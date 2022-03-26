@@ -10,10 +10,24 @@
  * Copyright 2022 - 2022 © 
  */
 //
-import type { NextPage } from 'next'
+import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import prisma from '../lib/prisma';
+//
+export const getStaticProps: GetStaticProps = async () => {
+  /*const feed = await prisma.post.findMany({
+    where: { published: true },
+    include: {
+      author: {
+        select: { name: true },
+      },
+    },
+  });*/
+  return { props: { } }; // need to fix just a test
+};
+
 //
 const Home: NextPage = () => {
   return (
