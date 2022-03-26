@@ -1,3 +1,14 @@
+//
+// File: schema.prisma
+// Project: next-cms
+// File Created: Saturday, 26th March 2022 10:40:58 pm
+// Author: Allan Nava (allan.nava@hiway.media)
+// -----
+// Last Modified: Saturday, 26th March 2022 10:59:22 pm
+// Modified By: Allan Nava (allan.nava@hiway.media>)
+// -----
+// Copyright 2022 - 2022 © 
+///
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 //
@@ -6,8 +17,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // example sqlite for dev
+  provider = "sqlite"
+  url      = "file:./dev.db"
+  //
+  //provider = "postgresql"
+  //url      = env("DATABASE_URL")
 }
 
 
