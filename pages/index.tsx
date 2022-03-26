@@ -1,8 +1,20 @@
+/*
+ * File: index.tsx
+ * Project: next-cms
+ * File Created: Saturday, 26th March 2022 10:04:25 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Saturday, 26th March 2022 10:24:49 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+//
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-
+//
 const Home: NextPage = () => {
   return (
     <div className={styles.container}>
