@@ -36,6 +36,18 @@ model Page {
   deletedAt         DateTime?
 }
 //
+model Component {
+  id                Int @id @default(autoincrement())
+  name              String
+  property          String
+}
+//
+model Entity {
+  id                Int @id @default(autoincrement())
+  name              String
+  attribute         String
+}
+//
 //
 // example model 
 // model Post {
