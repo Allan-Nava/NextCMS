@@ -16,8 +16,8 @@ export const fetchWrapper = {
     put,
     delete: _delete
 };
-
-async function get(url, context) {
+//
+async function get(url : string, context : any) {
     const requestOptions = {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...authHeader(context) }
@@ -28,7 +28,7 @@ async function get(url, context) {
 }
 
 
-async function post(url, body, context) {
+async function post(url : string, body : object, context : any ) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader(context) },
@@ -38,7 +38,7 @@ async function post(url, body, context) {
     return handleResponse(response);
 }
 
-function put(url, body, context) {
+function put(url : string, body : object, context : any ) {
     const requestOptions = {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...authHeader(context) },
@@ -48,7 +48,7 @@ function put(url, body, context) {
 }
 
 // prefixed with underscored because delete is a reserved word in javascript
-function _delete(url, context) {
+function _delete(url : string, body : object, context : any ) {
     const requestOptions = {
         method: 'DELETE',
         headers: authHeader(context)
@@ -60,7 +60,7 @@ function _delete(url, context) {
 
 // helper functions
 
-function authHeader(context) {
+function authHeader(context: any) {
     //
     //var token = userService.access_token;
     if (context.req) {
@@ -80,7 +80,7 @@ function authHeader(context) {
 }
 
 //
-async function handleResponse(response) {
+async function handleResponse(response : any) {
     if (!response.ok) {
         const message = await response.text()
         return {
