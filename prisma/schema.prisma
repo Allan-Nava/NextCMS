@@ -1,16 +1,54 @@
+//
+// File: schema.prisma
+// Project: next-cms
+// File Created: Saturday, 26th March 2022 10:40:58 pm
+// Author: Allan Nava (allan.nava@hiway.media)
+// -----
+// Last Modified: Saturday, 26th March 2022 10:59:22 pm
+// Modified By: Allan Nava (allan.nava@hiway.media>)
+// -----
+// Copyright 2022 - 2022 © 
+///
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 //
 generator client {
   provider = "prisma-client-js"
 }
-
+//
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // example sqlite for dev
+  provider = "sqlite"
+  url      = "file:./dev.db"
+  //
+  //provider = "postgresql"
+  //url      = env("DATABASE_URL")
 }
-
-
+// 
+model Page {
+  id                Int @id @default(autoincrement())
+  title             String
+  seoTitle          String
+  description       String 
+  seoDescription    String 
+  slug              String @unique
+  createdAt         DateTime @default(now())
+  deletedAt         DateTime?
+}
+//
+model Component {
+  id                Int @id @default(autoincrement())
+  name              String
+  property          String
+}
+//
+model Entity {
+  id                Int @id @default(autoincrement())
+  name              String
+  attribute         String
+}
+//
+//
 // example model 
 // model Post {
   // id        String     @default(cuid()) @id
