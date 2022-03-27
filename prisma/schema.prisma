@@ -15,7 +15,7 @@
 generator client {
   provider = "prisma-client-js"
 }
-
+//
 datasource db {
   // example sqlite for dev
   provider = "sqlite"
@@ -24,8 +24,31 @@ datasource db {
   //provider = "postgresql"
   //url      = env("DATABASE_URL")
 }
-
-
+// 
+model Page {
+  id                Int @id @default(autoincrement())
+  title             String
+  seoTitle          String
+  description       String 
+  seoDescription    String 
+  slug              String @unique
+  createdAt         DateTime @default(now())
+  deletedAt         DateTime?
+}
+//
+model Component {
+  id                Int @id @default(autoincrement())
+  name              String
+  property          String
+}
+//
+model Entity {
+  id                Int @id @default(autoincrement())
+  name              String
+  attribute         String
+}
+//
+//
 // example model 
 // model Post {
   // id        String     @default(cuid()) @id
