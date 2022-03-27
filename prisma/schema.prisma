@@ -28,9 +28,9 @@ datasource db {
 model Page {
   id                Int @id @default(autoincrement())
   title             String
-  seoTitle          String
+  seoTitle          String?
   description       String 
-  seoDescription    String 
+  seoDescription    String? 
   slug              String @unique
   createdAt         DateTime @default(now())
   deletedAt         DateTime?
