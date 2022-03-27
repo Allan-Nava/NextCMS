@@ -45,7 +45,7 @@ const DynamicComponents = () => {
   const components = config.map((c, i) => {
     const key = config[i].name as string
     const Component = Components[key as keyof Components]
-    return <Component key={i} />
+    return Component
   })
  
   return <>{components}</>
