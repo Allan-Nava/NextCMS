@@ -1,7 +1,18 @@
+/*
+ * File: DynamicCompontent.tsx
+ * Project: next-cms
+ * File Created: Sunday, 27th March 2022 10:42:47 am
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Sunday, 27th March 2022 10:43:00 am
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
 import dynamic from 'next/dynamic'
 import React, { lazy, Suspense } from 'react'
 import ErrorBoundary from './ErrorBoundary'
-
+//
 const config = [
   {
     name: 'First',
@@ -51,5 +62,6 @@ const DynamicComponents = () => {
   return <>{components}</>
   
 }
-
-export default DynamicComponents
+//
+export default DynamicComponents;
+//
