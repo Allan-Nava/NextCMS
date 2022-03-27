@@ -13,11 +13,22 @@
 import '../styles/globals.css'
 //
 import type { AppProps } from 'next/app'
+import { useRouter } from 'next/router';
+import AppStyles from './_appstyles';
+//
+//
 //
 function MyApp({ Component, pageProps }: AppProps) {
-
-  return <Component {...pageProps} />
-  
+  const router = useRouter();
+  const isAdmin = router.pathname.startsWith('/admin');
+  console.log("isAdmin ", isAdmin);
+  return (
+    <>
+      <Component {...pageProps} />
+      <AppStyles admin={isAdmin} />
+    </>
+  );
+  //
 }
 //
 export default MyApp;
