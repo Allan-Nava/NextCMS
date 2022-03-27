@@ -1,8 +1,6 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import DynamicComponents from "../components/DynamicCompontent";
 
-
-
 const Index: NextPage = () => {
   //const [indexComponent, setIndexComponent] = useState<Component>()
   //render component arrived from server side call
@@ -12,7 +10,6 @@ const Index: NextPage = () => {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   
-  console.log(context)
   // API CALL TO GET INDEX PAGE INFORMATION
 
   // const index: Page = await page.getPage("/")
