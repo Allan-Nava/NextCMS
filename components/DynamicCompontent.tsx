@@ -9,9 +9,12 @@
  * -----
  * Copyright 2022 - 2022 © 
  */
-import dynamic from 'next/dynamic'  
-import fs, { PathLike } from "fs"
+import dynamic from 'next/dynamic';  
+import fs, { PathLike } from "fs";
 //
+import prisma from '../lib/prisma';
+//
+// @tonio need to add the components from database
 const config: Component[] = [
   {
     name: 'First',
@@ -23,15 +26,17 @@ const config: Component[] = [
     path: './Second',
     props: {name: 'John', surname: 'Doe'}
   }
-]
-
+];
+const componentsPrisma : any = prisma.component.findMany();
+console.log("componencomponentsPrisma ts", componentsPrisma);
+//
 interface GenericObject {
   [key: string]: GenericObject | GenericObject[] | string | number
 }
-
+//
 const validation = <Obj extends GenericObject>(obj: Obj) => obj
-
-
+//
+//
 interface Component {
   name?: string
   path?: string
@@ -43,16 +48,16 @@ interface Components {
 const importedComponents = () => {
   const components: Components =  {}
   for(let i = 0; i < config.length; i++) {
-    const key = config[i].name as string
+    const key = config[i].name as string;
     components[key as keyof Components] = dynamic(() => import(`${config[i].path}`), { loading: ()=> <p>No component {config[i].path}</p>, ssr: false })
   }
-  return components
+  return components;
 }
 
 const DynamicComponents = () => {
   const componentsList = importedComponents()
   // const Components: Components =  importedComponents()
-  
+  //
   const components = config.map((c, i) => {
     const key = config[i].name as string
     return componentsList[key as keyof Components] 
