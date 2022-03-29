@@ -11,9 +11,9 @@
  */
 
 import { PrismaClient, Prisma } from '@prisma/client'
-
+//
 const prisma = new PrismaClient()
-
+console.log("prisma", prisma);
 const pageData: Prisma.PageCreateInput[] = [
   {
     title: 'Index',
@@ -37,9 +37,9 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error("exception ", e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
 });

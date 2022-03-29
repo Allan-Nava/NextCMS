@@ -12,6 +12,7 @@
 //
 import type { GetServerSideProps, NextPage } from 'next'
 import DynamicComponents from "../components/DynamicCompontent";
+
 import prisma from '../lib/prisma';
 // 
 // 
@@ -24,6 +25,7 @@ const Index: NextPage = () => {
 // 
 // 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  
   //
   console.log(context);
   // API CALL TO GET INDEX PAGE INFORMATION
