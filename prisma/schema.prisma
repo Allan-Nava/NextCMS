@@ -48,6 +48,23 @@ model Entity {
   name              String
   attribute         String
 }
+model User {
+  id                Int @id @default(autoincrement())
+  username          String
+  email             String
+  firstName         String
+  lastName          String
+  isAdmin           Boolean
+  isStaff           Boolean
+}
+model Role {
+  id                Int @id @default(autoincrement())
+  name              String
+}
+model RoleUser {
+  id                Int @id @default(autoincrement())
+  user              User? @relation(fields: [authorId], references: [id])
+}
 //
 //
 // example model 

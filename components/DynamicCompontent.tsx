@@ -9,8 +9,7 @@
  * -----
  * Copyright 2022 - 2022 © 
  */
-import dynamic from 'next/dynamic';  
-import fs, { PathLike } from "fs";
+import dynamic from 'next/dynamic';
 //
 import prisma from '../lib/prisma';
 //
@@ -39,7 +38,7 @@ const validation = <Obj extends GenericObject>(obj: Obj) => obj
 //
 interface Component {
   name?: string
-  path?: string
+  path: string
   props?: GenericObject
 }
 interface Components {
@@ -50,6 +49,7 @@ const importedComponents = () => {
   for(let i = 0; i < config.length; i++) {
     const key = config[i].name as string;
     components[key as keyof Components] = dynamic(() => import(`${config[i].path}`), { loading: ()=> <p>No component {config[i].path}</p>, ssr: false })
+    
   }
   return components;
 }
