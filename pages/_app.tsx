@@ -10,24 +10,20 @@
  * Copyright 2022 - 2022 © 
  */
 //
-import '../styles/globals.css'
 //
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router';
-//import AppStyles from './_appstyles';
-//
-//
+import '../styles/sass/style.scss'
+import '../styles/sass/style.react.scss'
 //
 function MyApp({ Component, pageProps }: AppProps) {
-  const router = useRouter();
+  const router = useRouter()
   const isAdmin = router.pathname.startsWith('/admin');
   console.log("isAdmin ", isAdmin);
-  return (
-    <>
-      <Component {...pageProps} />
+  return <>
+    <Component {...pageProps} />
     </>
-  );
-  //
+  
 }
 //
 export default MyApp;
