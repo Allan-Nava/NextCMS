@@ -10,10 +10,9 @@
  * Copyright 2022 - 2022 © 
  */
 //
-import type { GetServerSideProps, NextPage } from 'next'
-import DynamicComponents from '../components/DynamicCompontent'
-import prisma from '../lib/prisma'
-
+import type { GetServerSideProps, NextPage } from 'next';
+import DynamicComponents from '../components/DynamicCompontent';
+//
 //
 const Home: NextPage = () => {
   return (
@@ -25,16 +24,16 @@ const Home: NextPage = () => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
   // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
-  const result = await prisma.page.findMany()
   //const page: Page = await prisma.page.getPage(context.req.url)
   // if (page.statusCode == 400)
   //   return {
   //     notFound: true
   //   };
+  const res = await fetch('http://localhost:3000/api/page');
+  console.log("res", res);
+  const pages = await res.json();
   return {
-    props: {
-      result
-    }
+    props: { pages },
   }
   // ...
 }
