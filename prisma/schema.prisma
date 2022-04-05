@@ -41,12 +41,16 @@ model Component {
   name              String
   property          String
   parent            Int
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
 }
 //
 model Entity {
   id                Int @id @default(autoincrement())
   name              String
   attribute         String
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
 }
 model User {
   id                Int @id @default(autoincrement())
@@ -56,10 +60,14 @@ model User {
   lastName          String
   isAdmin           Boolean
   isStaff           Boolean
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
 }
 model Role {
   id                Int @id @default(autoincrement())
   name              String
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
 }
 //
 //
