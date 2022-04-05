@@ -12,8 +12,7 @@
 //
 import type { GetServerSideProps, NextPage } from 'next'
 import DynamicComponents from "../components/DynamicCompontent";
-
-import prisma from '../lib/prisma';
+//
 // 
 // 
 // 
@@ -32,7 +31,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // 
   // run inside `async` function
   //const pages = await prisma.page.findMany();
-  console.log("prisma", prisma);
   // const index: Page = await page.getPage("/") 
   //
   return {

@@ -12,6 +12,7 @@
 //
 import type { GetServerSideProps, NextPage } from 'next'
 import DynamicComponents from '../components/DynamicCompontent'
+import prisma from '../lib/prisma'
 
 //
 const Home: NextPage = () => {
@@ -24,14 +25,15 @@ const Home: NextPage = () => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
   // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
-  // const page: Page = await page.getPage(context.req.url)
+  const result = await prisma.page.findMany()
+  //const page: Page = await prisma.page.getPage(context.req.url)
   // if (page.statusCode == 400)
   //   return {
   //     notFound: true
   //   };
   return {
     props: {
-
+      result
     }
   }
   // ...
