@@ -10,7 +10,6 @@
  * Copyright 2022 - 2022 © 
  */
 import dynamic from 'next/dynamic';
-import type { GetServerSideProps, NextPage } from 'next'
 //
 //import prisma from '../lib/prisma';
 //
@@ -46,11 +45,11 @@ interface Components {
   name?: any
 }
 const importedComponents = () => {
-  const components: Components =  {}
+  const components: Components =  {}; 
+  // need to add the components from database
   for(let i = 0; i < config.length; i++) {
     const key = config[i].name as string;
     components[key as keyof Components] = dynamic(() => import(`${config[i].path}`), { loading: ()=> <p>No component {config[i].path}</p>, ssr: false })
-    
   }
   return components;
 }
@@ -74,20 +73,4 @@ const DynamicComponents = () => {
 //
 export default DynamicComponents;
 //
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  // API CALL TO GET SLUG PAGE INFORMATION
-  // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
-  //const page: Page = await prisma.page.getPage(context.req.url)
-  // if (page.statusCode == 400)
-  //   return {
-  //     notFound: true
-  //   };
-  const res = await fetch('http://localhost:3000/api/components');
-  console.log("res", res);
-  const pages = await res.json();
-  return {
-    props: { pages },
-  }
-  // ...
-}
+//

@@ -13,7 +13,7 @@
 import type { GetServerSideProps, NextPage } from 'next';
 import DynamicComponents from '../components/DynamicCompontent';
 //
-//
+// need to pass the props from server side render
 const Home: NextPage = () => {
   return (
     <DynamicComponents />
