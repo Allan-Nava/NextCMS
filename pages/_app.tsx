@@ -19,7 +19,7 @@ import '../styles/sass/style.react.scss'
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter()
   const isAdmin = router.pathname.startsWith('/admin');
-  console.log("isAdmin ", isAdmin);
+  //console.log("isAdmin ", isAdmin);
   return <>
     <Component {...pageProps} />
     </>

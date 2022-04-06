@@ -10,16 +10,30 @@
  * Copyright 2022 - 2022 © 
  */
 //
-import type { GetServerSideProps, NextPage } from 'next';
+import type { GetServerSideProps, NextPage, GetStaticProps } from 'next';
+import type { AppProps } from 'next/app';
 import DynamicComponents from '../components/DynamicCompontent';
 //
 // need to pass the props from server side render
-const Home: NextPage = () => {
+const Home: NextPage = ( { data }: any) => {
+  console.log("data ", data);
   return (
     <DynamicComponents />
   )
 }
 //
+export const getStaticProps : GetStaticProps = async (context) => {
+  const res = await fetch('http://localhost:3000/api/components');
+  console.log("res components", res);
+  const pages = await res.json();
+  return {
+    props: { pages },
+  }
+  // ...
+  return {
+    props: {}, // will be passed to the page component as props
+  }
+}
 //
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
