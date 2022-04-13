@@ -16,6 +16,7 @@ import prisma from '../../../lib/prisma';
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id;
     //
+    console.log("id ", id);
     if (req.method === 'GET') {
       handleGET(id, res)
     } else if (req.method === 'DELETE') {
