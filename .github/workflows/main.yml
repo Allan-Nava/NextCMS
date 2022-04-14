@@ -1,11 +1,13 @@
 name: Main workflow
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
-    branches:
-      - master
-      - main
-    types: [opened, synchronize, reopened]
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+  schedule:
+    - cron: '34 7 * * 4'
 
 jobs:
   test:
