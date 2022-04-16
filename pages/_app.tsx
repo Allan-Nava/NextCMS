@@ -11,10 +11,12 @@
  */
 //
 //
+import 'bootstrap/dist/css/bootstrap.css'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router';
-import '../styles/sass/style.scss'
-import '../styles/sass/style.react.scss'
+import '../styles/globals.css'
+// import '../styles/sass/style.scss'
+// import '../styles/sass/style.react.scss'
 //
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter()

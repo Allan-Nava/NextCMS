@@ -11,22 +11,25 @@
  */
 //
 import type { GetServerSideProps, NextPage } from 'next'
-import DynamicComponents from "../components/DynamicCompontent";
+import DynamicComponents from '../components/DynamicComponents'
+import { PageComponent } from '../lib/types/page'
 //
 // 
 // 
-// 
-const Index: NextPage = () => {
+//
+interface IProps {
+  page: PageComponent[]
+}
+const Index: NextPage<IProps> = ({page}) => {
   //const [indexComponent, setIndexComponent] = useState<Component>()
   //render component arrived from server side call
-  return <DynamicComponents />
+  return <DynamicComponents page={page} />
 }
 // 
 // 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   
   //
-  console.log(context);
   // API CALL TO GET INDEX PAGE INFORMATION
   // 
   // run inside `async` function
@@ -35,7 +38,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   //
   return {
     props: {
-      //index: index
+      page: [{
+        name: "navbar",
+        path: "./First",
+        props: {"ciao": "ciao"},
+        supportNestedComponent: false
+      },
+      {
+        name: "hero",
+        path: "./Elements/Hero",
+        supportNestedComponent: false
+      },
+      {
+        name: "features",
+        path: "./Elements/Features",
+        supportNestedComponent: false
+      }]
     }
   }
   // ...
