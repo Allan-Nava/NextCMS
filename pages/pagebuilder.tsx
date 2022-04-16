@@ -65,7 +65,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name: "features",
         path: "./Elements/Features",
         supportNestedComponent: false
-      }]
+      }] // COMPONENTS RETRIEVED BY COMPONENTS API CALL
     }
   }
   // ...

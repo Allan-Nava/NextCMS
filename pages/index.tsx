@@ -30,7 +30,7 @@ const Index: NextPage<IProps> = ({page}) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   
   //
-  // API CALL TO GET INDEX PAGE INFORMATION
+  // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
   // 
   // run inside `async` function
   //const pages = await prisma.page.findMany();
@@ -40,7 +40,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: {
       page: [{
         name: "navbar",
-        path: "./First",
+        path: "./Elements/Navbar",
         props: {"ciao": "ciao"},
         supportNestedComponent: false
       },
@@ -53,7 +53,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name: "features",
         path: "./Elements/Features",
         supportNestedComponent: false
-      }]
+      }] // COMPONENTS RETRIEVED BY PAGE API CALL
     }
   }
   // ...
