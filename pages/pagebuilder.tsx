@@ -1,3 +1,15 @@
+/*
+ * File: pagebuilder.tsx
+ * Project: next-cms
+ * File Created: Monday, 18th April 2022 10:55:41 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Monday, 18th April 2022 10:55:56 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+//
 import { NextPage } from 'next';
 import { DndProvider} from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -33,15 +45,15 @@ const PageBuilder: NextPage<PageBuilderProps> = ({availableComponents}) => {
     </Provider>
   );
 }
-
+//
 // 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  
+  console.log(context);
   //
   // API CALL TO GET ALL COMPONENTS AVAILABLE
   // 
   // run inside `async` function
-  //const availableComponents = await prisma.coponents.findMany();
+  //const availableComponents = await prisma.components.findMany();
   //
   return {
     props: {
