@@ -12,6 +12,11 @@ code {
 }
 .layout-zone{
   position: relative;
+  -webkit-transform: scale(0.9);
+  -ms-transform: scale(0.9);
+  transform: scale(0.9);
+  overflow: auto;
+  box-shadow: 0px 3px 4px 0px #888;
 }
 .droppable-layer{
   position: relative;
@@ -38,5 +43,28 @@ code {
 .droppable-layer.dragging .droppable-area,
 .droppable-area.isOver {
   /* background-color: rgba(0, 0, 255, 0.184); */
-  background-color: red
+  background-color: rgba(255, 0, 0, 0.3)
+}
+.component-settings{
+  display: none;
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(255, 0, 0, 0.3);
+}
+.droppable-layer:hover .component-settings{
+  display: flex;
+}
+.component-settings .component-settings-item i {
+  color: #000;
+  font-size: 18px;
+}
+.component-settings .component-settings-item .btn:hover {
+  border: 1px solid #000;
+}
+.component-settings .component-settings-item .btn {
+  padding: 0px 10px;
 }

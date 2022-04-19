@@ -31,12 +31,12 @@ const PageBuilder: NextPage<PageBuilderProps> = ({availableComponents}) => {
       <DndProvider backend={HTML5Backend}>
         <div className='container-fluid'>
           <div className='row overflow-hidden'>
-            <div className='col-2'>
-              <div className='row h-100'>
+            <div className='col-3'>
+              <div className='row vh-100 overflow-auto'>
                 <Sidebar components={availableComponents} />
               </div>
             </div>
-            <div className='col-10 overflow-auto'>
+            <div className='col-9'>
               <LayoutZone />
             </div>
           </div>

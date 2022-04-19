@@ -12,6 +12,7 @@
 //
 //
 import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-icons/font/bootstrap-icons.css'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router';
 import '../styles/globals.css'

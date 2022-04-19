@@ -6,6 +6,7 @@ import { ItemsType } from "../../lib/types/layout";
 import { useAppDispatch } from "../../lib/hooks/dispatchHook";
 import { insertItem } from "../../lib/reducers/layout/reducer";
 import { dragHandler } from "../../lib/reducers/dragAndDrop/reducer";
+import { DynamicComponent } from "../DynamicComponents";
 
 
 const DraggableCard: React.FC<{component: PageComponent}> = ({component}) => {
@@ -32,6 +33,10 @@ const DraggableCard: React.FC<{component: PageComponent}> = ({component}) => {
     dispatch(dragHandler({dragging: isDragging}))
   }, [isDragging])
 
-  return <Card ref={drag} role="Box" className='mb-2'><Card.Body>{component.name}</Card.Body></Card>
+  return <Card ref={drag} role="Box" className='mb-2'>
+    <Card.Body>
+      {component.name}
+    </Card.Body>
+  </Card>
 }
 export default DraggableCard
