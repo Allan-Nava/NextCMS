@@ -52,10 +52,10 @@ const DynamicComponents: React.FC<{ page?: PageComponent[], Wrapper?: React.FC<{
   </>
 }
 
-export const DynamicComponent: React.FC<{path: string}> = ({ children, path }) => {
-  const Component = dynamic(() => import(`${path}`).catch((err) => import("./NoComponent")), { loading: ()=> <p>No component {path}</p> })
+// export const DynamicComponent: React.FC<{path: string}> = ({ children, path }) => {
+//   const Component = dynamic(() => import(`${path}`).catch((err) => import("./NoComponent")), { loading: ()=> <p>No component {path}</p> })
 
-  return <>{<Component path={path} />}</>
-}
+//   return <>{<Component path={path} />}</>
+// }
 
 export default DynamicComponents
