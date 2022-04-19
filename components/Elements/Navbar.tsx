@@ -1,5 +1,4 @@
 import React from 'react'
-import { Card } from 'react-bootstrap'
 
 const Navbar: React.FC = () => {
   return <nav className="py-2 bg-light border-bottom">
