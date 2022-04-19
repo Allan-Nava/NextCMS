@@ -6,7 +6,6 @@ import { ItemsType } from "../../lib/types/layout";
 import { useAppDispatch } from "../../lib/hooks/dispatchHook";
 import { insertItem } from "../../lib/reducers/layout/reducer";
 import { dragHandler } from "../../lib/reducers/dragAndDrop/reducer";
-import { DynamicComponent } from "../DynamicComponents";
 
 
 const DraggableCard: React.FC<{component: PageComponent}> = ({component}) => {
