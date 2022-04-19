@@ -1,3 +1,21 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "plugins": [
+    "react"
+  ],
+  "rules": {
+    "react/no-did-update-set-state": "error",
+    "react/no-unknown-property": "error",
+    "react/no-unused-prop-types": "error",
+    "react/prop-types": "off",
+    "react/no-unescaped-entities": "off",
+    "react/jsx-no-bind": "off",
+    "react/react-in-jsx-scope": "off"
+  }
+
 }
