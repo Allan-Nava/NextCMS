@@ -1,8 +1,20 @@
+/*
+ * File: DynamicComponents.tsx
+ * Project: next-cms
+ * File Created: Monday, 18th April 2022 10:55:41 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Tuesday, 19th April 2022 10:51:44 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+
 import React from 'react';
 import { PageComponent } from '../lib/types/page';
 import dynamic from 'next/dynamic';
-
-
+//
+//
 const DynamicComponents: React.FC<{ page?: PageComponent[], Wrapper?: React.FC<{position: number}> }> = ({ page, Wrapper }) => {
   
   if (!page) {
