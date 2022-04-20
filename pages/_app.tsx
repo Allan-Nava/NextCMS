@@ -22,11 +22,12 @@ import '../styles/globals.css'
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter()
   const isAdmin = router.pathname.startsWith('/admin');
-  //console.log("isAdmin ", isAdmin);
-  return <>
+  console.log("isAdmin ", isAdmin);
+  return (<>
     <Component {...pageProps} />
     </>
-  
+  );
+  //
 }
 //
 export default MyApp;

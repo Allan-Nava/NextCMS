@@ -12,8 +12,28 @@
 
 import React from 'react';
 //
-const Button: React.FC<{}> = () => {
-    return (<>  </>);
+interface PropsInterface {
+    className?: string
+    text?: string
+    disabled?: boolean
+    icon?: string
+    loading?: boolean
+    onClick?: () => void
+}
+//
+const Button: React.FC<{props?: PropsInterface}> = ({props}) => {
+    console.log("props", props);
+    var className = `${props?.className == null || props?.className == "" ? "" : " " + props?.className }`;
+    var text = props?.text;
+    var disabled = props?.disabled;
+    //
+    return (
+        <button className={"hm-button" + className} onClick={props?.onClick} disabled={ disabled } >
+            {props?.icon ? <i className={props?.icon}></i> : "" }
+            {props?.loading ? "Attendi..." : text }
+        </button>
+    );
+    //
 };
 export default Button;
 //
