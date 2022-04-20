@@ -1,0 +1,70 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.layout-zone{
+  position: relative;
+  -webkit-transform: scale(0.9);
+  -ms-transform: scale(0.9);
+  transform: scale(0.9);
+  overflow: auto;
+  box-shadow: 0px 3px 4px 0px #888;
+}
+.droppable-layer{
+  position: relative;
+  overflow: hidden;
+}
+.droppable-area {
+  position: absolute;
+  z-index: 2;
+  width: 100%;
+  height: 20px;
+  background-color: transparent;
+}
+.droppable-layer .droppable-area.first {
+  top: 0px;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+}
+.droppable-layer .droppable-area.last {
+  bottom: 0px;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+}
+
+.droppable-layer.dragging .droppable-area,
+.droppable-area.isOver {
+  /* background-color: rgba(0, 0, 255, 0.184); */
+  background-color: rgba(255, 0, 0, 0.3)
+}
+.component-settings{
+  display: none;
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(255, 0, 0, 0.3);
+}
+.droppable-layer:hover .component-settings{
+  display: flex;
+}
+.component-settings .component-settings-item i {
+  color: #000;
+  font-size: 18px;
+}
+.component-settings .component-settings-item .btn:hover {
+  border: 1px solid #000;
+}
+.component-settings .component-settings-item .btn {
+  padding: 0px 10px;
+}
