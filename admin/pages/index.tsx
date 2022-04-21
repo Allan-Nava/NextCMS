@@ -23,41 +23,9 @@ interface IProps {
 const Index: NextPage<IProps> = ({page}) => {
   //const [indexComponent, setIndexComponent] = useState<Component>()
   //render component arrived from server side call
-  return <DynamicComponents page={page} />
+  return <>TODO ADMIN STUFF</>
 }
 // 
-// 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  
-  //
-  // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
-  // 
-  // run inside `async` function
-  //const pages = await prisma.page.findMany();
-  // const index: Page = await page.getPage("/") 
-  //
-  return {
-    props: {
-      page: [{
-        name: "navbar",
-        path: "./Elements/Navbar",
-        props: {"ciao": "ciao"},
-        supportNestedComponent: false
-      },
-      {
-        name: "hero",
-        path: "./Elements/Hero",
-        supportNestedComponent: false
-      },
-      {
-        name: "features",
-        path: "./Elements/Features",
-        supportNestedComponent: false
-      }] // COMPONENTS RETRIEVED BY PAGE API CALL
-    }
-  }
-  // ...
-}
 //
 export default Index;
 //
