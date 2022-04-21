@@ -11,7 +11,8 @@
  */
 /** @type {import('next').NextConfig} */
 const path = require('path');
-const { ADMIN_URL } = process.env;
+//const { ADMIN_URL } = process.env;
+console.log("process ",process.env);
 //
 const nextConfig = {
   reactStrictMode: true,
@@ -46,15 +47,15 @@ const nextConfig = {
       },
       {
         source: '/admin',
-        destination: `${ADMIN_URL}/admin`,
+        destination: `${process.env.ADMIN_URL}/admin`,
       },
       {
         source: '/admin/:path*',
-        destination: `${ADMIN_URL}/admin/:path*`,
+        destination: `${process.env.ADMIN_URL}/admin/:path*`,
       },
     ]
   },
 }
 //
-module.exports = nextConfig
+module.exports = nextConfig;
 //
