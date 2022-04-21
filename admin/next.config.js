@@ -37,8 +37,9 @@ const nextConfig = {
     };
     return config;
   },
-  basePath: '/admin',
+  basePath: '/admin'
 }
 //
-module.exports = nextConfig
+console.log("nextConfig ", nextConfig);
+module.exports = nextConfig;
 //
