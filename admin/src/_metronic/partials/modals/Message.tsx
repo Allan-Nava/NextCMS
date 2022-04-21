@@ -1,3 +1,15 @@
+/*
+ * File: Message.tsx
+ * Project: next-admin
+ * File Created: Tuesday, 19th April 2022 11:25:16 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Thursday, 21st April 2022 8:18:24 am
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+
 import React from 'react'
 import { Modal } from 'react-bootstrap'
 import { KTSVG } from '../../helpers'
