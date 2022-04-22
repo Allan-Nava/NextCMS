@@ -10,24 +10,33 @@
  * Copyright 2022 - 2022 © 
  */
 import type { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
+import { pagesRepo } from '../../../lib/helpers/page-repo';
+//import prisma from '../../../lib/prisma';
 //
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     // need to add the filters
-    console.log("Page ", prisma);
-    if (prisma){
+    switch (req.method) {
+        case 'GET':
+            return getPages();
+        case 'POST':
+            return createUser();
+        default:
+            return res.status(405).end(`Method ${req.method} Not Allowed`)
+    }
+    //
+    function getPages() {
+        const users = pagesRepo.getAll();
+        return res.status(200).json(users);
+    }
+    
+    function createUser() {
         try {
-            const data = await prisma.page.findMany();
-            console.log("Page data", data);
-            res.json(data);
+            pagesRepo.create(req.body);
+            return res.status(200).json({});
         } catch (error) {
-            console.error("error ", error );
-            // expected output: ReferenceError: nonExistentFunction is not defined
-            // Note - error messages will vary depending on browser
+            return res.status(400).json({ message: error });
         }
-    }else{
-        res.json({"data": {}});
     }
 };
 //
