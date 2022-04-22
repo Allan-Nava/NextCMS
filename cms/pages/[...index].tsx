@@ -18,12 +18,13 @@ import DynamicComponents from '../components/DynamicComponents';
 const Home: NextPage = ( { data }: any) => {
   console.log("data ", data);
   return (
-    <DynamicComponents />
+    <DynamicComponents page={data} />
   )
 }
 //
 //
 //
+/* 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
   // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
@@ -41,7 +42,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: { pages },
   }
   //
-}
+}*/
 //
 export default Home;
 //
