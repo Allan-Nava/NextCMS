@@ -15,9 +15,13 @@ import prisma from '../../../lib/prisma';
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     // need to add the filters
-    console.log("Page ");
-    const data = await prisma.page.findMany();
-    console.log("Page data", data);
-    res.json(data);
+    console.log("Page ", prisma);
+    if (prisma){
+        const data = await prisma.page.findMany();
+        console.log("Page data", data);
+        res.json(data);
+    }else{
+        res.json({"data": {}});
+    }
 };
 //
