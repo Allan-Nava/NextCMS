@@ -22,17 +22,8 @@ const Home: NextPage = ( { data }: any) => {
   )
 }
 //
-/*export const getStaticProps : GetStaticProps = async (context) => {
-  const res = await fetch('http://localhost:3000/api/components');
-  console.log("res components", res);
-  const pages = await res.json();
-  return {
-    props: { pages },
-  }
-  //
-}*/
 //
-
+//
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
   // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
@@ -41,7 +32,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   //   return {
   //     notFound: true
   //   };
-  const res = await fetch('http://localhost:3000/api/page');
+  // need to fix with base url programmatically
+  const res = await fetch('https://next-cms-main.vercel.app/api/page');
   console.log("res", res);
   const pages = await res.json();
   return {
