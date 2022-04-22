@@ -32,6 +32,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   //   return {
   //     notFound: true
   //   };
+  console.log("getServerSideProps context ", context);
   // need to fix with base url programmatically
   const res = await fetch('https://next-cms-main.vercel.app/api/page');
   console.log("res", res);
