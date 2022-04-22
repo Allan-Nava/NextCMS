@@ -16,7 +16,13 @@ import prisma from '../../../lib/prisma';
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     // need to add the filters
-    const data = await prisma.user.findMany()
-    res.json(data);
+    try{
+        const data = await prisma.user.findMany()
+        res.json(data);
+    } catch (error) {
+        console.error("error ", error );
+        // expected output: ReferenceError: nonExistentFunction is not defined
+        // Note - error messages will vary depending on browser
+    }
 };
 //

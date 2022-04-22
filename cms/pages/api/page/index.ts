@@ -17,9 +17,15 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     // need to add the filters
     console.log("Page ", prisma);
     if (prisma){
-        const data = await prisma.page.findMany();
-        console.log("Page data", data);
-        res.json(data);
+        try {
+            const data = await prisma.page.findMany();
+            console.log("Page data", data);
+            res.json(data);
+        } catch (error) {
+            console.error("error ", error );
+            // expected output: ReferenceError: nonExistentFunction is not defined
+            // Note - error messages will vary depending on browser
+        }
     }else{
         res.json({"data": {}});
     }
