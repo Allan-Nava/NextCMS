@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx next telemetry disable && next build",
+    "build": "npx next telemetry disable && prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint"
   },
