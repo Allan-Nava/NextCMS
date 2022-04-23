@@ -12,6 +12,7 @@
 //const fs = require('fs');
 //let users = require('data/users.json');
 import prisma from '../prisma';
+import { Prisma } from '@prisma/client'
 //
 export const pagesRepo = {
     getAll,
@@ -41,14 +42,14 @@ async function getBySlug( slug : string ) {
     });
 }
 //
-async function create(title : string) {
+async function create(title : string, slug : string, description : string,) {
     console.log("title", title);
-    /* need to fix the creation stuff 
-    let body = {
+    //
+    let body : Prisma.PageCreateInput = {
         title: title,
+        slug: slug,
+        description: description,
     }
-    const createPage  = await prisma.page.create({ 
-        data : body
-    });*/
+    const page  = await prisma.page.create({data: body});
 }
 //

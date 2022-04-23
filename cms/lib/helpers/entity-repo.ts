@@ -9,8 +9,8 @@
  * -----
  * Copyright 2022 - 2022 © 
  */
-
 import prisma from '../prisma';
+import { Prisma } from '@prisma/client'
 //
 export const entityRepo = {
     getAll,
@@ -35,12 +35,13 @@ async function getById( id : string ) {
 //
 async function create(title : string) {
     console.log("title", title);
-    /* need to fix the creation stuff 
-    let body = {
-        title: title,
+    let body : Prisma.EntityCreateInput = {
+        name: title,
+        attribute: JSON.stringify({})
     }
-    const createPage  = await prisma.entity.create({ 
+    const entity  = await prisma.entity.create({ 
         data : body
-    });*/
+    });
+    return entity
 }
 //

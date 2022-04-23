@@ -4,14 +4,14 @@
  * File Created: Saturday, 23rd April 2022 12:30:05 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Saturday, 23rd April 2022 12:30:07 pm
+ * Last Modified: Saturday, 23rd April 2022 9:40:21 pm
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
  * Copyright 2022 - 2022 © 
  */
-
 import prisma from '../prisma';
 import { PageComponent } from '../types/page';
+import { Prisma } from '@prisma/client'
 //
 export const componentRepo = {
     getAll,
@@ -40,10 +40,18 @@ async function create(title : string, path: string) {
         components: [],
         supportNestedComponent: false
     }
+    let body : Prisma.ComponentCreateInput = {
+        name: title,
+        property: JSON.stringify(bodyComponent),
+        parent: 1
+        //path: PageComponent,
+    }
     console.log("bodyComponent", bodyComponent);
-    /* need to fix the creation stuff 
-    const createPage  = await prisma.page.create({ 
+    //
+    const page  = await prisma.component.create({ 
         data : body
-    });*/
+    });
+    console.log("createPage", page);
+    return page;
 }
 //
