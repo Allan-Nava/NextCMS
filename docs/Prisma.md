@@ -43,3 +43,6 @@ Examples
   $ prisma db push
   
 ```
+
+
+https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1
