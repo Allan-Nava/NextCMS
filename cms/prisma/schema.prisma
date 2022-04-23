@@ -34,6 +34,7 @@ model Page {
   seoDescription    String? 
   slug              String @unique
   createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
   deletedAt         DateTime?
 }
 //
@@ -42,6 +43,7 @@ model Component {
   name              String
   property          String
   parent            Int
+  createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
 }
