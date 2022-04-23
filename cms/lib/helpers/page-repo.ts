@@ -17,6 +17,7 @@ export const pagesRepo = {
     getAll,
     getById,
     create,
+    getBySlug,
     //update,
     //delete: _delete
 };
@@ -30,6 +31,13 @@ async function getById( id : string ) {
     console.info("getById ", id);
     return await prisma.page.findUnique({
         where: { "id": parseInt(id) }
+    });
+}
+//
+async function getBySlug( slug : string ) {
+    console.info("getBySlug ", slug);
+    return await prisma.page.findUnique({
+        where: { "slug": slug }
     });
 }
 //

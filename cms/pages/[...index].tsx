@@ -13,6 +13,7 @@
 import type { GetServerSideProps, NextPage, GetStaticProps } from 'next';
 import type { AppProps } from 'next/app';
 import DynamicComponents from '../components/DynamicComponents';
+import { pagesRepo } from '../lib/helpers/page-repo';
 //
 // need to pass the props from server side render
 const Home: NextPage = ( { data }: any) => {
@@ -24,7 +25,6 @@ const Home: NextPage = ( { data }: any) => {
 //
 //
 //
-/* 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET SLUG PAGE INFORMATION
   // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
@@ -35,14 +35,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   //   };
   console.log("getServerSideProps context ", context);
   // need to fix with base url programmatically
-  const res = await fetch('https://next-cms-main.vercel.app/api/page');
-  console.log("res", res);
-  const pages = await res.json();
-  return {
-    props: { pages },
+  if(context.req.url != null){
+    console.log("getServerSideProps context.req.url ", context.req.url);
+    const pages = await pagesRepo.getBySlug(context.req.url);
+    console.log("pages", pages);
+    return {
+      props: { pages },
+    }
+  } else {
+    return {
+      notFound: true
+    }
   }
   //
-}*/
+}
 //
 export default Home;
 //

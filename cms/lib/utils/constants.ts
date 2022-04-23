@@ -10,6 +10,6 @@
  * Copyright 2022 - 2022 © 
  */
 //
-export const API_URI    = `${process.env.API_URI}`
-export const BASE_URI   = `${process.env.BASE_URI}`
+export const API_URI    = `${process.env.API_URI}`;
+export const BASE_URI   = "https://next-cms-main.vercel.app"; //`${process.env.BASE_URI}`;
 //
