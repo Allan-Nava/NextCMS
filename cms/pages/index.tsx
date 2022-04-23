@@ -12,6 +12,7 @@
 //
 import type { GetServerSideProps, NextPage } from 'next'
 import DynamicComponents from '../components/DynamicComponents'
+import { pagesRepo } from '../lib/helpers/page-repo'
 import { PageComponent } from '../lib/types/page'
 //
 // 
@@ -28,16 +29,15 @@ const Index: NextPage<IProps> = ({page}) => {
 // 
 // 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  
   //
   // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
-  // 
   // run inside `async` function
-  //const pages = await prisma.page.findMany();
-  // const index: Page = await page.getPage("/") 
+  const pages = await pagesRepo.getBySlug("/");
+  console.log("pages", pages);
   //
   return {
     props: {
+      pages: pages,
       page: [{
         name: "navbar",
         path: "./Elements/Navbar",
