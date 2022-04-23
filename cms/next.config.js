@@ -13,6 +13,7 @@
 const path = require('path');
 //const { ADMIN_URL } = process.env;
 console.log("process ", process.env);
+console.log("DATABASE_URL ", process.env.DATABASE_URL);
 //
 const nextConfig = {
   reactStrictMode: true,
