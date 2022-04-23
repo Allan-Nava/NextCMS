@@ -1,11 +1,23 @@
+/*
+ * File: reducer.ts
+ * Project: next-cms
+ * File Created: Tuesday, 19th April 2022 10:56:57 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Saturday, 23rd April 2022 3:22:57 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { PageComponent } from '../../types/page';
-
+//
 const initialState = {
   components: [] as PageComponent[],
 }
-
+//
 export const layoutReducer = createSlice({
   name: "layout",
   initialState,
