@@ -11,6 +11,7 @@
  */
 
 import prisma from '../prisma';
+import { PageComponent } from '../types/page';
 //
 export const componentRepo = {
     getAll,
@@ -30,12 +31,17 @@ async function getById( id : string ) {
     });
 }
 //
-async function create(title : string) {
+async function create(title : string, path: string) {
     console.log("title", title);
-    /* need to fix the creation stuff 
-    let body = {
-        title: title,
+    let bodyComponent : PageComponent= {
+        name: title,
+        path: path,
+        props: {},
+        components: [],
+        supportNestedComponent: false
     }
+    console.log("bodyComponent", bodyComponent);
+    /* need to fix the creation stuff 
     const createPage  = await prisma.page.create({ 
         data : body
     });*/

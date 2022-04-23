@@ -17,3 +17,4 @@ export interface PageComponent {
   components?: PageComponent[]
   supportNestedComponent: boolean
 }
+//
