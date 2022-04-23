@@ -15,24 +15,25 @@ import { pagesRepo } from '../../../lib/helpers/page-repo';
 //
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
+    console.log("req ", req, "res ", res);
     // need to add the filters
     switch (req.method) {
         case 'GET':
             return getPages();
         case 'POST':
-            return createUser();
+            return createPages();
         default:
             return res.status(405).end(`Method ${req.method} Not Allowed`)
     }
     //
-    function getPages() {
-        const users = pagesRepo.getAll();
-        return res.status(200).json(users);
+    async function getPages() {
+        const pages = await pagesRepo.getAll();
+        return res.status(200).json(pages);
     }
-    
-    function createUser() {
+    //
+    async function createPages() {
         try {
-            pagesRepo.create(req.body);
+            await pagesRepo.create(req.body);
             return res.status(200).json({});
         } catch (error) {
             return res.status(400).json({ message: error });

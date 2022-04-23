@@ -12,16 +12,18 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 //const { ADMIN_URL } = process.env;
-console.log("process ",process.env);
+console.log("process ", process.env);
 //
 const nextConfig = {
   reactStrictMode: true,
   env:{
     API_URI: process.env.API_URI,
+    ADMIN_URL: process.env.ADMIN_URL,
     BASE_URI: process.env.BASE_URI
   },
   publicRuntimeConfig: {
     API_URI: process.env.API_URI,
+    ADMIN_URL: process.env.ADMIN_URL,
     BASE_URI: process.env.BASE_URI
   },
   future: {
