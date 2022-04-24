@@ -11,17 +11,17 @@
  */
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { pagesRepo } from '../../../lib/helpers/page-repo';
-//import prisma from '../../../lib/prisma';
+import { PageNextApiRequest } from '../../../lib/types/request/page-request';
 //
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     console.log("req ", req, "res ", res);
-    // need to add the filters
+    // 
     switch (req.method) {
         case 'GET':
             return getPages();
         case 'POST':
-            return createPages();
+            return createPages(req);
         default:
             return res.status(405).end(`Method ${req.method} Not Allowed`)
     }
@@ -31,13 +31,15 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         return res.status(200).json(pages);
     }
     //
-    async function createPages() {
+    async function createPages(req : PageNextApiRequest) {
         try {
-            await pagesRepo.create(req.body);
+            console.log("req.body ", req.body);
+            //let page = await pagesRepo.create(req.body);
             return res.status(200).json({});
         } catch (error) {
             return res.status(400).json({ message: error });
         }
     }
+    //
 };
 //

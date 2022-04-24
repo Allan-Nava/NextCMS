@@ -55,17 +55,17 @@ async function create(title : string, path: string) {
     return page;
 }
 //
-async function update( id : number ,title : string, path: string) {
-    console.log("title", title);
+async function update( id : number ,name : string, path: string) {
+    console.log("name", name);
     let bodyComponent : PageComponent= {
-        name: title,
+        name: name,
         path: path,
         props: {},
         components: [],
         supportNestedComponent: false
     }
     let body : Prisma.ComponentUpdateInput = {
-        name: title,
+        name: name,
         property: JSON.stringify(bodyComponent),
         parent: 1
         //path: PageComponent,
