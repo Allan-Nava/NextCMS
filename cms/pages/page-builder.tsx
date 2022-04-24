@@ -55,6 +55,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   let components = await componentRepo.getAll();
   console.log("components", components);
   let availableComponents = components.map(component => {
+    console.log("component ", component.property);
     return JSON.parse(component.property);
   });
   console.log("availableComponents", availableComponents);
