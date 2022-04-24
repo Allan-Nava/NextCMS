@@ -56,7 +56,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   console.log("components", components);
   let availableComponents = components.map(component => {
     console.log("component ", component.property);
-    return JSON.parse(component.property);
+    try{
+      return JSON.parse(component.property);
+    }catch(e){
+      console.log("error", e);
+    }
   });
   console.log("availableComponents", availableComponents);
   //
