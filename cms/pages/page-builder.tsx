@@ -54,11 +54,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // run inside `async` function
   let components = await componentRepo.getAll();
   console.log("components", components);
-  //const availableComponents = await prisma.components.findMany();
+  let availableComponents = components.map(component => {
+    return JSON.parse(component.property);
+  });
+  console.log("availableComponents", availableComponents);
   //
   return {
     props: {
-      availableComponents: components // COMPONENTS RETRIEVED BY COMPONENTS API CALL
+      availableComponents: availableComponents // COMPONENTS RETRIEVED BY COMPONENTS API CALL
     }
   }
   // ...
