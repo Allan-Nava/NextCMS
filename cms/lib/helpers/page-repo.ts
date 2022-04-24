@@ -4,7 +4,7 @@
  * File Created: Friday, 22nd April 2022 8:54:55 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Saturday, 23rd April 2022 3:21:28 pm
+ * Last Modified: Sunday, 24th April 2022 10:53:04 am
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
  * Copyright 2022 - 2022 © 
@@ -19,8 +19,8 @@ export const pagesRepo = {
     getById,
     create,
     getBySlug,
-    //update,
-    //delete: _delete
+    update,
+    delete: _delete
 };
 //
 async function getAll() {
@@ -51,5 +51,22 @@ async function create(title : string, slug : string, description : string,) {
         description: description,
     }
     const page  = await prisma.page.create({data: body});
+}
+//
+async function update(id: number, title : string, slug : string, description : string,) {
+    console.log("title", title);
+    //
+    let body : Prisma.PageUpdateInput = {
+        title: title,
+        slug: slug,
+        description: description,
+    }
+    const page  = await prisma.page.update({data: body, where: {id: id }});
+}
+//
+async function _delete( id : string ) {
+    return await prisma.page.delete({
+        where: { "id": parseInt(id) }
+    });
 }
 //

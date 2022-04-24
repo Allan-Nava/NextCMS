@@ -16,8 +16,8 @@ export const entityRepo = {
     getAll,
     getById,
     create,
-    //update,
-    //delete: _delete
+    update,
+    delete: _delete
 };
 
 //
@@ -43,5 +43,24 @@ async function create(title : string) {
         data : body
     });
     return entity
+}
+//
+async function update(id: number, title : string) {
+    console.log("title", title);
+    let body : Prisma.EntityUpdateInput = {
+        name: title,
+        attribute: JSON.stringify({})
+    }
+    const entity  = await prisma.entity.update({ 
+        data : body, where : {id: id}
+    });
+    return entity
+}
+//
+async function _delete( id : string ) {
+    // need to understand if need to update the field deleted_at
+    return await prisma.entity.delete({
+        where: { "id": parseInt(id) }
+    });
 }
 //
