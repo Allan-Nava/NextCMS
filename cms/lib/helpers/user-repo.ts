@@ -12,7 +12,8 @@
 
 import prisma from '../prisma';
 import { Prisma } from '@prisma/client';
-import bcryptjs  from "bcryptjs";
+//import bcryptjs  from "bcryptjs";
+const bcrypt = require('bcryptjs');
 
 //
 export const userRepo = {
@@ -40,7 +41,7 @@ async function getById( id : string ) {
 //
 async function create(username : string, email: string, password: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
     console.log("username", username);
-    password = bcryptjs.hashSync(password, 8);
+    password = bcrypt.hashSync(password, 8);
     // need to hash the password
     let body : Prisma.UserCreateInput = {
         username: username,
@@ -71,7 +72,7 @@ async function login(username : string, password: string ){
     if (!user) {
         throw new Error('User not registered');
     }
-    const checkPassword = bcryptjs.compareSync(password, user.password)
+    const checkPassword = bcrypt.compareSync(password, user.password)
     if (!checkPassword) throw new Error('Email address or password not valid')
     //
     return user;
