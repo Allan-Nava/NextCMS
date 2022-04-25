@@ -57,8 +57,9 @@ model Entity {
 }
 model User {
   id                Int @id @default(autoincrement())
-  username          String
-  email             String
+  username          String @unique
+  email             String @unique
+  password          String  //@hasher(argon2i)
   firstName         String
   lastName          String
   isAdmin           Boolean

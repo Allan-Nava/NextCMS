@@ -35,7 +35,7 @@ async function getById( id : string ) {
 }
 //
 //
-async function create(username : string, email: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean, ) {
+async function create(username : string, email: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
     console.log("username", username);
     let body : Prisma.UserCreateInput = {
         username: username,
