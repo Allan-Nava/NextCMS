@@ -12,6 +12,7 @@
 
 import prisma from '../prisma';
 import { Prisma } from '@prisma/client'
+
 //
 export const userRepo = {
     getAll,
@@ -35,11 +36,13 @@ async function getById( id : string ) {
 }
 //
 //
-async function create(username : string, email: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
+async function create(username : string, email: string, password: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
     console.log("username", username);
+    // need to hash the password
     let body : Prisma.UserCreateInput = {
         username: username,
         email: email,
+        password: password,
         firstName: firstName,
         lastName: lastName,
         isAdmin: isAdmin,
