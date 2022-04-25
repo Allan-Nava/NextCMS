@@ -33,12 +33,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
   // run inside `async` function
   const pages = await pagesRepo.getBySlug("/");
-  pages.createdAt = pages.createdAt.toString()
+  const basePages = JSON.parse(JSON.stringify(pages));
   console.log("pages", pages);
   //
   return {
     props: {
-      pages: pages,
+      pages: basePages,
       page: [{
         name: "navbar",
         path: "./Elements/Navbar",

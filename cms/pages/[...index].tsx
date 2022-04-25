@@ -39,8 +39,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     console.log("getServerSideProps context.req.url ", context.req.url);
     const pages = await pagesRepo.getBySlug(context.req.url);
     console.log("pages", pages);
+    const basePages = JSON.parse(JSON.stringify(pages));
     return {
-      props: { pages },
+      props: { basePages },
     }
   } else {
     return {

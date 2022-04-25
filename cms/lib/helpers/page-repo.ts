@@ -26,8 +26,9 @@ export const pagesRepo = {
 async function getAll() {
     const pages = await prisma.page.findMany();
     console.info("getAll ", pages);
-    const baseObject = JSON.parse(JSON.stringify(pages)); 
-    return baseObject;
+    return pages;
+    //const baseObject = JSON.parse(JSON.stringify(pages)); 
+    //return baseObject;
 }
 //
 async function getById( id : string ) {
@@ -35,8 +36,9 @@ async function getById( id : string ) {
     const page = await prisma.page.findUnique({
         where: { "id": parseInt(id) }
     });
-    const baseObject = JSON.parse(JSON.stringify(page)); 
-    return baseObject; 
+    return page;
+    //const baseObject = JSON.parse(JSON.stringify(page)); 
+    //return baseObject; 
 }
 //
 async function getBySlug( slug : string ) {
@@ -45,8 +47,9 @@ async function getBySlug( slug : string ) {
         where: { "slug": slug }
     });
     console.info("getBySlug ", page);
-    const basePage = JSON.parse(JSON.stringify(page)); 
-    return basePage;
+    return page;
+    //const baseObject = JSON.parse(JSON.stringify(page)); 
+    //return baseObject;
 }
 //
 async function create(title : string, slug : string, description : string,) {
