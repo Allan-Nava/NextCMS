@@ -42,7 +42,7 @@ async function create(title : string, path: string) {
     }
     let body : Prisma.ComponentCreateInput = {
         name: title,
-        property: JSON.stringify(bodyComponent),
+        property: bodyComponent.toString(),
         parent: 1
         //path: PageComponent,
     }
