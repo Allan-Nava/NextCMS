@@ -33,6 +33,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
   // run inside `async` function
   const pages = await pagesRepo.getBySlug("/");
+  pages.createdAt = pages.createdAt.toString()
   console.log("pages", pages);
   //
   return {
