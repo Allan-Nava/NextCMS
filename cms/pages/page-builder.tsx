@@ -4,11 +4,12 @@
  * File Created: Sunday, 24th April 2022 11:51:06 am
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Sunday, 24th April 2022 11:51:16 am
+ * Last Modified: Monday, 25th April 2022 9:38:18 am
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
  * Copyright 2022 - 2022 © 
  */
+
 //
 import { NextPage } from 'next';
 import { DndProvider} from 'react-dnd';
@@ -20,13 +21,13 @@ import { PageComponent } from '../lib/types/page';
 import { store } from '../lib/reducers/store';
 import { Provider } from 'react-redux';
 import { componentRepo } from '../lib/helpers/component-repo';
-
+//
 interface PageBuilderProps {
   availableComponents: PageComponent[]
 }
-
+//
 const PageBuilder: NextPage<PageBuilderProps> = ({availableComponents}) => {
-  
+  //
   return (
     <Provider store={store}>
       <DndProvider backend={HTML5Backend}>
@@ -49,18 +50,20 @@ const PageBuilder: NextPage<PageBuilderProps> = ({availableComponents}) => {
 //
 // 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  console.log(context);
+  console.log("context GetServerSideProps", context);
   // API CALL TO GET ALL COMPONENTS AVAILABLE
   // run inside `async` function
   let components = await componentRepo.getAll();
   console.log("components", components);
   let availableComponents = components.map(component => {
     console.log("component ", component.property);
+    let avComponent = {};
     try{
-      return JSON.parse(component.property);
+      avComponent = JSON.parse(component.property);
     }catch(e){
       console.log("error", e);
     }
+    return avComponent;
   });
   console.log("availableComponents", availableComponents);
   //
