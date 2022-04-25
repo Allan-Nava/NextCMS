@@ -18,6 +18,7 @@ export const userRepo = {
     getAll,
     getById,
     create,
+    login,
     //update,
     //delete: _delete
 };
@@ -38,6 +39,7 @@ async function getById( id : string ) {
 //
 async function create(username : string, email: string, password: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
     console.log("username", username);
+    password = bcrypt.hashSync(password, 8);
     // need to hash the password
     let body : Prisma.UserCreateInput = {
         username: username,
@@ -58,3 +60,18 @@ async function create(username : string, email: string, password: string, firstN
     return page;
 }
 //
+async function create(username : string, password: string ){
+    //
+    const user = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+    if (!user) {
+        throw Exception('User not registered')
+    }
+    const checkPassword = bcrypt.compareSync(password, user.password)
+    if (!checkPassword) throw Exception('Email address or password not valid')
+    //
+    return user;
+}
