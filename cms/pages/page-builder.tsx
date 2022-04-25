@@ -60,6 +60,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     let avComponent = {};
     try{
       avComponent = JSON.parse(component.property);
+      console.log("avComponent ", avComponent);
     }catch(e){
       console.log("error", e);
     }
