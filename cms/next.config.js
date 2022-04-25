@@ -42,7 +42,7 @@ const nextConfig = {
     };
     return config;
   },
-  async rewrites() {
+  /*async rewrites() {
     return [
       {
         source: '/:path*',
@@ -57,7 +57,7 @@ const nextConfig = {
         destination: `${process.env.ADMIN_URL}/admin/:path*`,
       },
     ]
-  },
+  },*/
 }
 //
 module.exports = nextConfig;
