@@ -1,4 +1,3 @@
-import { userRepo } from './../../../lib/helpers/user-repo';
 /*
  * File: register.ts
  * Project: next-cms
@@ -12,7 +11,7 @@ import { userRepo } from './../../../lib/helpers/user-repo';
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { pagesRepo } from '../../../lib/helpers/page-repo';
+import { userRepo } from './../../../lib/helpers/user-repo';
 import { AuthRegisterNextApiRequest } from '../../../lib/types/request/auth-request';
 //
 //
@@ -32,4 +31,5 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         const userObject = JSON.parse(JSON.stringify(user));
         return res.status(201).json(userObject);
     }
-}
+};
+//

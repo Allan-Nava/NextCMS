@@ -16,8 +16,6 @@ import { pagesRepo } from '../lib/helpers/page-repo'
 import { PageComponent } from '../lib/types/page'
 //
 // 
-// 
-//
 interface IProps {
   page: PageComponent[]
 }
