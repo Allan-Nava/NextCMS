@@ -14,14 +14,15 @@ import prisma from '../prisma';
 import { Prisma } from '@prisma/client';
 //import bcryptjs  from "bcryptjs";
 const bcrypt = require('bcryptjs');
-
+const jwt    = require('jsonwebtoken');
+//
 //
 export const userRepo = {
     getAll,
     getById,
     create,
     login,
-    //update,
+    update,
     //delete: _delete
 };
 //
@@ -55,11 +56,11 @@ async function create(username : string, email: string, password: string, firstN
     }
     console.log("bodyComponent", body);
     //
-    const page  = await prisma.user.create({ 
+    const user  = await prisma.user.create({ 
         data : body
     });
-    console.log("createPage", page);
-    return page;
+    console.log("createUser", user);
+    return user;
 }
 //
 async function login(username : string, password: string ){
@@ -75,5 +76,20 @@ async function login(username : string, password: string ){
     const checkPassword = bcrypt.compareSync(password, user.password)
     if (!checkPassword) throw new Error('Email address or password not valid')
     //
-    return user;
+    var token = jwt.sign(user, 'shhhhh'); // need to change the private key
+    console.log("token", token);
+    return token;
+};
+//
+
+async function update(username : string, email?: string, firstName?: string, lastName?: string, isAdmin?:  boolean, isStaff?: boolean,) {
+    const user = await prisma.user.findUnique({
+        where: {
+            username: username
+        }
+    });
+    if (!user) {
+        throw new Error('User not registered');
+    }
+    //
 }
