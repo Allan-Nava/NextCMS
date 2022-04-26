@@ -14,19 +14,14 @@
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import type { AppProps } from 'next/app'
-import { useRouter } from 'next/router';
+import { store } from '../lib/reducers/store'
 import '../styles/globals.css'
-// import '../styles/sass/style.scss'
-// import '../styles/sass/style.react.scss'
+import '../styles/sass/style.scss'
+import '../styles/sass/style.react.scss'
+import { Provider } from 'react-redux'
 //
 function MyApp({ Component, pageProps }: AppProps) {
-  const router = useRouter()
-  const isAdmin = router.pathname.startsWith('/admin');
-  //console.log("isAdmin ", isAdmin);
-  return (<>
-    <Component {...pageProps} />
-    </>
-  );
+  return <Provider store={store}><Component {...pageProps} /></Provider>;
   //
 }
 //

@@ -12,12 +12,14 @@
 
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 //
+import * as auth from './auth/reducer';
 import layoutReducer from '../reducers/layout/reducer';
 import dragAndDropReducer from '../reducers/dragAndDrop/reducer';
 //
 //
 export const store = configureStore({
   reducer: {
+    auth: auth.reducer,
     layout: layoutReducer,
     dragAndDrop: dragAndDropReducer,
   },

@@ -17,8 +17,6 @@ import LayoutZone from '../components/pagebuilder/LayoutZone';
 import Sidebar from '../components/pagebuilder/Sidebar';
 import { GetServerSideProps } from 'next';
 import { PageComponent } from '../lib/types/page';
-import { store } from '../lib/reducers/store';
-import { Provider } from 'react-redux';
 
 interface PageBuilderProps {
   availableComponents: PageComponent[]
@@ -27,22 +25,20 @@ interface PageBuilderProps {
 const PageBuilder: NextPage<PageBuilderProps> = ({availableComponents}) => {
   
   return (
-    <Provider store={store}>
-      <DndProvider backend={HTML5Backend}>
-        <div className='container-fluid'>
-          <div className='row overflow-hidden'>
-            <div className='col-3'>
-              <div className='row vh-100 overflow-auto'>
-                <Sidebar components={availableComponents} />
-              </div>
-            </div>
-            <div className='col-9'>
-              <LayoutZone />
+    <DndProvider backend={HTML5Backend}>
+      <div className='container-fluid'>
+        <div className='row overflow-hidden'>
+          <div className='col-3'>
+            <div className='row vh-100 overflow-auto'>
+              <Sidebar components={availableComponents} />
             </div>
           </div>
+          <div className='col-9'>
+            <LayoutZone />
+          </div>
         </div>
-      </DndProvider>
-    </Provider>
+      </div>
+    </DndProvider>
   );
 }
 //
