@@ -1,3 +1,14 @@
+/*
+ * File: reducer.ts
+ * Project: next-cms
+ * File Created: Tuesday, 26th April 2022 10:57:59 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Tuesday, 26th April 2022 11:19:30 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
 import { Action } from '@reduxjs/toolkit'
 import { persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
