@@ -1,12 +1,23 @@
+/*
+ * File: login.tsx
+ * Project: next-cms
+ * File Created: Tuesday, 26th April 2022 10:57:59 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Wednesday, 27th April 2022 7:43:17 am
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
 import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import * as Yup from 'yup'
 import clsx from 'clsx'
 import { actions } from '../lib/reducers/auth/reducer'
 import { useFormik } from 'formik'
-import { login } from '../lib/crud/AuthCrud'
-
-
+import { login } from '../lib/crud/AuthCRUD'
+//
+//
 const loginSchema = Yup.object().shape({
   email: Yup.string()
     .email('Wrong email format')
@@ -17,14 +28,14 @@ const loginSchema = Yup.object().shape({
     .min(3, 'Minimum 3 symbols')
     .max(50, 'Maximum 50 symbols')
     .required('Password is required'),
-})
-
+});
+//
 const initialValues = {
   email: '',
   password: '',
 }
-
-
+//
+//
 const Login = () => {
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
@@ -141,5 +152,6 @@ const Login = () => {
     </div>
   </div>
 }
-
-export default Login
+//
+export default Login;
+//
