@@ -1,3 +1,15 @@
+/*
+ * File: AuthCRUD.ts
+ * Project: next-cms
+ * File Created: Tuesday, 26th April 2022 10:57:59 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Wednesday, 27th April 2022 7:33:08 am
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
+//
 import axios from 'axios'
 import { JWTModelToUserModel, JWTModel } from '../types/user'
 import jwt_decode from 'jwt-decode'
