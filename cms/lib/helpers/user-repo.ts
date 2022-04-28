@@ -40,9 +40,11 @@ async function getById( id : string ) {
 }
 //
 //
-async function create(username : string, email: string, password: string, firstName: string, lastName: string, isAdmin:  boolean, isStaff: boolean,) {
+async function create(username : string, email: string, password: string, firstName: string, lastName: string, isAdmin?:  boolean, isStaff?: boolean,) {
     console.log("username", username);
     password = bcrypt.hashSync(password, 8);
+    if (isAdmin === undefined) isAdmin = false;
+    if (isStaff === undefined) isStaff = false;
     // need to hash the password
     let body : Prisma.UserCreateInput = {
         username: username,

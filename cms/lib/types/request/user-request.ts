@@ -23,6 +23,10 @@ export interface UserNextApiRequest extends NextApiRequest {
 export interface UserCreateNextApiRequest extends NextApiRequest {
     body: {
       username: string;
+      email?: string;
+      password: string;
+      firstName: string;
+      lastName: string;
     };
 }
 //
