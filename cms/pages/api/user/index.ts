@@ -11,13 +11,12 @@
  */
 //
 import type { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
 import { UserCreateNextApiRequest } from '../../../lib/types/request/user-request';
 import { userRepo } from './../../../lib/helpers/user-repo';
 //
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    console.log("req ", req, "res ", res);
+    //console.log("req ", req, "res ", res);
     // 
     switch (req.method) {
         case 'GET':
@@ -29,6 +28,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     }
     //
     async function getUsers() {
+        console.log("getUsers");
         const users = await userRepo.getAll();
         return res.status(200).json(users);
     }
