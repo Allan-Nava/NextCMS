@@ -30,3 +30,8 @@ export interface UserCreateNextApiRequest extends NextApiRequest {
     };
 }
 //
+export interface UserDetailNextApiRequest extends NextApiRequest {
+  body: {
+    id: string;
+  };
+}

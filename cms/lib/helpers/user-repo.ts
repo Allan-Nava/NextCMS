@@ -20,6 +20,7 @@ const jwt    = require('jsonwebtoken');
 export const userRepo = {
     getAll,
     getById,
+    getByUsername,
     create,
     login,
     update,
@@ -36,6 +37,13 @@ async function getById( id : string ) {
     console.info("getById ", id);
     return await prisma.user.findUnique({
         where: { "id": parseInt(id) }
+    });
+}
+//
+async function getByUsername( username : string ) {
+    console.info("getByUsername ", username);
+    return await prisma.user.findUnique({
+        where: { "username": username }
     });
 }
 //
