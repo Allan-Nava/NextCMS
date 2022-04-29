@@ -26,5 +26,11 @@ export interface PageCreateNextApiRequest extends NextApiRequest {
     };
 }
 //
+export interface PageDetailNextApiRequest extends NextApiRequest {
+    body: {
+      id: string;
+    };
+}
+//
 //export default { PageNextApiRequest , CreatePageNextApiRequest  };
 //

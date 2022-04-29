@@ -19,8 +19,9 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     //
     if (req.method === 'GET') {
       //handleGET(userId, res)
+      getUser(req);
     } else if (req.method === 'DELETE') {
-      handleDELETE(userId, res)
+      handleDELETE(userId, res);
     } else {
       throw new Error(
         `The HTTP ${req.method} method is not supported at this route.`
