@@ -19,3 +19,9 @@ export interface ComponentNextApiRequest extends NextApiRequest {
     };
 }
 //
+export interface ComponentDetailNextApiRequest extends NextApiRequest {
+    body: {
+        id: string;
+    };
+}
+//

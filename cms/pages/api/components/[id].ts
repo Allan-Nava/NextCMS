@@ -4,21 +4,22 @@
  * File Created: Tuesday, 5th April 2022 9:28:17 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Tuesday, 5th April 2022 9:28:20 pm
+ * Last Modified: Saturday, 30th April 2022 11:37:22 am
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
  * Copyright 2022 - 2022 © 
  */
-
 import type { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
+import { componentRepo } from './../../../lib/helpers/component-repo';
+import { ComponentDetailNextApiRequest } from '../../../lib/types/request/component-request';
 //
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id;
     //
     console.log("id ", id);
     if (req.method === 'GET') {
-      handleGET(id, res)
+      //handleGET(id, res)
+      getComponent(req);
     } else if (req.method === 'DELETE') {
       handleDELETE(id, res)
     } else {
@@ -26,6 +27,18 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         `The HTTP ${req.method} method is not supported at this route.`
       )
     }
+    //
+    async function getComponent(req : ComponentDetailNextApiRequest) {
+      try {
+          console.log("req.body ", req.body);
+          // req.body.email?
+          let user = await componentRepo.getById(req.body.id);
+          return res.status(200).json(user);
+      } catch (error) {
+          return res.status(400).json({ message: error });
+      }
+    }
+    //
 }
 
 // GET /api/components/:id
