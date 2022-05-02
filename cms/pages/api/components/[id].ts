@@ -19,28 +19,42 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     console.log("id ", id);
     if (req.method === 'GET') {
       //handleGET(id, res)
-      getComponent(req);
+      getComponent(req ,res );
     } else if (req.method === 'DELETE') {
-      handleDELETE(id, res)
+      //handleDELETE(id, res)
+      deleteComponent(req ,res );
     } else {
       throw new Error(
         `The HTTP ${req.method} method is not supported at this route.`
       )
     }
-    //
-    async function getComponent(req : ComponentDetailNextApiRequest) {
-      try {
-          console.log("req.body ", req.body);
-          // req.body.email?
-          let user = await componentRepo.getById(req.body.id);
-          return res.status(200).json(user);
-      } catch (error) {
-          return res.status(400).json({ message: error });
-      }
-    }
-    //
+    
 }
-
+//
+// GET /api/components/:id
+async function getComponent(req : ComponentDetailNextApiRequest, res: NextApiResponse) {
+  try {
+      console.log("req.body ", req.body);
+      // req.body.email?
+      let user = await componentRepo.getById(req.body.id);
+      return res.status(200).json(user);
+  } catch (error) {
+      return res.status(400).json({ message: error });
+  }
+}
+//
+// DELETE /api/components/:id
+async function deleteComponent(req : ComponentDetailNextApiRequest, res: NextApiResponse) {
+  try {
+      console.log("req.body ", req.body);
+      // req.body.email?
+      let user = await componentRepo.delete(req.body.id);
+      return res.status(200).json(user);
+  } catch (error) {
+      return res.status(400).json({ message: error });
+  }
+}
+//
 // GET /api/components/:id
 async function handleGET(id : string|string[] , res: NextApiResponse) {
     
