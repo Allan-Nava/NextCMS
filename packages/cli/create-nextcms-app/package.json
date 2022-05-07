@@ -1,0 +1,49 @@
+{
+    "name": "create-nextcms-app",
+    "version": "4.1.9",
+    "description": "Generate a new NextCMS application.",
+    "keywords": [
+      "create-nextcms-app",
+      "create",
+      "new",
+      "generate",
+      "nextcms"
+    ],
+    "homepage": "https://nextcms.io",
+    "bugs": {
+      "url": "https://github.com/Allan-Nava/NextCMS/issues"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/Allan-Nava/NextCMS.git"
+    },
+    "license": "SEE LICENSE IN LICENSE",
+    "author": {
+      "name": "nextcms Solutions SAS",
+      "email": "hi@nextcms.io",
+      "url": "https://nextcms.io"
+    },
+    "maintainers": [
+      {
+        "name": "nextcms Solutions SAS",
+        "email": "hi@nextcms.io",
+        "url": "https://nextcms.io"
+      }
+    ],
+    "main": "./index.js",
+    "bin": {
+      "create-nextcms-app": "./index.js"
+    },
+    "scripts": {
+      "test": "echo \"no tests yet\""
+    },
+    "dependencies": {
+      "@nextcms/generate-new": "4.1.9",
+      "commander": "6.1.0",
+      "inquirer": "8.2.0"
+    },
+    "engines": {
+      "node": ">=12.22.0 <=16.x.x",
+      "npm": ">=6.0.0"
+    }
+  }
