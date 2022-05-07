@@ -1,7 +1,7 @@
 {
     "name": "@nextcms/nextcms",
     "version": "0.1.0",
-    "description": "An open source Next CMS solution to create and manage your own API.",
+    "description": "An open source Next CMS solution to create and manage your own next cms.",
     "keywords": [
       "nextcms",
       "cms",

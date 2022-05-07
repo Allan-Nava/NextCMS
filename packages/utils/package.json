@@ -1,0 +1,50 @@
+{
+    "name": "@nextcms/utils",
+    "version": "0.1.0",
+    "description": "An open source Next CMS solution to create and manage your own API.",
+    "keywords": [
+      "nextcms",
+      "cms",
+      "utils"
+    ],
+    "homepage": "https://nextcms.io",
+    "bugs": {
+      "url": "https://github.com/Allan-Nava/Next-CMS/issues"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/Allan-Nava/Next-CMS.git"
+    },
+    "license": "SEE LICENSE IN LICENSE",
+    "author": {
+      "name": "NextCMS",
+      "email": "hi@nextcms.io",
+      "url": "https://nextcms.io"
+    },
+    "maintainers": [
+    ],
+    "main": "./lib",
+    "directories": {
+      "lib": "./lib",
+      "bin": "./bin"
+    },
+    "scripts": {
+      "postinstall": "node lib/utils/success.js",
+      "test:unit": "jest --verbose"
+    },
+    "dependencies": {
+      
+    "@sindresorhus/slugify": "1.1.0",
+    "date-fns": "2.24.0",
+    "http-errors": "1.8.0",
+    "lodash": "4.17.21",
+    "yup": "0.32.9"
+    },
+    "devDependencies": {
+      "supertest": "^6.1.6"
+    },
+    "engines": {
+      "node": ">=12.22.0 <=16.x.x",
+      "npm": ">=6.0.0"
+    }
+  }
