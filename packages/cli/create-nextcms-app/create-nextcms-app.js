@@ -71,4 +71,5 @@ function generateApp(projectName, options) {
     };
   
     return generateApp(directory, generateNextCMSAppOptions);
-  }
+};
+//

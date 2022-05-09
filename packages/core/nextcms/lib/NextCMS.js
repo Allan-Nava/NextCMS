@@ -23,6 +23,7 @@ const createConfigProvider = require('./core/registries/config');
 //
 class NextCMS {
     constructor(opts = {}) {
+        console.log("🚀 NextCMS is starting...");
         destroyOnSignal(this);
         const rootDir = opts.dir || process.cwd();
         const appConfig = loadConfiguration(rootDir, opts);
