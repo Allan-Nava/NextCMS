@@ -1,0 +1,55 @@
+{
+    "name": "@nextcms/generators",
+    "version": "0.1.0",
+    "description": "Generate a new NextCMS application.",
+    "keywords": [
+      "generate",
+      "generator",
+      "nextcms"
+    ],
+    "homepage": "https://nextCMS.io",
+    "bugs": {
+      "url": "https://github.comAllan-Nava/NextCMS/issues"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/Allan-Nava/NextCMS.git"
+    },
+    "license": "SEE LICENSE IN LICENSE",
+    "author": {
+      "name": "NextCMS Solutions SAS",
+      "email": "hi@nextcms.io",
+      "url": "https://nextcms.io"
+    },
+    "maintainers": [
+      {
+        "name": "NextCMS Solutions SAS",
+        "email": "hi@nextcms.io",
+        "url": "https://nextcms.io"
+      }
+    ],
+    "main": "./lib/index.js",
+    "directories": {
+      "lib": "./lib"
+    },
+    "scripts": {
+      "test": "echo \"no tests yet\""
+    },
+    "dependencies": {
+      "@sentry/node": "6.19.6",
+      "chalk": "^4.1.1",
+      "execa": "^1.0.0",
+      "fs-extra": "10.0.0",
+      "inquirer": "8.2.0",
+      "lodash": "4.17.21",
+      "node-fetch": "^2.6.1",
+      "node-machine-id": "^1.1.10",
+      "ora": "^5.4.0",
+      "tar": "6.1.11",
+      "uuid": "^3.3.2"
+    },
+    "engines": {
+      "node": ">=12.22.0 <=16.x.x",
+      "npm": ">=6.0.0"
+    }
+  }
