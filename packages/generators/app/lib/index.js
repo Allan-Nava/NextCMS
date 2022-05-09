@@ -39,7 +39,7 @@ const generateNewApp = (projectDirectory, cliArguments) => {
       debug: cliArguments.debug !== undefined,
       quick: cliArguments.quickstart,
       template: cliArguments.template,
-      packageJsonStrapi: {
+      packageJsonNextCMS: {
         template: cliArguments.template,
         starter: cliArguments.starter,
       },
