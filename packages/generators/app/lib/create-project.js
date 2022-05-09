@@ -35,6 +35,8 @@ module.exports = async function createProject(scope, { client, connection, depen
   const { rootPath } = scope;
   const resources = join(__dirname, 'resources');
 
+  console.log(`NextCMS application. `, resources);
+  // need to create a NextJS empty project
   try {
     // copy files
     await fse.copy(join(resources, 'files'), rootPath);
