@@ -53,10 +53,19 @@ const generateNewApp = (projectDirectory, cliArguments) => {
       nextCMSDependencies: [
         '@nextcms/nextcms'
       ],
-      additionalsDependencies: {},
+      additionalsDependencies: {
+        "bcryptjs": "^2.4.3",
+        "jsonwebtoken": "^8.5.1",
+        "next": "12.1.1",
+        "pg": "^8.7.3",
+        "react": "17.0.2",
+        "react-dom": "17.0.2",
+        "reflect-metadata": "^0.1.13",
+        "sass-loader": "^12.6.0"  
+      },
     };
     initCancelCatcher(scope);
-
+    //
     return generateNew(scope).catch(error => {
       console.error(error);
       return captureException(error).then(() => {
