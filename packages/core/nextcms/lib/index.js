@@ -11,7 +11,7 @@
  */
 const NextCMS = require('./NextCMS');
 //
-NextCMS.factories = require('./factories');
+//NextCMS.factories = require('./factories');
 //
 module.exports = NextCMS;
 //
