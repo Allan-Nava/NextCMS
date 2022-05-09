@@ -27,7 +27,7 @@ const mergeTemplate = require('./utils/merge-template.js');
 
 const packageJSON = require('./resources/json/package.json');
 const createEnvFile = require('./resources/templates/env.js');
-
+//
 module.exports = async function createProject(scope, { client, connection, dependencies }) {
   console.log(`Creating a new NextCMS application at ${chalk.green(scope.rootPath)}.`);
   console.log('Creating files.');

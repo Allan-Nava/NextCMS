@@ -1,3 +1,14 @@
+/*
+ * File: components.js
+ * Project: @nextcms/generators
+ * File Created: Monday, 9th May 2022 7:51:39 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Monday, 9th May 2022 7:56:03 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
 'use strict';
 //
 //

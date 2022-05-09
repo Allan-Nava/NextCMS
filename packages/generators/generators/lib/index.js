@@ -1,9 +1,20 @@
+/*
+ * File: index.js
+ * Project: @nextcms/generators
+ * File Created: Monday, 9th May 2022 7:51:39 pm
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Last Modified: Monday, 9th May 2022 7:55:16 pm
+ * Modified By: Allan Nava (allan.nava@hiway.media>)
+ * -----
+ * Copyright 2022 - 2022 © 
+ */
 'use strict';
-
+//
 const { join } = require('path');
 const { Plop, run } = require('plop');
 const nodePlop = require('node-plop');
-
+//
 /**
  * Starts the Plop CLI programmatically
  */
