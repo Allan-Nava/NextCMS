@@ -1,6 +1,6 @@
 {
     "name": "create-nextcms-app",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Generate a new NextCMS application.",
     "keywords": [
       "create-nextcms-app",
@@ -38,7 +38,7 @@
       "test": "echo \"no tests yet\""
     },
     "dependencies": {
-      "@nextcms/generate-new": "4.1.9",
+      "@nextcms/generate-new": ">=0.1.0 <=1.x.x",
       "commander": "6.1.0",
       "inquirer": "8.2.0"
     },
