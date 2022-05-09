@@ -43,7 +43,7 @@ const generateNewApp = (projectDirectory, cliArguments) => {
         template: cliArguments.template,
         starter: cliArguments.starter,
       },
-      uuid: (process.env.STRAPI_UUID_PREFIX || '') + uuid(),
+      uuid: (process.env.NEXTCMS_UUID_PREFIX || '') + uuid(),
       docker: process.env.DOCKER === 'true',
       deviceId: machineID(),
       tmpPath,
