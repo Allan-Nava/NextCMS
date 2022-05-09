@@ -124,7 +124,7 @@ module.exports = opts => {
       ...packageJsonNextCMS,
     },
     engines: {
-      node: '>=12.x.x <=16.x.x',
+      node: '>=12.x.x <=17.x.x',
       npm: '>=6.0.0',
     },
     license: 'MIT',
