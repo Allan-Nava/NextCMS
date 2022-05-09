@@ -17,6 +17,8 @@ const { isFunction } = require('lodash/fp');
 const loadConfiguration = require('./core/app-configuration');
 const { destroyOnSignal } = require('./utils/signals');
 //
+const ee = require('./utils/ee');
+const loaders = require('./core/loaders');
 const createConfigProvider = require('./core/registries/config');
 //
 class NextCMS {
@@ -174,4 +176,13 @@ class NextCMS {
     }
     //
 }
+//
+//
+module.exports = options => {
+    const nextcms = new NextCMS(options);
+    global.nextcms = nextcms;
+    return nextcms;
+};
+//
+module.exports.NextCMS = NextCMS;
 //
