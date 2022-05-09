@@ -38,7 +38,7 @@ function generateApp(projectName, options) {
       console.error('Please specify the <directory> of your project when using --quickstart');
       process.exit(1);
     }
-  
+    console.log("options ", options);
     return generateNewApp(projectName, options).then(() => {
       if (process.platform === 'win32') {
         process.exit(0);
@@ -49,21 +49,6 @@ function generateApp(projectName, options) {
   async function initProject(projectName, program) {
     if (projectName) {
       await checkInstallPath(resolve(projectName));
-    }
-  
-    const hasDatabaseOptions = databaseOptions.some(opt => program[opt]);
-  
-    if (program.quickstart && hasDatabaseOptions) {
-      console.error(
-        `The quickstart option is incompatible with the following options: ${databaseOptions.join(
-          ', '
-        )}`
-      );
-      process.exit(1);
-    }
-  
-    if (hasDatabaseOptions) {
-      program.quickstart = false; // Will disable the quickstart question because != 'undefined'
     }
   
     if (program.quickstart) {
