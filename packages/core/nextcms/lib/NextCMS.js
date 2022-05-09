@@ -44,6 +44,13 @@ class NextCMS {
     get EE() {
         return ee({ dir: this.dirs.root, logger: this.log });
     }
+    get plugins() {
+      return this.container.get('plugins').getAll();
+    }
+
+    plugin(name) {
+      return this.container.get('plugins').get(name);
+    }
     //
     async start() {
         try {
@@ -67,22 +74,6 @@ class NextCMS {
           ...Object.values(nextcms.components),
         ];
     
-        this.db = await Database.init({
-          ...this.config.get('database'),
-          models: Database.transformContentTypes(contentTypes),
-        });
-    
-        this.store = createCoreStore({ db: this.db });
-        this.webhookStore = createWebhookStore({ db: this.db });
-    
-        this.entityValidator = entityValidator;
-        this.entityService = createEntityService({
-            nextcms: this,
-          db: this.db,
-          eventHub: this.eventHub,
-          entityValidator: this.entityValidator,
-        });
-    
         const cronTasks = this.config.get('server.cron.tasks', {});
         this.cron.add(cronTasks);
     
@@ -90,9 +81,6 @@ class NextCMS {
     
     
         await this.startWebhooks();
-    
-        await this.server.initMiddlewares();
-        await this.server.initRouting();
     
         await this.runLifecyclesFunctions(LIFECYCLES.BOOTSTRAP);
     
