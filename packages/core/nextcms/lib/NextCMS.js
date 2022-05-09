@@ -17,6 +17,8 @@ const { isFunction } = require('lodash/fp');
 const loadConfiguration = require('./core/app-configuration');
 const { destroyOnSignal } = require('./utils/signals');
 //
+const createConfigProvider = require('./core/registries/config');
+//
 class NextCMS {
     constructor(opts = {}) {
         destroyOnSignal(this);
@@ -24,6 +26,152 @@ class NextCMS {
         const appConfig = loadConfiguration(rootDir, opts);
         this.container = createContainer(this);
         this.container.register('config', createConfigProvider(appConfig));
+        //
+        this.dirs = utils.getDirs(rootDir, { nextcms: this });
+        //
+        this.isLoaded = false;
+        this.reload = this.reload();
+        this.log = createLogger(this.config.get('logger', {}));
+        //
     }
+    //
+    get config() {
+        return this.container.get('config');
+    }
+    //
+    get EE() {
+        return ee({ dir: this.dirs.root, logger: this.log });
+    }
+    //
+    async start() {
+        try {
+        if (!this.isLoaded) {
+            await this.load();
+        }
+
+        await this.listen();
+
+        return this;
+        } catch (error) {
+        return this.stopWithError(error);
+        }
+    }
+    //
+    async bootstrap() {
+        const contentTypes = [
+          coreStoreModel,
+          webhookModel,
+          ...Object.values(nextcms.contentTypes),
+          ...Object.values(nextcms.components),
+        ];
+    
+        this.db = await Database.init({
+          ...this.config.get('database'),
+          models: Database.transformContentTypes(contentTypes),
+        });
+    
+        this.store = createCoreStore({ db: this.db });
+        this.webhookStore = createWebhookStore({ db: this.db });
+    
+        this.entityValidator = entityValidator;
+        this.entityService = createEntityService({
+            nextcms: this,
+          db: this.db,
+          eventHub: this.eventHub,
+          entityValidator: this.entityValidator,
+        });
+    
+        const cronTasks = this.config.get('server.cron.tasks', {});
+        this.cron.add(cronTasks);
+    
+        this.telemetry.bootstrap();
+    
+    
+        await this.startWebhooks();
+    
+        await this.server.initMiddlewares();
+        await this.server.initRouting();
+    
+        await this.runLifecyclesFunctions(LIFECYCLES.BOOTSTRAP);
+    
+        this.cron.start();
+    
+        return this;
+    }
+    
+    async load() {
+        await this.register();
+        await this.bootstrap();
+    
+        this.isLoaded = true;
+    
+        return this;
+    }
+    
+    async startWebhooks() {
+        const webhooks = await this.webhookStore.findWebhooks();
+        webhooks.forEach(webhook => this.webhookRunner.add(webhook));
+    }
+    
+    reload() {
+        const state = {
+          shouldReload: 0,
+        };
+    
+        const reload = function() {
+          if (state.shouldReload > 0) {
+            // Reset the reloading state
+            state.shouldReload -= 1;
+            reload.isReloading = false;
+            return;
+          }
+    
+          if (this.config.get('autoReload')) {
+            process.send('reload');
+          }
+        };
+    
+        Object.defineProperty(reload, 'isWatching', {
+          configurable: true,
+          enumerable: true,
+          set(value) {
+            // Special state when the reloader is disabled temporarly (see GraphQL plugin example).
+            if (state.isWatching === false && value === true) {
+              state.shouldReload += 1;
+            }
+            state.isWatching = value;
+          },
+          get() {
+            return state.isWatching;
+          },
+        });
+    
+        reload.isReloading = false;
+        reload.isWatching = true;
+    
+        return reload;
+    }
+    //
+    stopWithError(err, customMessage) {
+        this.log.debug(`⛔️ Server wasn't able to start properly.`);
+        if (customMessage) {
+            this.log.error(customMessage);
+        }
+    
+        this.log.error(err);
+        return this.stop();
+    }
+    //
+    stop(exitCode = 1) {
+        this.destroy();
+    
+        if (this.config.get('autoReload')) {
+            process.send('stop');
+        }
+    
+        // Kill process
+        process.exit(exitCode);
+    }
+    //
 }
 //
