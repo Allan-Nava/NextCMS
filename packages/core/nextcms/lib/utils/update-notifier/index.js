@@ -23,10 +23,10 @@ const boxenOptions = {
 const getUpdateMessage = (newVersion, currentVersion) => {
   const currentVersionLog = chalk.dim(currentVersion);
   const newVersionLog = chalk.green(newVersion);
-  const releaseLink = chalk.bold('https://github.com/nextcms/nextcms/releases');
+  const releaseLink = chalk.bold('https://github.com/Allan-Nava/nextcms/releases');
 
   return `
-A new version of Strapi is available ${currentVersionLog} → ${newVersionLog}
+A new version of NextCMS is available ${currentVersionLog} → ${newVersionLog}
 Check out the new releases at: ${releaseLink}
 `.trim();
 };

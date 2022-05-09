@@ -34,7 +34,7 @@ async function getPackageInfo(packageName) {
 async function getTemplatePackageInfo(template) {
   // Check if template is a shorthand
   try {
-    const longhand = `@strapi/template-${template}`;
+    const longhand = `@nextcms/template-${template}`;
     const packageInfo = await getPackageInfo(longhand);
     // Hasn't crashed so it is indeed a shorthand
     return packageInfo;

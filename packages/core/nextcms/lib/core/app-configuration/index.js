@@ -23,7 +23,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 const loadConfigDir = require('./config-loader');
 
-const { version: strapiVersion } = require(path.join(__dirname, '../../../package.json'));
+const { version: NextCMSVersion } = require(path.join(__dirname, '../../../package.json'));
 
 const defaultConfig = {
   server: {
@@ -54,11 +54,11 @@ module.exports = (dir, initialConfig = {}) => {
     serveAdminPanel,
     autoReload,
     environment: process.env.NODE_ENV,
-    uuid: _.get(pkgJSON, 'strapi.uuid'),
-    packageJsonNextCMS: _.omit(_.get(pkgJSON, 'strapi', {}), 'uuid'),
+    uuid: _.get(pkgJSON, 'nextcms.uuid'),
+    packageJsonNextCMS: _.omit(_.get(pkgJSON, 'nextcms', {}), 'uuid'),
     info: {
       ...pkgJSON,
-      strapi: strapiVersion,
+      nextcms: nextCMSVersion,
     },
   };
 

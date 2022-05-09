@@ -18,12 +18,12 @@
 
 module.exports = opts => {
   const {
-    strapiDependencies,
+    nextCMSDependencies,
     additionalsDependencies,
-    strapiVersion,
+    nextCMSVersion,
     projectName,
     uuid,
-    packageJsonStrapi,
+    packageJsonNextCMS,
   } = opts;
 
   // Finally, return the JSON.

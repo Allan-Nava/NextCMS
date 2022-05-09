@@ -2,7 +2,7 @@
 
 const { join, resolve } = require('path');
 
-const getDirs = (root, { strapi }) => ({
+const getDirs = (root, { nextcms }) => ({
   root,
   src: join(root, 'src'),
   api: join(root, 'src', 'api'),
@@ -11,7 +11,7 @@ const getDirs = (root, { strapi }) => ({
   policies: join(root, 'src', 'policies'),
   middlewares: join(root, 'src', 'middlewares'),
   config: join(root, 'config'),
-  public: resolve(root, strapi.config.get('server.dirs.public')),
+  public: resolve(root, nextcms.config.get('server.dirs.public')),
 });
 
 module.exports = getDirs;

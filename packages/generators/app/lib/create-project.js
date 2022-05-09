@@ -29,7 +29,7 @@ const packageJSON = require('./resources/json/package.json');
 const createEnvFile = require('./resources/templates/env.js');
 
 module.exports = async function createProject(scope, { client, connection, dependencies }) {
-  console.log(`Creating a new Strapi application at ${chalk.green(scope.rootPath)}.`);
+  console.log(`Creating a new NextCMS application at ${chalk.green(scope.rootPath)}.`);
   console.log('Creating files.');
 
   const { rootPath } = scope;
@@ -54,12 +54,12 @@ module.exports = async function createProject(scope, { client, connection, depen
     await fse.writeJSON(
       join(rootPath, 'package.json'),
       packageJSON({
-        strapiDependencies: scope.strapiDependencies,
+        nextCMSDependencies: scope.nextCMSDependencies,
         additionalsDependencies: dependencies,
-        strapiVersion: scope.strapiVersion,
+        nextCMSVersion: scope.nextCMSVersion,
         projectName: _.kebabCase(scope.name),
         uuid: scope.uuid,
-        packageJsonStrapi: scope.packageJsonStrapi,
+        packageJsonNextCMS: scope.packageJsonNextCMS,
       }),
       {
         spaces: 2,
@@ -158,16 +158,16 @@ module.exports = async function createProject(scope, { client, connection, depen
   console.log();
   console.log(`  ${cmd} develop`);
   console.log(
-    '  Start Strapi in watch mode. (Changes in Strapi project files will trigger a server restart)'
+    '  Start NextCMS in watch mode. (Changes in NextCMS project files will trigger a server restart)'
   );
   console.log();
   console.log(`  ${cmd} start`);
-  console.log('  Start Strapi without watch mode.');
+  console.log('  Start NextCMS without watch mode.');
   console.log();
   console.log(`  ${cmd} build`);
-  console.log('  Build Strapi admin panel.');
+  console.log('  Build NextCMS admin panel.');
   console.log();
-  console.log(`  ${cmd} strapi`);
+  console.log(`  ${cmd} NextCMS`);
   console.log(`  Display all available commands.`);
   console.log();
   console.log('You can start by doing:');

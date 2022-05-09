@@ -23,7 +23,7 @@ const program = new Command();
 
 const packageJSON = require('../package.json');
 
-const checkCwdIsStrapiApp = name => {
+const checkCwdIsNextCMSApp = name => {
   let logErrorAndExit = () => {
     console.log(
       `You need to run ${yellow(
@@ -44,7 +44,7 @@ const checkCwdIsStrapiApp = name => {
 };
 
 const getLocalScript = name => (...args) => {
-  checkCwdIsStrapiApp(name);
+  checkCwdIsNextCMSApp(name);
 
   const cmdPath = resolveCwd.silent(`@nextcms/nextcms/lib/commands/${name}`);
   if (!cmdPath) {
@@ -122,7 +122,7 @@ program
   .command('generate')
   .description('Launch the interactive API generator')
   .action(() => {
-    checkCwdIsStrapiApp('generate');
+    checkCwdIsNextCMSApp('generate');
     process.argv.splice(2, 1);
     require('@nextcms/generators').runCLI();
   });

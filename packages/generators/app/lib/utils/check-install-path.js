@@ -27,7 +27,7 @@ module.exports = async rootPath => {
       stopProcess(
         `⛔️ ${chalk.green(
           rootPath
-        )} is not a directory. Make sure to create a Strapi application in an empty directory.`
+        )} is not a directory. Make sure to create a NextCMS application in an empty directory.`
       );
       process.exit(1);
     }
@@ -35,7 +35,7 @@ module.exports = async rootPath => {
     const files = await fse.readdir(rootPath);
     if (files.length > 1) {
       stopProcess(
-        `⛔️ You can only create a Strapi app in an empty directory.\nMake sure ${chalk.green(
+        `⛔️ You can only create a NextCMS app in an empty directory.\nMake sure ${chalk.green(
           rootPath
         )} is empty.`
       );

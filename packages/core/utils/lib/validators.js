@@ -47,9 +47,9 @@ yup.addMethod(yup.string, 'isCamelCase', isCamelCase);
 yup.addMethod(yup.string, 'isKebabCase', isKebabCase);
 yup.addMethod(yup.object, 'onlyContainsFunctions', onlyContainsFunctions);
 
-class StrapiIDSchema extends MixedSchemaType {
+class NextCMSIDSchema extends MixedSchemaType {
   constructor() {
-    super({ type: 'strapiID' });
+    super({ type: 'nextCMSID' });
   }
 
   _typeCheck(value) {
@@ -57,7 +57,7 @@ class StrapiIDSchema extends MixedSchemaType {
   }
 }
 
-yup.strapiID = () => new StrapiIDSchema();
+yup.nextCMSID = () => new NextCMSIDSchema();
 
 const handleYupError = (error, errorMessage) => {
   throw new YupValidationError(error, errorMessage);
