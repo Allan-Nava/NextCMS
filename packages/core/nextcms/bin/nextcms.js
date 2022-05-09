@@ -24,6 +24,7 @@ const program = new Command();
 const packageJSON = require('../package.json');
 
 const checkCwdIsNextCMSApp = name => {
+  console.log("name ",name);
   let logErrorAndExit = () => {
     console.log(
       `You need to run ${yellow(
@@ -174,60 +175,6 @@ program
   .option('-f, --file <file>', 'Input file, default input is stdin')
   .option('-s, --strategy <strategy>', 'Strategy name, one of: "replace", "merge", "keep"')
   .action(getLocalScript('configurationRestore'));
-
-// Admin
-program
-  .command('admin:create-user')
-  .alias('admin:create')
-  .description('Create a new admin')
-  .option('-e, --email <email>', 'Email of the new admin')
-  .option('-p, --password <password>', 'Password of the new admin')
-  .option('-f, --firstname <first name>', 'First name of the new admin')
-  .option('-l, --lastname <last name>', 'Last name of the new admin')
-  .action(getLocalScript('admin-create'));
-
-program
-  .command('admin:reset-user-password')
-  .alias('admin:reset-password')
-  .description("Reset an admin user's password")
-  .option('-e, --email <email>', 'The user email')
-  .option('-p, --password <password>', 'New password for the user')
-  .action(getLocalScript('admin-reset'));
-
-program
-  .command('routes:list')
-  .description('List all the application routes')
-  .action(getLocalScript('routes/list'));
-
-program
-  .command('middlewares:list')
-  .description('List all the application middlewares')
-  .action(getLocalScript('middlewares/list'));
-
-program
-  .command('policies:list')
-  .description('List all the application policies')
-  .action(getLocalScript('policies/list'));
-
-program
-  .command('content-types:list')
-  .description('List all the application content-types')
-  .action(getLocalScript('content-types/list'));
-
-program
-  .command('hooks:list')
-  .description('List all the application hooks')
-  .action(getLocalScript('hooks/list'));
-
-program
-  .command('services:list')
-  .description('List all the application services')
-  .action(getLocalScript('services/list'));
-
-program
-  .command('controllers:list')
-  .description('List all the application controllers')
-  .action(getLocalScript('controllers/list'));
 
 //    `$ nextcms opt-out-telemetry`
 program
