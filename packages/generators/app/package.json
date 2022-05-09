@@ -1,6 +1,6 @@
 {
     "name": "@nextcms/generate-new",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "description": "Generate a new NextCMS application.",
     "keywords": [
       "generate",
