@@ -1,6 +1,6 @@
 {
     "name": "@nextcms/generators",
-    "version": "0.1.0",
+    "version": "0.1.01",
     "description": "Generate a new NextCMS application.",
     "keywords": [
       "generate",
@@ -9,7 +9,7 @@
     ],
     "homepage": "https://nextCMS.io",
     "bugs": {
-      "url": "https://github.comAllan-Nava/NextCMS/issues"
+      "url": "https://github.com/Allan-Nava/NextCMS/issues"
     },
     "repository": {
       "type": "git",

@@ -1,13 +1,14 @@
 'use strict';
-
+//
 const pluralize = require('pluralize');
-
-const generateController = require('./plops/controller');
-const generateContentType = require('./plops/content-type');
+//
+const generateComponents = require('./plops/components');
 //
 module.exports = plop => {
   // Plop config
   plop.setWelcomeMessage('NextCMS Generators');
   plop.addHelper('pluralize', text => pluralize(text));
-
+  //
+  generateComponents(plop);
+  //
 };
