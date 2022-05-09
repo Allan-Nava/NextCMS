@@ -38,7 +38,7 @@
       "test": "echo \"no tests yet\""
     },
     "dependencies": {
-      "@nextcms/generate-new": ">=0.1.0 <=4.x.x",
+      "@nextcms/generate-new": ">=0.1.0",
       "commander": "6.1.0",
       "inquirer": "8.2.0"
     },
