@@ -15,7 +15,10 @@ const { join, resolve, basename } = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const uuid = require('uuid/v4');
-
+// FIXME
+/* eslint-disable import/extensions */
+const hasYarn = require('./utils/has-yarn');
+const checkRequirements = require('./utils/check-requirements');
 const { trackError, captureException } = require('./utils/usage');
 const generateNew = require('./generate-new');
 const checkInstallPath = require('./utils/check-install-path');

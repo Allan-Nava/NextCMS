@@ -22,6 +22,7 @@ const createQuickStartProject = require('./create-quickstart-project');
 //
 //
 module.exports = async scope => {
+    console.log("scope ", scope);
     // check rootPath is empty
     checkInstallPath(scope.rootPath);
     //

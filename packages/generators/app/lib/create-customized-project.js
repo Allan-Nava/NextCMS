@@ -12,10 +12,16 @@
 
 /* eslint-disable no-unreachable */
 'use strict';
+const { join } = require('path');
+const fse = require('fs-extra');
+const inquirer = require('inquirer');
+const execa = require('execa');
+const { merge } = require('lodash');
 //
 const createProject = require('./create-project');
-
+//
 module.exports = async scope => {
-  return createProject(scope, configuration);
+  console.log("CreateCustomized project scope ", scope);
+  return createProject(scope);
 };
 //
