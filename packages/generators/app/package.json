@@ -1,6 +1,6 @@
 {
     "name": "@nextcms/generate-new",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "description": "Generate a new NextCMS application.",
     "keywords": [
       "generate",
@@ -49,7 +49,7 @@
       "uuid": "^3.3.2"
     },
     "engines": {
-      "node": ">=12.22.0 <=16.x.x",
+      "node": ">=12.22.0 <=18.x.x",
       "npm": ">=6.0.0"
     }
   }
