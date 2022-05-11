@@ -154,19 +154,19 @@ program
   .action(getLocalScript('uninstall'));
 
 //   `$ nextcms watch-admin`
-program
-  .command('watch-admin')
-  .option('--browser <name>', 'Open the browser', true)
-  .description('Start the admin development server')
-  .action(getLocalScript('watchAdmin'));
-
-program
-  .command('configuration:dump')
-  .alias('config:dump')
-  .description('Dump configurations of your application')
-  .option('-f, --file <file>', 'Output file, default output is stdout')
-  .option('-p, --pretty', 'Format the output JSON with indentation and line breaks', false)
-  .action(getLocalScript('configurationDump'));
+//program
+//  .command('watch-admin')
+//  .option('--browser <name>', 'Open the browser', true)
+//  .description('Start the admin development server')
+//  .action(getLocalScript('watchAdmin'));
+//
+//program
+//  .command('configuration:dump')
+//  .alias('config:dump')
+//  .description('Dump configurations of your application')
+//  .option('-f, --file <file>', 'Output file, default output is stdout')
+//  .option('-p, --pretty', 'Format the output JSON with indentation and line breaks', false)
+//  .action(getLocalScript('configurationDump'));
 
 program
   .command('configuration:restore')
