@@ -1,6 +1,6 @@
 {
     "name": "@nextcms/utils",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "An open source Next CMS solution to create and manage your own API.",
     "keywords": [
       "nextcms",
@@ -47,4 +47,4 @@
       "node": ">=12.22.0 <=17.x.x",
       "npm": ">=6.0.0"
     }
-  }
+}
