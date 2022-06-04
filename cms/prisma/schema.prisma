@@ -46,6 +46,8 @@ model Component {
   name              String
   property          String
   parent            Int
+  template          String
+  data              String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
