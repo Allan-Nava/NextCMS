@@ -39,6 +39,9 @@ model Page {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
+
+  @@index([title,], name: "title")
+
 }
 //
 model Component {
@@ -79,6 +82,12 @@ model Role {
   deletedAt         DateTime?
 }
 //
+model Visit {
+  id                Int @id @default(autoincrement())
+  Page     Page? @relation(fields: [id,], references: [id])
+  updatedAt         DateTime @default(now())
+} 
+
 //
 // example model 
 // model Post {
