@@ -2,7 +2,7 @@ name: 'docker-publish'
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
     tags: [ v* ]
 
 jobs:
@@ -68,7 +68,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./cms/Dockerfile
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.prep.outputs.tags }}
