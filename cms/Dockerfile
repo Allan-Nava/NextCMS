@@ -30,7 +30,7 @@ CMD [ "npm", "run", "dev" ]
 FROM base AS builder
 COPY --from=dependencies /app/node_modules /app/node_modules
 COPY . /app
-RUN yarn build && \
+RUN npm run build && \
     rm -rf node_modules
 #
 # Build target production #
