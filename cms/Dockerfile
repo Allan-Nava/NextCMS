@@ -6,7 +6,7 @@ ARG NODE_ENV=production
 ENV PATH=/app/node_modules/.bin:$PATH \
     NODE_ENV="$NODE_ENV"
 RUN apt -y install curl
-COPY package.json package-lock.json /app/
+COPY package.json /app/
 EXPOSE 3000
 #
 # Build target dependencies #
