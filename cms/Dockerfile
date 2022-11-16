@@ -29,7 +29,7 @@ CMD [ "npm", "run", "dev" ]
 ########################
 FROM base AS builder
 COPY --from=dependencies /app/node_modules /app/node_modules
-COPY --from=dependencies /app/next.config.js /app/next.config.js
+#COPY --from=dependencies /app/next.config.js /app/next.config.js
 COPY . /app
 RUN npm run build && \
     rm -rf node_modules
