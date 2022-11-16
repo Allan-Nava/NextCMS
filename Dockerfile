@@ -1,6 +1,6 @@
 # Build target base #
 #####################
-FROM node:14.17.0-stretch AS base
+FROM node:17.4-stretch AS base
 WORKDIR /app
 ARG NODE_ENV=production
 ENV PATH=/app/node_modules/.bin:$PATH \
@@ -13,25 +13,24 @@ EXPOSE 3000
 #############################
 FROM base AS dependencies
 # Install prod dependencies
-RUN yarn install --production && \
+RUN npm install --production && \
     # Cache prod dependencies
     cp -R node_modules /prod_node_modules && \
     # Install dev dependencies
-    yarn install --production=false
+    npm install --production=false
 #
 # Build target development #
 ############################
 FROM dependencies AS development
 COPY . /app
-CMD [ "yarn", "dev" ]
+CMD [ "npm", "run", "dev" ]
 #
 # Build target builder #
 ########################
 FROM base AS builder
 COPY --from=dependencies /app/node_modules /app/node_modules
-RUN yarn add eslint-plugin-react --save-dev
 COPY . /app
-RUN yarn build && \
+RUN npm run build && \
     rm -rf node_modules
 #
 # Build target production #
@@ -40,5 +39,4 @@ FROM base AS production
 COPY --from=builder /app/public /app/public
 COPY --from=builder /app/.next /app/.next
 COPY --from=dependencies /prod_node_modules /app/node_modules
-CMD [ "yarn", "start" ]
-#
+CMD [ "npm", "start" ]
