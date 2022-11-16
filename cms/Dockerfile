@@ -41,3 +41,4 @@ COPY --from=builder /app/public /app/public
 COPY --from=builder /app/.next /app/.next
 COPY --from=dependencies /prod_node_modules /app/node_modules
 CMD [ "npm", "start" ]
+#
