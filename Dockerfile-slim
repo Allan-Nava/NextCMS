@@ -1,0 +1,34 @@
+# Build target base #
+#####################
+FROM node:18-alpine AS dependencies
+LABEL maintainer="allan.nava@ies-italia.it"
+RUN apk add --no-cache libc6-compat git
+WORKDIR /home/app
+COPY .npmrc ./
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
+#
+FROM node:18-alpine AS builder
+WORKDIR /home/app
+COPY --from=dependencies /home/app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED 1
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV}
+RUN npm run build
+#
+FROM node:18-alpine AS runner
+RUN apk add --no-cache curl
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED 1
+#
+COPY --from=builder /home/app/*.conf .
+COPY --from=builder /home/app/.next/standalone ./standalone
+COPY --from=builder /home/app/public ./standalone/public
+COPY --from=builder /home/app/.next/static ./standalone/.next/static
+#EXPOSE 3000
+#ENV PORT 3000
+#
+CMD ["node", "standalone/server.js"]
+#
