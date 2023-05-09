@@ -23,7 +23,6 @@ RUN apk add --no-cache curl
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED 1
 #
-COPY --from=builder /home/app/*.conf .
 COPY --from=builder /home/app/.next/standalone ./standalone
 COPY --from=builder /home/app/public ./standalone/public
 COPY --from=builder /home/app/.next/static ./standalone/.next/static
