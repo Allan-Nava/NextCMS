@@ -40,7 +40,7 @@
     "dependencies": {
       "@nextcms/generate-new": ">=0.1.14",
       "commander": "6.1.0",
-      "inquirer": "8.2.0"
+      "inquirer": "8.2.6"
     },
     "engines": {
       "node": ">=12.22.0 <=17.x.x",
