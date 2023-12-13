@@ -63,7 +63,7 @@
     "test:unit": "jest --verbose"
   },
   "dependencies": {
-    "@koa/cors": "3.1.0",
+    "@koa/cors": "5.0.0",
     "@koa/router": "10.1.1",
     "@nextcms/generate-new": "0.1.13",
     "@nextcms/generators": "0.1.4",
