@@ -1,16 +1,6 @@
-# NEXT CMS TODO:
+# NEXT CMS TODO
 
-# Tasks
+I todo si tracciano in **[`BACKLOG.md`](BACKLOG.md)**, con id stabili `NC-n`.
+Le feature di prodotto elencate qui in passato sono ora gli item **NC-39 … NC-44** (milestone M6).
 
-- [] Auth and user management ( login, logout, register, forgot password, etc )
-   - [] User profile
-   - [] User Update
-   - [] User creation
-   - [] User password hashing
-- [] Content management (eg. posts, pages, categories, tags, etc.)
-- [] Page builder (e.g. blocks, images, etc.)
-- [] Admin UI / UX
-    - [] Integration all entities
-- [] Admin API
-    - [] CRUD Integration for each entity
-
+Non aggiungere todo in questo file né come `TODO:` nei commenti: vanno in `BACKLOG.md`.
