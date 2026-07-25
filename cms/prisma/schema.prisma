@@ -40,7 +40,9 @@ model Page {
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
 
-  @@index([title,], name: "title")
+  visits            Visit[]
+
+  @@index([title], map: "title")
 
 }
 //
@@ -82,11 +84,19 @@ model Role {
   deletedAt         DateTime?
 }
 //
+// Una visita a una pagina. La relazione usa una foreign key dedicata
+// (`pageId`): la versione precedente riusava la primary key di Visit come FK
+// verso Page e non dichiarava il campo opposto, quindi `prisma generate`
+// falliva con P1012 (NC-24).
 model Visit {
   id                Int @id @default(autoincrement())
-  Page     Page? @relation(fields: [id,], references: [id])
+  pageId            Int
+  page              Page @relation(fields: [pageId], references: [id])
+  createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
-} 
+
+  @@index([pageId], map: "visit_page")
+}
 
 //
 // example model 

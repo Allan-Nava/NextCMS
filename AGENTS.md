@@ -34,19 +34,22 @@ Questo file definisce le regole operative per gli agent (Copilot, Claude, altri 
 - Stato UI: Redux Toolkit in `cms/lib/reducers/` (`auth`, `layout`, `dragAndDrop`), page builder react-dnd in `cms/components/pagebuilder/`.
 - Schema dati: `cms/prisma/schema.prisma` (`Page`, `Component`, `Entity`, `User`, `Role`, `Visit`), provider postgresql.
 
-## Rotto oggi (audit 2026-07-25, dettagli in BACKLOG.md)
+## Rotto oggi (dettagli in BACKLOG.md)
+
+Il progetto **compila** (M0 chiusa in v0.5.0), ma a runtime:
 
 - Login non funzionante end-to-end (`NC-11`, `NC-12`); credenziali errate danno 500 generico (`NC-13`).
 - Route `[id].ts` leggono `req.body.id` invece di `req.query.id` (`NC-15`); alcuni handler non rispondono mai (`NC-14`).
-- `prisma generate` fallisce: relazione `Visit -> Page` senza campo opposto (`NC-24`); create senza campi obbligatori (`NC-25`).
 - API espongono l'hash password (`NC-1`); JWT con segreto hardcodato e utente intero nel payload (`NC-2`, `NC-3`); `next.config.js` logga tutte le env (`NC-4`).
 - `POST /api/page` e `POST /api/components` rispondono 200 senza scrivere (`NC-17`); `[...index].tsx` passa props con nome sbagliato e renderizza vuoto (`NC-18`).
+- I pacchetti `@nextcms/*` non sono installabili: dipendenze su versioni mai pubblicate (`NC-51`).
 
 ## Trappole note
 
 - `Dockerfile` e `Dockerfile-slim` di root non buildano nulla (la root non ha `next`): l'immagine reale la produce `docker-publish.yml` da `cms/Dockerfile`. `Dockerfile-slim` presuppone `output: 'standalone'` e `.npmrc`, entrambi assenti.
-- La CI (`ci.yml`) e' un gate reale ed e' rossa di proposito finche' M0 non e' chiusa (`NC-24`, `NC-25`, `NC-48`): chiudere gli item, non silenziare i job.
-- `cms/` non ha lockfile: `ci.yml` usa `npm install` senza cache finche' non arriva (`NC-26`).
+- `bootstrap` e' pinnato a `~5.1.3` di proposito (`NC-52`): il sass di Metronic usa la sequenza di import 5.1, da 5.3 il build muore con `SassError`.
+- `@popperjs/core` e la coppia apexcharts sono allineati per far risolvere npm (`NC-50`): non tornare indietro.
+- Lockfile: rigenerarli sempre da zero (`rm -rf node_modules package-lock.json`), altrimenti si eredita l'omissione dei binari SWC opzionali e il build fallisce con *Failed to load SWC binary*.
 - `_middleware.ts` (cms e admin) e' uno stub `NextResponse.next()`: nessuna route e' protetta a livello di middleware.
 - `BASE_URI` in `cms/lib/utils/constants.ts` e' hardcodato su un URL Vercel (lettura da env commentata).
 - Le API route fanno `console.log` della request intera: non aggiungerne, mai loggare credenziali o token.
@@ -57,7 +60,7 @@ Questo file definisce le regole operative per gli agent (Copilot, Claude, altri 
 
 ## Roadmap
 
-Sei milestone sequenziali in `BACKLOG.md`: **M0** build verde (`v0.5.0`) -> **M1** sicurezza (`v0.6.0`) -> **M2** API corrette (`v0.7.0`) -> **M3** auth (`v0.8.0`) -> **M4** contenuti e page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** strada per 1.0 (`v1.0.0`). Non si aprono item di una milestone successiva finche' la precedente non e' chiusa.
+Milestone sequenziali in `BACKLOG.md`: **M0** build verde OK (`v0.5.0`) -> **M1** sicurezza (`v0.6.0`) -> **M2** API corrette (`v0.7.0`) -> **M3** auth (`v0.8.0`) -> **M4** contenuti e page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** strada per 1.0 (`v1.0.0`). A parte **M0b** (`v0.5.1`) per i pacchetti npm. Non si aprono item di una milestone successiva finche' la precedente non e' chiusa.
 
 ## Puntatori
 

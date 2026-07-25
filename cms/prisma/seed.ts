@@ -21,6 +21,8 @@ const pageData: Prisma.PageCreateInput[] = [
     description: 'first page example',
     seoDescription: 'Index seo description',
     slug: "/",
+    // Obbligatorio a schema, mancava: il seed non compilava (NC-25).
+    type: 'page',
   }
 ]
 //

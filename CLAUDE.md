@@ -59,9 +59,11 @@ npm publish --access public    # pubblicazione @nextcms/* (vedi docs/NPM.md)
 
 ## Trappole note / regole tecniche
 
-- **Il `Dockerfile` e il `Dockerfile-slim` di root non buildano l'app**: la root non ha né `next` né script. La pipeline reale è `.github/workflows/docker-publish.yml` con context `./cms` e `cms/Dockerfile` → push su `ghcr.io`. `Dockerfile-slim` inoltre copia `.next/standalone` e `.npmrc`, ma `cms/next.config.js` non imposta `output: 'standalone'` e `.npmrc` non esiste: va sistemato prima di usarlo, non copiato altrove.
-- **La CI è rossa di proposito** finché la milestone M0 non è chiusa: `ci.yml` è un gate reale (typecheck + lint + build) e il progetto oggi non compila (`NC-24`, `NC-25`, `NC-48`). Non silenziare i job — chiudere gli item.
-- **`cms/` non ha lockfile**, quindi `ci.yml` usa `npm install` e non può usare la cache npm. Quando arriva il lockfile (`NC-26`), passare a `npm ci` + `cache: npm`.
+- **Il `Dockerfile` e il `Dockerfile-slim` di root non buildano l'app** (`NC-27`): la root non ha né `next` né script. La pipeline reale è `.github/workflows/docker-publish.yml` con context `./cms` e `cms/Dockerfile` → push su `ghcr.io`. `Dockerfile-slim` inoltre copia `.next/standalone` e `.npmrc`, ma `cms/next.config.js` non imposta `output: 'standalone'` e `.npmrc` non esiste: va sistemato prima di usarlo, non copiato altrove. Il `cms/Dockerfile` invece è stato riscritto ed è quello buono.
+- **`bootstrap` è pinnato a `~5.1.3` di proposito** (`NC-52`): il tema Metronic in `styles/sass/_init.scss` usa la sequenza di import di Bootstrap 5.1, e da 5.3 `$theme-colors-rgb` vive in `_maps.scss` — sbloccare il pin fa fallire il build con `SassError: Undefined variable`.
+- **`@popperjs/core` e la coppia apexcharts sono allineati** per far risolvere npm (`NC-50`): non riportarli alle versioni vecchie.
+- **I lockfile vanno rigenerati da zero**, non "aggiornati": quello di `admin` era lockfileVersion 2 e ometteva i binari SWC opzionali, e rigenerarlo con `node_modules` già popolato eredita l'omissione. Se manca `@next/swc-*`, `rm -rf node_modules package-lock.json` e reinstalla.
+- **I pacchetti `packages/@nextcms/*` non sono installabili** (`NC-51`): dipendono da versioni dei propri fratelli mai pubblicate su npm. Per questo `ci.yml` non ha un job `packages`.
 - **`_middleware.ts` (cms e admin) è uno stub** che fa solo `NextResponse.next()`: l'auth non è ancora applicata a livello di middleware. Non dare per scontato che una route sia protetta.
 - **`BASE_URI` in `cms/lib/utils/constants.ts` è hardcodato** su un URL Vercel, con la lettura da env commentata. Se tocchi quel file, passa da `process.env`.
 - **`console.log` di request/response nelle API route**: loggano `req` intero (header inclusi). Non aggiungerne altri e non loggare mai credenziali o token.
@@ -72,18 +74,18 @@ npm publish --access public    # pubblicazione @nextcms/* (vedi docs/NPM.md)
 
 ## Roadmap
 
-`BACKLOG.md` definisce sei milestone **sequenziali**, ognuna con la sua release: **M0** build verde (`v0.5.0`) → **M1** sicurezza (`v0.6.0`) → **M2** API corrette (`v0.7.0`) → **M3** auth (`v0.8.0`) → **M4** contenuti e page builder (`v0.9.0`) → **M5** admin (`v0.10.0`) → **M6** strada per 1.0 (`v1.0.0`). Non si aprono item di una milestone successiva finché la precedente non è chiusa (tutti gli item spuntati, CI verde, sezione nel changelog, tag).
+`BACKLOG.md` definisce milestone **sequenziali**, ognuna con la sua release: **M0** build verde ✅ (`v0.5.0`) → **M1** sicurezza (`v0.6.0`) → **M2** API corrette (`v0.7.0`) → **M3** auth (`v0.8.0`) → **M4** contenuti e page builder (`v0.9.0`) → **M5** admin (`v0.10.0`) → **M6** strada per 1.0 (`v1.0.0`). A parte, **M0b** (`v0.5.1`) per i pacchetti npm. Non si aprono item di una milestone successiva finché la precedente non è chiusa (tutti gli item spuntati, CI verde, sezione nel changelog, tag).
 
-## Stato noto (audit 2026-07-25)
+## Stato noto
 
-Il repo è WIP e l'audit sul commit `7ac0299` ha aperto 49 item in `BACKLOG.md`. Le cose da sapere **prima** di toccare qualcosa:
+Il repo è WIP. L'audit sul commit `7ac0299` ha aperto 52 item in `BACKLOG.md`; M0 ne ha chiusi 11. **Il progetto compila** — `cms` e `admin` passano install, typecheck, lint e build — ma il comportamento a runtime è ancora largamente rotto. Prima di toccare qualcosa:
 
 - Il **login non funziona end-to-end** (`NC-11`/`NC-12`): il token torna come stringa dentro `successResponse`, il client si aspetta `access_token`/`refresh_token`.
 - Le route `[id].ts` leggono `req.body.id` invece di `req.query.id` (`NC-15`) e diversi handler non rispondono mai (`NC-14`).
-- `prisma generate` **fallisce** per la relazione `Visit → Page` senza campo opposto (`NC-24`), e alcune create omettono campi obbligatori (`NC-25`).
-- Le API espongono l'hash password e il JWT è firmato con un segreto hardcodato che contiene l'intero utente (`NC-1`…`NC-3`).
+- `POST /api/page` e `POST /api/components` rispondono 200 senza scrivere (`NC-17`); `[...index].tsx` passa le props con il nome sbagliato e renderizza vuoto (`NC-18`).
+- Le API espongono l'hash password e il JWT è firmato con un segreto hardcodato che contiene l'intero utente (`NC-1`…`NC-3`); `next.config.js` logga tutte le env (`NC-4`).
 
-Non dare per buono che una route funzioni: verifica sull'item di backlog corrispondente.
+Che compili non vuol dire che funzioni: verifica sull'item di backlog corrispondente.
 
 ## Puntatori
 

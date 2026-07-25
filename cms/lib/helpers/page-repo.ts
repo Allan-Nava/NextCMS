@@ -52,13 +52,16 @@ async function getBySlug( slug : string ) {
     //return baseObject;
 }
 //
-async function create(title : string, slug : string, description : string,) {
+// `type` e' obbligatorio a schema e non ha default: va passato dal chiamante
+// (NC-25). Il default "page" copre il caso piu' comune.
+async function create(title : string, slug : string, description : string, type : string = "page",) {
     console.log("title", title);
     //
     let body : Prisma.PageCreateInput = {
         title: title,
         slug: slug,
         description: description,
+        type: type,
     }
     const page  = await prisma.page.create({data: body});
     return page;

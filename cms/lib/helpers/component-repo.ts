@@ -40,11 +40,15 @@ async function create(title : string, path: string) {
         components: [],
         supportNestedComponent: false
     }
+    // `template` e `data` sono obbligatori a schema (NC-25). `property` usa
+    // JSON.stringify come nell'update: `toString()` salvava "[object Object]"
+    // (NC-21).
     let body : Prisma.ComponentCreateInput = {
         name: title,
-        property: bodyComponent.toString(),
-        parent: 1
-        //path: PageComponent,
+        property: JSON.stringify(bodyComponent),
+        parent: 1,
+        template: path,
+        data: JSON.stringify(bodyComponent.props)
     }
     console.log("bodyComponent", bodyComponent);
     //
