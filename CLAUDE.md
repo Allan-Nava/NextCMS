@@ -60,7 +60,8 @@ npm publish --access public    # pubblicazione @nextcms/* (vedi docs/NPM.md)
 ## Trappole note / regole tecniche
 
 - **Il `Dockerfile` e il `Dockerfile-slim` di root non buildano l'app**: la root non ha né `next` né script. La pipeline reale è `.github/workflows/docker-publish.yml` con context `./cms` e `cms/Dockerfile` → push su `ghcr.io`. `Dockerfile-slim` inoltre copia `.next/standalone` e `.npmrc`, ma `cms/next.config.js` non imposta `output: 'standalone'` e `.npmrc` non esiste: va sistemato prima di usarlo, non copiato altrove.
-- **Il workflow `cypress.yml` gira su ogni push ma nel repo non c'è nessun test Cypress** né la config: builda e avvia `cms/` a vuoto. Se aggiungi E2E, aggiungili lì.
+- **La CI è rossa di proposito** finché la milestone M0 non è chiusa: `ci.yml` è un gate reale (typecheck + lint + build) e il progetto oggi non compila (`NC-24`, `NC-25`, `NC-48`). Non silenziare i job — chiudere gli item.
+- **`cms/` non ha lockfile**, quindi `ci.yml` usa `npm install` e non può usare la cache npm. Quando arriva il lockfile (`NC-26`), passare a `npm ci` + `cache: npm`.
 - **`_middleware.ts` (cms e admin) è uno stub** che fa solo `NextResponse.next()`: l'auth non è ancora applicata a livello di middleware. Non dare per scontato che una route sia protetta.
 - **`BASE_URI` in `cms/lib/utils/constants.ts` è hardcodato** su un URL Vercel, con la lettura da env commentata. Se tocchi quel file, passa da `process.env`.
 - **`console.log` di request/response nelle API route**: loggano `req` intero (header inclusi). Non aggiungerne altri e non loggare mai credenziali o token.
@@ -69,9 +70,13 @@ npm publish --access public    # pubblicazione @nextcms/* (vedi docs/NPM.md)
 - I package `@nextcms/*` dichiarano `engines: node >=12.22.0 <=17.x.x`: su Node moderno alcuni di essi possono non installarsi: non è un bug delle app Next.
 - Ci sono **due lockfile in root** (`package-lock.json` e `yarn.lock`) per una singola dipendenza: non prenderli come indicazione del package manager: nelle app si usa **npm**.
 
+## Roadmap
+
+`BACKLOG.md` definisce sei milestone **sequenziali**, ognuna con la sua release: **M0** build verde (`v0.5.0`) → **M1** sicurezza (`v0.6.0`) → **M2** API corrette (`v0.7.0`) → **M3** auth (`v0.8.0`) → **M4** contenuti e page builder (`v0.9.0`) → **M5** admin (`v0.10.0`) → **M6** strada per 1.0 (`v1.0.0`). Non si aprono item di una milestone successiva finché la precedente non è chiusa (tutti gli item spuntati, CI verde, sezione nel changelog, tag).
+
 ## Stato noto (audit 2026-07-25)
 
-Il repo è WIP e l'audit sul commit `7ac0299` ha aperto 44 item in `BACKLOG.md`. Le cose da sapere **prima** di toccare qualcosa:
+Il repo è WIP e l'audit sul commit `7ac0299` ha aperto 49 item in `BACKLOG.md`. Le cose da sapere **prima** di toccare qualcosa:
 
 - Il **login non funziona end-to-end** (`NC-11`/`NC-12`): il token torna come stringa dentro `successResponse`, il client si aspetta `access_token`/`refresh_token`.
 - Le route `[id].ts` leggono `req.body.id` invece di `req.query.id` (`NC-15`) e diversi handler non rispondono mai (`NC-14`).
@@ -83,6 +88,6 @@ Non dare per buono che una route funzioni: verifica sull'item di backlog corrisp
 ## Puntatori
 
 - Todo: `BACKLOG.md` (id `NC-n`) · Rilasci: `CHANGELOG.md` · Doc: `docs/` (`Prisma.md`, `NPM.md`) · Schema: `cms/prisma/schema.prisma`
-- CI: `.github/workflows/` (`codeql.yml`, `cypress.yml`, `docker-publish.yml`) · Release: tag `v*` → immagine su ghcr.io (ultimo tag `v0.2.11`)
+- CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → immagine su ghcr.io)
 - Env: `.env.example` (root, Prisma) e `cms/.env.example` — variabili usate: `DATABASE_URL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`

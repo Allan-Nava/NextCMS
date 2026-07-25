@@ -45,7 +45,8 @@ Questo file definisce le regole operative per gli agent (Copilot, Claude, altri 
 ## Trappole note
 
 - `Dockerfile` e `Dockerfile-slim` di root non buildano nulla (la root non ha `next`): l'immagine reale la produce `docker-publish.yml` da `cms/Dockerfile`. `Dockerfile-slim` presuppone `output: 'standalone'` e `.npmrc`, entrambi assenti.
-- `cypress.yml` gira a ogni push ma nel repo non esistono test Cypress.
+- La CI (`ci.yml`) e' un gate reale ed e' rossa di proposito finche' M0 non e' chiusa (`NC-24`, `NC-25`, `NC-48`): chiudere gli item, non silenziare i job.
+- `cms/` non ha lockfile: `ci.yml` usa `npm install` senza cache finche' non arriva (`NC-26`).
 - `_middleware.ts` (cms e admin) e' uno stub `NextResponse.next()`: nessuna route e' protetta a livello di middleware.
 - `BASE_URI` in `cms/lib/utils/constants.ts` e' hardcodato su un URL Vercel (lettura da env commentata).
 - Le API route fanno `console.log` della request intera: non aggiungerne, mai loggare credenziali o token.
@@ -54,6 +55,10 @@ Questo file definisce le regole operative per gli agent (Copilot, Claude, altri 
 - I package `@nextcms/*` dichiarano `engines: node >=12.22.0 <=17.x.x`.
 - Due lockfile in root (`package-lock.json` + `yarn.lock`) per una dipendenza: nelle app si usa **npm**.
 
+## Roadmap
+
+Sei milestone sequenziali in `BACKLOG.md`: **M0** build verde (`v0.5.0`) -> **M1** sicurezza (`v0.6.0`) -> **M2** API corrette (`v0.7.0`) -> **M3** auth (`v0.8.0`) -> **M4** contenuti e page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** strada per 1.0 (`v1.0.0`). Non si aprono item di una milestone successiva finche' la precedente non e' chiusa.
+
 ## Puntatori
 
-- Todo: `TODO.md` - Doc: `docs/` - CI: `.github/workflows/` - Env: `.env.example`, `cms/.env.example` (`DATABASE_URL`, `ADMIN_URL`, `API_URI`, `BASE_URI`)
+- Todo: `BACKLOG.md` (id `NC-n`) - Rilasci: `CHANGELOG.md` - Doc: `docs/` - CI: `.github/workflows/` (`ci.yml`, `codeql.yml`, `docker-publish.yml`) - Env: `.env.example`, `cms/.env.example` (`DATABASE_URL`, `ADMIN_URL`, `API_URI`, `BASE_URI`)

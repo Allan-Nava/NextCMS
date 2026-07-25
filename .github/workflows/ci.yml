@@ -1,0 +1,101 @@
+name: CI
+
+# Gate di qualità del repository (NC-29). Prima di questa workflow nulla
+# verificava che il progetto compilasse: giravano solo CodeQL, un job Cypress
+# senza test e la publish Docker.
+#
+# I job sono gate REALI (bloccanti). Finché la milestone M0 non è chiusa la CI
+# è rossa: è voluto — è il termometro dello stato del repo, non un fastidio da
+# silenziare. Vedi BACKLOG.md (NC-24, NC-25, NC-26, NC-48).
+
+on:
+  push:
+    branches: ["main", "master"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # App pubblica + API. È l'unica che ha Prisma, quindi il client va generato
+  # prima del typecheck: senza `prisma generate` i tipi `Prisma.*Input` usati
+  # nei repo layer non esistono.
+  cms:
+    name: cms (typecheck, lint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cms
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Prisma pretende una URL valida anche solo per generare il client: non
+      # viene aperta nessuna connessione durante generate/build.
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/nextcms?schema=public"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      # `npm ci` non è utilizzabile: cms/ non ha lockfile (NC-26). Quando il
+      # lockfile arriva, passare a `npm ci` e abilitare `cache: npm`.
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Prisma validate
+        run: npx prisma validate
+      - name: Prisma generate
+        run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  # Pannello admin: nessun Prisma, parla con l'API di cms/ via HTTP.
+  admin:
+    name: admin (typecheck, lint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  # Pacchetti npm @nextcms/*: JS CommonJS, indipendenti dalle app Next.
+  packages:
+    name: packages (unit test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/core/nextcms
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Install
+        run: npm install --no-audit --no-fund
+      # Rosso finché jest non è tra le devDependencies del package (NC-48).
+      - name: Unit test
+        run: npm run test:unit
