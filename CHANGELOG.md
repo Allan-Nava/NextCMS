@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.7.3] - 2026-07-26
+
+Node runtime aligned on **24** everywhere. This started as a deploy failure — Vercel refused the build outright with `Found invalid or discontinued Node.js Version: "14.x"` — but the repo disagreed with itself about the Node version in three separate places, so pointing Vercel at a newer one would only have moved the problem.
+
+### Changed
+
+- **Node 24 across the whole toolchain** (NC-55): `.github/workflows/ci.yml` (both the `cms` and `admin` jobs), `cms/Dockerfile` (build and runtime stages) and `.devcontainer/`. Before this the devcontainer was on Node 14, CI and Docker on Node 18 — itself EOL — and Vercel on 14.x, so CI was gating on a runtime nobody deploys.
+- **`engines.node: "24.x"`** added to `cms/package.json` and `admin/package.json`. Vercel reads `engines` and it takes precedence over the dashboard setting, so the deployed Node version is now declared in git rather than living as invisible project state. It is also what makes a mismatched local Node warn on `npm install`.
+- **`cms/Dockerfile` moved from bullseye to bookworm**, and now installs `openssl`. The old comment said Prisma 3 needs OpenSSL 1.1; that is not accurate — Prisma 3.15 publishes a `debian-openssl-3.0.x` engine. What actually breaks is that the `-slim` images ship no `openssl` binary, and Prisma shells out to it to choose an engine: without it the platform resolves to `linux-<arch>-openssl-undefined` and `prisma generate` fails with `Unknown binaryTarget`. Installed in both the build and the runtime stage, since the engine re-resolves its platform at startup. The move was forced anyway — there is no `node:24-bullseye` image.
+- **`.devcontainer/` rebased on the official `node:24-bookworm-slim`.** Its old base (`vscode/devcontainers/javascript-node:0-14`) is retired, and the maintained successor family stops at Node 22, so there was no Node 24 devcontainer image to move to. `sudo` and `git` are now installed explicitly because the Microsoft base provided them. `linuxbrew-wrapper` was dropped from Debian bookworm and would have failed the build; the two zsh plugins it existed to install (`zsh-autosuggestions`, `zsh-syntax-highlighting`) come from apt instead, and `.zshrc` sources them from `/usr/share` behind an existence guard rather than from the linuxbrew prefix.
+
+### Verification
+
+| | typecheck | lint | tests | build |
+|---|---|---|---|---|
+| `cms` | ✅ | ✅ (1 pre-existing warning) | ✅ 52 passed | ✅ |
+| `admin` | ✅ | — | — | ✅ |
+
+Container builds were verified by building them, not by reading them:
+
+- `cms/Dockerfile` `--platform linux/amd64` (the only platform `docker-publish.yml` publishes) builds to the `production` stage. Inspecting the resulting image: Node `v24.18.0`, `libquery_engine-debian-openssl-3.0.x.so.node` present in `node_modules/.prisma/client`, `.next/BUILD_ID` present. An earlier attempt without `openssl` failed exactly as described above, which is how the cause was found.
+- `.devcontainer/Dockerfile` builds, and the image reports Node `v24.18.0`, npm `11.16.0`, user `node`, working passwordless `sudo`, and both zsh plugin files plus powerlevel10k present.
+- The `backlog-sync` parser added in 0.7.2 still passes its 12 tests with the new item, and a dry run reads M6 as 3/9.
+
+Not verified: the host-side `tsc`/lint/test/build ran on Node 23, not 24 — no Node 24 is installed on this machine. Node 24 is exercised inside both container builds, and CI will be the first run of the host path on 24. The Vercel deploy itself has not been re-run.
+
 ## [0.7.2] - 2026-07-26
 
 ### Added

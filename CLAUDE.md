@@ -74,7 +74,9 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 - **Never return a raw Prisma `User`**: use `publicUserSelect` / the `PublicUser` type so the password hash cannot leak (`NC-1`).
 - **Never log a request or response object**: they carry headers and cookies, i.e. tokens. Use `lib/utils/logger.ts`.
 - After every `schema.prisma` change run `npx prisma generate`, otherwise the `Prisma.*Input` types used by the repos will not match.
-- The `@nextcms/*` packages declare `engines: node >=12.22.0 <=17.x.x`: on a modern Node some of them may refuse to install — that is not a bug in the Next apps.
+- **The Node version is pinned in five places and they must agree** (`NC-55`): `.github/workflows/ci.yml` (both jobs), `cms/Dockerfile` (build and runtime stages), `.devcontainer/devcontainer.json` (`VARIANT`) and `engines.node` in `cms/package.json` and `admin/package.json`. The current version is **24**. Vercel reads `engines.node` and it **overrides the dashboard setting**, so change it here rather than in the Vercel project — a version that only exists in the dashboard is invisible to everyone. Note there is no Node 24 devcontainer image from Microsoft (that family stops at 22), which is why `.devcontainer/` builds on plain `node:24-bookworm-slim` and installs `sudo`/`git` itself.
+- **Prisma 3 needs the `openssl` binary in the image** (`NC-55`): the `-slim` Node images do not ship it, and Prisma shells out to it to pick a query engine. Without it the platform resolves to `linux-<arch>-openssl-undefined` and `prisma generate` fails with `Unknown binaryTarget`. `cms/Dockerfile` installs it in both stages. Contrary to what the old comment in that file claimed, Prisma 3.15 is fine on OpenSSL 3 — it publishes a `debian-openssl-3.0.x` engine — so bookworm is not the problem. Alpine would be: musl is a different target (`linux-musl`) and needs checking separately.
+- The `@nextcms/*` packages declare `engines: node >=12.22.0 <=17.x.x`: they will refuse to install on the Node 24 the apps now use — that is not a bug in the Next apps, it is `NC-51`/`NC-48` territory.
 
 ## Roadmap
 

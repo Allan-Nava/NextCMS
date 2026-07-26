@@ -1,27 +1,44 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.183.0/containers/javascript-node/.devcontainer/base.Dockerfile
+# v0.7.3 (NC-55): the base was `vscode/devcontainers/javascript-node:0-14`.
+# Two things forced a change when Node moved to 24:
+#   - that image family is retired, and
+#   - its maintained successor (`devcontainers/javascript-node:1-*`) stops at
+#     Node 22 — there is no Node 24 tag to move to.
+# So this builds on the official Node image instead. It ships the same non-root
+# `node` user, but none of the devcontainer extras, so `sudo` and `git` are
+# installed explicitly below.
 
-# [Choice] Node.js version: 16, 14, 12 (overriden in .devcontainer)
-ARG VARIANT="16-buster"
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
+# [Choice] Node.js version: 24-bookworm-slim, 22-bookworm-slim (keep in sync with
+# .devcontainer/devcontainer.json, cms/Dockerfile and .github/workflows/ci.yml)
+ARG VARIANT="24-bookworm-slim"
+FROM node:${VARIANT}
 
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Installing additional OS Packages
+# `linuxbrew-wrapper` was dropped from Debian bookworm, so the old package list
+# fails outright on this base. The only thing brew was used for here was the two
+# zsh plugins, and bookworm ships both as apt packages — installed directly.
+# `sudo`, `git` and `ca-certificates` came from the old MS base image.
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
+    ca-certificates \
     curl \
-    git-core \
+    git \
     gnupg \
-    linuxbrew-wrapper \
     locales \
+    sudo \
     zsh \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting \
     wget \
     tree \
     jq \
     fonts-powerline \
     # set up locale
-    && locale-gen en_US.UTF-8 && fc-cache -vf
+    && sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 && fc-cache -vf \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=dialog
 ENV SHELL=/bin/zsh
@@ -31,6 +48,10 @@ RUN yarn set version berry
 
 ARG USER="node"
 ARG GROUP="node"
+
+# Passwordless sudo for the non-root user — the old MS base set this up for us.
+RUN echo "${USER} ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER}
 
 USER ${USER}
 
@@ -46,10 +67,5 @@ RUN git clone https://github.com/romkatv/powerlevel10k.git /home/${USER}/.oh-my-
 
 ADD --chown=${USER}:${GROUP} .zshrc /home/${USER}
 
-# Configure Linuxbrew
-RUN brew update || true
-# Install handy plugins
-RUN brew install zsh-autosuggestions zsh-syntax-highlighting
-
-# Restore cache ownership
-RUN sudo chown -R ${USER}:${GROUP} ~/.cache
+# The zsh plugins now come from apt above (see the note there), so there is no
+# brew step left to run.

@@ -5,8 +5,11 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			// Update 'VARIANT' to pick a Node version: 12, 14, 16
-			"VARIANT": "14",
+			// Update 'VARIANT' to pick a Node version: 24-bookworm-slim,
+			// 22-bookworm-slim. Keep in sync with cms/Dockerfile,
+			// .github/workflows/ci.yml and the "engines" field of
+			// cms/package.json and admin/package.json.
+			"VARIANT": "24-bookworm-slim",
 
 			// User name has to match the 'remoteUser' argument for personalization to work
 			"USER": "node",

@@ -2,6 +2,9 @@
   "name": "next-admin",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev -p 4000",
     "build": "npx next telemetry disable && next build",

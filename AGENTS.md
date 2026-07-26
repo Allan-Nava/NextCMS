@@ -53,6 +53,8 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - `@popperjs/core` and the apexcharts pair are aligned so npm can resolve (`NC-50`): do not move them back.
 - Lockfiles: always regenerate from scratch (`rm -rf node_modules package-lock.json`), otherwise you inherit the missing optional SWC binaries and the build fails with *Failed to load SWC binary*.
 - The root `Dockerfile` and `Dockerfile-slim` build nothing (the root has no `next`): the real image comes from `cms/Dockerfile` via `docker-publish.yml` (`NC-27`).
+- Node is **24**, pinned in five places that must stay in sync (`NC-55`): `ci.yml` (both jobs), `cms/Dockerfile` (both stages), `.devcontainer/devcontainer.json` (`VARIANT`), and `engines.node` in `cms/package.json` and `admin/package.json`. Vercel reads `engines.node` and it beats the dashboard setting — change it in git, not in the Vercel project.
+- `cms/Dockerfile` must install `openssl` (`NC-55`): the `-slim` images omit it, and without it Prisma resolves `linux-<arch>-openssl-undefined` and `prisma generate` dies with `Unknown binaryTarget`. Bookworm/OpenSSL 3 is fine for Prisma 3.15; alpine (musl) is a different target and is not.
 - The `@nextcms/*` packages are not installable: they depend on versions never published to npm (`NC-51`). That is why CI has no `packages` job.
 - The `cms/.env.example` credential has been removed from the file but is still in the git history: it must be **rotated** (`NC-5`).
 
