@@ -117,7 +117,12 @@ async function update(id: number, patch: UpdateComponentInput): Promise<Componen
     const current = await prisma.component.findUnique({ where: { id } });
     if (!current) {
         // Surfaces as Prisma's P2025 to the caller, like every other miss.
-        throw new Prisma.PrismaClientKnownRequestError('component not found', 'P2025', Prisma.prismaVersion.client);
+        // Prisma 4 moved this constructor to an options object; the positional
+        // form was the Prisma 3 signature.
+        throw new Prisma.PrismaClientKnownRequestError('component not found', {
+            code: 'P2025',
+            clientVersion: Prisma.prismaVersion.client,
+        });
     }
     const descriptor = describe({
         name: patch.name ?? current.name,

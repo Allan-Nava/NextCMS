@@ -9,8 +9,8 @@
 #   - the production stage copied `prod_node_modules` without the generated
 #     Prisma client (`node_modules/.prisma`), so the app crashed at runtime.
 #
-# bookworm since v0.7.3 (NC-55). It used to be bullseye, because the Prisma 3
-# query engines were assumed to need OpenSSL 1.1 — but Prisma 3.15 does publish a
+# bookworm since v0.7.3 (NC-55). It used to be bullseye, because the Prisma
+# query engines were assumed to need OpenSSL 1.1 — but Prisma does publish a
 # `debian-openssl-3.0.x` engine, and Node 24 has no bullseye image at all
 # (bullseye is EOL for the official Node images). The bookworm build is verified:
 # `prisma generate` resolves the OpenSSL 3.0 engine and `next build` passes.
@@ -21,7 +21,7 @@
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-# `openssl` is not optional: the -slim images ship no openssl CLI, and Prisma 3
+# `openssl` is not optional: the -slim images ship no openssl CLI, and Prisma
 # shells out to it to pick a query engine. Without it the platform resolves to
 # `linux-<arch>-openssl-undefined` and `prisma generate` dies with
 # "Unknown binaryTarget". libssl3 itself is already present.

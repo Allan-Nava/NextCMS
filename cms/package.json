@@ -7,13 +7,13 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next telemetry disable && prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest"
   },
   "dependencies": {
-    "@prisma/client": "^3.11.1",
+    "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "next": "12.1.1",
@@ -67,7 +67,7 @@
     "prettier": "^2.3.2",
     "prism-react-renderer": "^1.2.1",
     "prism-themes": "^1.7.0",
-    "prisma": "^3.11.1",
+    "prisma": "^5.22.0",
     "prismjs": "^1.23.0",
     "react": "^17.0.2",
     "react-apexcharts": "~1.5.0",

@@ -4,6 +4,49 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.9.1] - 2026-07-26
+
+Work on a Vercel build failure. **The reported failure was not reproduced**, and this release says so rather than claiming a fix — but the investigation found three real defects, two of them mine, and they are fixed.
+
+### Fixed
+
+- **Prisma upgraded 3.15 → 5.22** (NC-74). Prisma 3.15 shells out to the `openssl` binary to pick a query engine; when that binary is absent it resolves the platform to `linux-<arch>-openssl-undefined` and **throws**, three seconds into a build. Reproduced on `node:24-bookworm-slim`. Prisma 5 downgrades that to a warning and generates successfully.
+
+  Declaring `binaryTargets` explicitly does **not** avoid it — detection of the current platform runs regardless. That was tested, not assumed.
+
+  Prisma 5 rather than 6: 6 requires TypeScript ≥5.1, and this codebase is on 4.9, so it would have dragged a second major upgrade behind it. One code change was needed — `PrismaClientKnownRequestError` takes an options object again from Prisma 4 onwards, which is the Prisma 3 signature reversed.
+
+- **`cms/vercel.json` no longer pins a bare `npm ci`** (NC-75). Under `NODE_ENV=production`, which build environments commonly set, `npm ci` omits devDependencies: **144 packages instead of 900**, with none of `tsc`, `prisma` or `next` installed — a build that dies in seconds. Both counts were measured in a container. Now `npm ci --include=dev`, so the install cannot depend on an environment variable. This landmine was introduced in v0.8.3, by me.
+
+- **`prisma -v` removed from the build script.** It was added in v0.8.3 as a diagnostic and is worse than useless: it runs the *schema* engine, which fails to load where the *query* engine used by `prisma generate` works fine. It can turn a passing build into a failing one — demonstrated, not theorised.
+
+- **`next telemetry disable` removed from the build script.** Vercel, CI and the Dockerfile all set `NEXT_TELEMETRY_DISABLED` already, and the command writes a config file, so it was one more thing that could fail for no benefit.
+
+### Verification
+
+The app was built in a container that matches Vercel's shape — `node:24-bookworm-slim`, Linux, a fresh `npm ci` of 900 packages, `NODE_ENV=production` — and **it builds cleanly**, with both the old and the new build script:
+
+```
+INSTALL_EXIT=0 (added 900 packages)
+BUILD_EXIT=0
+```
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 pre-existing warning) | ✅ 106 passed | ✅ |
+
+### What is still unknown
+
+**The cause of the reported Vercel failure.** The pasted log ends at `Running "npm run build"`, and the error lines come after that. Five hypotheses were tested and three were refuted:
+
+| Hypothesis | Verdict |
+|---|---|
+| Node version rejected (`14.x`) | Fixed in v0.8.4 — the log confirms it is gone, and Next 12.1.1 is detected |
+| devDependencies missing from the install | Refuted: the log shows 897 packages, a full install |
+| `NODE_ENV=production` breaks the build | Refuted: reproduced locally, builds fine |
+| `next telemetry disable` fails | Refuted: builds fine in a faithful container |
+| Prisma cannot detect OpenSSL | Real and fixed, but not reproducible as *Vercel's* failure |
+
 ## [0.9.0] - 2026-07-26
 
 First two items of **M7 · Product**, both built test-first.
