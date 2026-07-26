@@ -103,12 +103,13 @@ Things that need a human decision, not a patch:
 ## Pointers
 
 - Todos: `BACKLOG.md` (`NC-n` ids) · Releases: `CHANGELOG.md` · Docs: `docs/` (`Prisma.md`, `NPM.md`) · Schema: `cms/prisma/schema.prisma`
-- CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/test/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io), `backlog-sync.yml`
+- CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/test/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io), `backlog-sync.yml`, `pages.yml`, `release.yml`
 - **Do not put `prisma -v` (or anything that runs the schema engine) in the build** (`NC-74`): it can fail where `prisma generate` succeeds, turning a working build into a failing one. Proven, not theorised.
 - **`cms/vercel.json` pins `npm ci --include=dev`** (`NC-75`): plain `npm ci` under `NODE_ENV=production` installs 144 packages instead of 900 and none of `tsc`, `prisma` or `next`, so the build dies immediately.
 - **The `cms` build script must keep running `prisma generate`** (`NC-70`): the generated client lives in `node_modules/.prisma`, and any host that restores `node_modules` from a cache — Vercel does — skips the postinstall that would create it. Without it the build fails type-checking with `'@prisma/client' has no exported member 'Prisma'`. A local `.next` cache hides this, so test with `rm -rf .next node_modules/.prisma`.
 - **Vercel needs Root Directory = `cms`** (`NC-71`), a dashboard-only setting: the repo root has no `next` and no scripts, so a project pointed at it cannot build.
 - **`engines.node` must stay identical in all three manifests** — root, `cms/`, `admin/` (`NC-72`). Vercel reads it from the manifest at the project's Root Directory only; putting it just in `cms/` is invisible to a project pointed at the repo root, and the dashboard's stale value wins. `check-engines.mjs` gates this in CI.
+- **Releases are automatic**: pushing a `v*` tag publishes a GitHub release whose body is that version's `CHANGELOG.md` section (`release.yml`). A tag with no changelog section **fails the workflow** — so writing the changelog entry is not optional, it is what makes the release publishable.
 - **Backlog automation**: every push touching `BACKLOG.md` syncs the `NC-n` items to GitHub issues and the `## Mn` sections to milestones (`.github/scripts/backlog-sync.mjs`). The file is the source of truth and is never written back to — close an item by ticking it in the file, not by closing the issue.
 - **Documentation site**: `docs/index.html` (static, no build step) deployed by `pages.yml`. It states the project status publicly, so keep it honest when behaviour changes.
 - Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`, `SITE_NAME`

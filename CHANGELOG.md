@@ -4,6 +4,24 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.10.1] - 2026-07-26
+
+### Added
+
+- **Releases are published automatically** (NC-77). Ten tags existed and the Releases page was empty. `.github/workflows/release.yml` now publishes a release for every `v*` tag, taking the body from the matching `CHANGELOG.md` section.
+
+  The notes come from the changelog and not from commit messages, because the changelog already records what was verified and what was not — a commit log does not. A tag whose version has **no** changelog section **fails the workflow** rather than publishing an empty release: this project's rule that every tag has a changelog section is now enforced instead of trusted. Re-running on an existing release refreshes its notes, so a corrected changelog can be republished.
+
+  `--prerelease` is set only for a semver prerelease suffix. Marking every `0.x` tag as a prerelease — which is all of them so far — would make the flag meaningless.
+
+- 12 tests for the extractor, run in the release workflow before anything is published and in CI alongside the backlog parser (24 repo-script tests in total). One of them runs against the real `CHANGELOG.md` and asserts that every version's section is non-empty and does not leak into the next one.
+
+### Note
+
+The `--prerelease` flag is passed as a plain string rather than a bash array. Expanding an empty array under `set -u` is an error in bash 3.2, and while the runners ship bash 5, depending on that is the kind of assumption that only fails in CI. Verified under bash 3.2, which is stricter than the runner.
+
+**When these tags are pushed, one release per tag will be created** — ten of them at once for the existing history. That is the intended backfill, but it is worth knowing before the push.
+
 ## [0.10.0] - 2026-07-26
 
 Most of **M5 · Admin**. The panel had one page whose entire body was the string `TODO ADMIN STUFF`; it is now a working surface with a session.

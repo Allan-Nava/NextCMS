@@ -26,7 +26,7 @@ jobs:
   # first, because getting these wrong fails a deploy before any of the build
   # jobs below would have caught it.
   manifests:
-    name: manifests (node version)
+    name: repo (manifests, scripts)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +37,12 @@ jobs:
       # Directory, so every manifest a deploy might read has to agree (NC-72).
       - name: Node version is declared consistently
         run: node .github/scripts/check-engines.mjs
+
+      # The repo scripts decide what reaches the issue tracker and what a
+      # published release says, so they are tested here too rather than only in
+      # the workflows that use them.
+      - name: Repo script tests
+        run: node --test .github/scripts/*.test.mjs
 
   # Public app plus the API. It is the only one with Prisma, so the client must
   # be generated before the typecheck: without `prisma generate` the

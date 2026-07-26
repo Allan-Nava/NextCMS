@@ -872,7 +872,8 @@ Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.</
           </li>
           <li>
             <strong>Every feature is a tagged release</strong> with its own <code>CHANGELOG.md</code> section, including
-            what was verified and what was not.
+            what was verified and what was not. Pushing the tag publishes a GitHub release from that section, and a tag
+            without one fails the workflow — so the entry is what makes a release publishable, not a courtesy.
           </li>
           <li>
             <strong>Documentation ships with the change.</strong> A change to the architecture, the env vars, the schema

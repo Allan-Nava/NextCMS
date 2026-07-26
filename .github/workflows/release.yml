@@ -1,0 +1,91 @@
+name: Release
+
+# Publishes a GitHub release when a `v*` tag is pushed (NC-77).
+#
+# The notes come from CHANGELOG.md, not from commit messages: the changelog already
+# records what was verified and what was not, which a commit log does not. The
+# section is the source of truth, the same way BACKLOG.md is for issues.
+#
+# A tag whose version has no changelog section **fails the workflow** rather than
+# publishing an empty release. That is this project's own rule — every tag has a
+# changelog section — enforced instead of trusted.
+#
+# Idempotent: re-running on an existing release updates its notes rather than
+# failing, so a fixed changelog can be republished.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish or refresh (e.g. v0.10.0)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The tag itself for a push; the requested tag for a manual run.
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # The parser decides what a published release says, so it is tested before it
+      # is trusted — the same rule as the backlog sync.
+      - name: Test the changelog parser
+        run: node --test .github/scripts/changelog-section.test.mjs
+
+      - name: Resolve the version
+        id: version
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          version="${tag#v}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Semver prereleases only: 0.x is where this project lives, so treating
+          # every 0.x tag as a prerelease would make the flag meaningless.
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract the release notes
+        run: node .github/scripts/changelog-section.mjs "${{ steps.version.outputs.tag }}" > release-notes.md
+
+      - name: Publish or refresh the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          # A plain string rather than an array on purpose: expanding an empty
+          # array under `set -u` is an error in bash 3.2, and depending on the
+          # runner shipping bash 5 is the kind of assumption that only fails in CI.
+          # The unquoted expansion below is deliberate word splitting.
+          prerelease=""
+          if [ "$PRERELEASE" = "true" ]; then prerelease="--prerelease"; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG exists, refreshing its notes"
+            # shellcheck disable=SC2086
+            gh release edit "$TAG" --notes-file release-notes.md $prerelease
+          else
+            # shellcheck disable=SC2086
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes-file release-notes.md \
+              --verify-tag $prerelease
+          fi

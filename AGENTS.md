@@ -6,7 +6,7 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 
 ## Working rules (ALWAYS)
 
-- **Every feature = one tag `vX.Y.Z`**: a section in `CHANGELOG.md` (Keep a Changelog) plus `git tag -a vX.Y.Z -m "Release X.Y.Z"`. `minor` for features, `patch` for fixes and docs.
+- **Every feature = one tag `vX.Y.Z`**: a section in `CHANGELOG.md` (Keep a Changelog) plus `git tag -a vX.Y.Z -m "Release X.Y.Z"`. `minor` for features, `patch` for fixes and docs. Pushing the tag publishes a GitHub release from that changelog section, and a missing section fails the workflow — so the entry is mandatory in practice, not just by convention.
 - **Track everything**: every piece of work exists as an `NC-n` item in `BACKLOG.md` before you start, gets ticked when released, and the commit cites its id (`NC-12: fix login response envelope`).
 - **Document it**: changes to architecture, commands, env vars, the Prisma schema or an API contract update `CLAUDE.md` and `AGENTS.md` in the same commit.
 - **No workspaces**: run `npm ci` and the scripts inside `cms/`, `admin/` or the individual package. Never from the repo root (no scripts there).
