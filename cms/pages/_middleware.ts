@@ -19,7 +19,7 @@ import { NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 // decision: every API route enforces the real check with `requireAuth` /
 // `requireAdmin` from lib/helpers/auth.ts. Do not move authorisation here.
 //
-const PROTECTED_PREFIXES = ['/page-builder', '/profile'];
+const PROTECTED_PREFIXES = ['/page-builder', '/profile', '/content'];
 //
 export function middleware(req: NextRequest, ev: NextFetchEvent) {
     const { pathname } = req.nextUrl;

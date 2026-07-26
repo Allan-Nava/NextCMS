@@ -11,6 +11,8 @@
 // bodies straight to Prisma, so a missing field surfaced as a 500 from the
 // database driver instead of a 400.
 //
+import { isRegisteredComponent } from '../../components/registry';
+//
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 //
 export const MIN_PASSWORD_LENGTH = 10;
@@ -58,6 +60,39 @@ export function validateComponentPayload(body: unknown): string[] {
     const payload = (body ?? {}) as Record<string, unknown>;
     if (!isNonEmptyString(payload.name)) errors.push('name is required');
     if (!isNonEmptyString(payload.path)) errors.push('path is required');
+    return errors;
+}
+//
+// A saved layout is a list of blocks (NC-42). Every path is checked against the
+// component registry here, so a layout the renderer could not draw never reaches
+// the database (NC-34).
+export function validateLayoutPayload(body: unknown): string[] {
+    const errors: string[] = [];
+    const payload = (body ?? {}) as Record<string, unknown>;
+    const blocks = payload.components;
+    if (!Array.isArray(blocks)) {
+        return ['components must be an array'];
+    }
+    blocks.forEach((block, index) => {
+        const item = (block ?? {}) as Record<string, unknown>;
+        if (!isNonEmptyString(item.name)) errors.push(`components[${index}].name is required`);
+        if (!isNonEmptyString(item.path)) {
+            errors.push(`components[${index}].path is required`);
+        } else if (!isRegisteredComponent(item.path)) {
+            errors.push(`components[${index}].path "${item.path}" is not a registered component`);
+        }
+        if (item.props !== undefined && (typeof item.props !== 'object' || item.props === null || Array.isArray(item.props))) {
+            errors.push(`components[${index}].props must be an object`);
+        }
+    });
+    return errors;
+}
+//
+export function validateTaxonomyPayload(body: unknown): string[] {
+    const errors: string[] = [];
+    const payload = (body ?? {}) as Record<string, unknown>;
+    if (!isNonEmptyString(payload.name)) errors.push('name is required');
+    if (payload.slug !== undefined && !isNonEmptyString(payload.slug)) errors.push('slug must be a non-empty string');
     return errors;
 }
 //

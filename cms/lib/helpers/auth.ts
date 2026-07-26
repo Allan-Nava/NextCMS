@@ -116,6 +116,14 @@ export function requireAuth(req: NextApiRequest, res: NextApiResponse): TokenCla
     return claims;
 }
 //
+// For endpoints that serve both the public and the editor: returns the claims
+// when a valid token is present and null otherwise, without answering the
+// request. Used to widen a listing for an authenticated caller (NC-41).
+export function optionalAuth(req: NextApiRequest): TokenClaims | null {
+    const token = extractToken(req);
+    return token ? verifyAccessToken(token) : null;
+}
+//
 export function requireAdmin(req: NextApiRequest, res: NextApiResponse): TokenClaims | null {
     const claims = requireAuth(req, res);
     if (!claims) return null;

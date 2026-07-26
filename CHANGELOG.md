@@ -4,6 +4,59 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.8.1] - 2026-07-26
+
+### Added
+
+- **Documentation site** (NC-57): `docs/index.html` plus a stylesheet, deployed to GitHub Pages by `.github/workflows/pages.yml`. Before this the project had no published documentation — `docs/` held two scratch notes and two screenshots, and the README was three lines and a GIF.
+
+  It covers the overview, an honest project status table (including what does *not* work), quick start with the first-user problem spelled out, the full environment variable reference, architecture and layering, the data model, a complete API reference with the access level of every endpoint, the authentication guarantees, the content and page-builder guide, the roadmap and the tracking process.
+
+  Static HTML and one stylesheet: no framework, no build step, light and dark themes, readable on a phone. `.nojekyll` keeps Pages from running Jekyll over it.
+
+- `.github/scripts/check-anchors.mjs`: the site is one page navigated entirely by anchors, so a renamed heading silently breaks the sidebar — something `html-validate` does not catch and a reader notices immediately. The Pages workflow validates the markup and then the anchors before deploying.
+
+- README rewritten to say what the project is, what state it is in, and where the documentation lives.
+
+### Verification
+
+`html-validate` passes with zero errors against its default preset — the markup was fixed to conform rather than the rules configured away — and the anchor check resolves all 13 links against 13 ids. Both run in the workflow before the deploy step.
+
+**Needs one manual step**: Settings → Pages → Source = "GitHub Actions". Until that is set the workflow builds and then fails at deploying. Nothing has been deployed yet, so the deploy path has not run.
+
+## [0.8.0] - 2026-07-26
+
+Milestone **M4 · Content and page builder** closed. Content can be created, categorised, published and composed — and a saved layout now survives a reload.
+
+### Added
+
+- **Categories and tags** (NC-41): new `Category` and `Tag` models with a full CRUD API (`/api/category`, `/api/tag`). Slugs are derived from the name when not supplied, and tags named in a content payload are created on the fly, so an editor never has to create a tag before using it.
+- **Drafts** (NC-41): `Page.publishedAt`. `GET /api/page` returns only published content to an anonymous caller and everything to an authenticated one, so a draft cannot leak through the public API.
+- **Content filters** (NC-41): `?type=`, `?category=`, `?tag=` on `GET /api/page`.
+- **Layout persistence** (NC-42): `GET` and `PUT /api/page/:id/layout`. The replacement runs inside a transaction — a half-written layout would render a mixture of two versions. A block whose path is not in the component registry is rejected before it reaches the database, so a layout the renderer cannot draw can never be saved.
+- **`Component.position`** (NC-42): a layout has an explicit order now. Previously the blocks came back in whatever order the database chose.
+- **Editor screens** (NC-41): `/content` (list, filter by type, delete), `/content/new` and `/content/:id` (title, slug, type, description, category, tags, SEO fields, published flag), all behind the session middleware. Creating content leads straight into the layout editor, since a new page with no blocks renders empty.
+- **The page builder edits a real page** (NC-42): `/page-builder?page=<id>` loads the saved layout, tracks changes and writes them back. Its palette is the component registry rather than arbitrary `Component` rows — those are the components the renderer can actually draw.
+- 14 more tests (66 total): slug derivation, taxonomy validation, and layout validation including the rejection of unregistered component paths.
+
+### Changed
+
+- **`Page.tags` is no longer a freeform string**: it is a many-to-many relation to `Tag`. Tags can be listed and filtered on now, which the old column could not do. **Breaking for an existing database** — the `tags` column is dropped, so export its contents first if it holds anything worth keeping, then `npx prisma db push`.
+- Pages and posts share the `Page` table, told apart by `type`, so they share one slug space and one renderer.
+- `loadPage` fetches the blocks of the one page being rendered, in order. It used to read every component in the database and filter them in memory.
+
+### New backlog items
+
+- **NC-58** 🟡 (M5) — the second half of the page builder: per-block settings in the UI (props are stored and rendered, just not editable), image and media handling, and nested blocks. The data model supports nesting; the editor does not.
+
+### Verification
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 pre-existing warning) | ✅ 66 passed | ✅ |
+
+Not verified: no runtime exercise against a live PostgreSQL instance. The queries are checked by the type system and `prisma validate`, not by execution, and the new tables and columns need `prisma db push` before any of this runs.
+
 ## [0.7.3] - 2026-07-26
 
 Node runtime aligned on **24** everywhere. This started as a deploy failure — Vercel refused the build outright with `Found invalid or discontinued Node.js Version: "14.x"` — but the repo disagreed with itself about the Node version in three separate places, so pointing Vercel at a newer one would only have moved the problem.

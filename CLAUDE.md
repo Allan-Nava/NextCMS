@@ -50,6 +50,8 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `lib/helpers/auth.ts` — token signing/verification, the access-token cookie, and the `requireAuth` / `requireAdmin` guards used by the API routes.
   - `lib/helpers/password-reset.ts` — reset tokens: only their SHA-256 hash is stored, they are single-use and they expire. `lib/helpers/mailer.ts` is the transport seam — **no real mail provider is configured**.
   - `lib/utils/rate-limit.ts` — fixed-window limiter on the auth endpoints. Counters are per process, so behind several instances the limit is per instance.
+  - `lib/helpers/taxonomy-repo.ts` — categories and tags; `tagRepo.ensureMany` creates tags named in a payload.
+  - Editor screens: `/content` (list), `/content/new`, `/content/:id`, `/page-builder?page=<id>`, `/profile`. All behind the session middleware.
   - `lib/types/response/response.ts` — uniform envelope: `successResponse(data, message)` / `errorResponse(error)` with `DEFAULTResponse.OK|KO`.
   - `lib/utils/logger.ts` — levelled logger. Never log request or response objects.
   - `lib/reducers/` — Redux Toolkit (`auth`, `layout`, `dragAndDrop`) mounted in `store.ts`; the page builder (`components/pagebuilder/`, react-dnd) builds on it.
@@ -60,7 +62,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `core/utils` → `@nextcms/utils`: env helper, errors, sanitize/visitors (including `remove-password`).
   - `generators/app` → `@nextcms/generate-new`, `generators/generators` → `@nextcms/generators` (plop).
   - `cli/create-nextcms-app`: the `npx create-nextcms-app` scaffolder.
-- **Data** — `cms/prisma/schema.prisma`: `Page`, `Component` (tree via `parent` + `template` + `data`), `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema). There is no `migrations/` directory: the project has always used `prisma db push`, so a schema change needs to be pushed to the database before the code that depends on it can run.
+- **Data** — `cms/prisma/schema.prisma`: `Page` (content; `type` tells pages and posts apart, `publishedAt` marks drafts), `Component` (one layout block: `parent` = page id, `position` = order), `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema). There is no `migrations/` directory: the project has always used `prisma db push`, so a schema change needs to be pushed to the database before the code that depends on it can run.
 
 ## Known traps / technical rules
 
@@ -80,7 +82,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 
 ## Roadmap
 
-`BACKLOG.md` defines **sequential** milestones, each with its release: **M0** green build ✅ (`v0.5.0`) → **M1** security ✅ + **M2** correct APIs ✅ (`v0.6.0`) → **M3** working auth ✅ (`v0.7.0`) → **M4** content and page builder (`v0.8.0`) → **M5** admin (`v0.9.0`) → **M6** road to 1.0 (`v1.0.0`). Separately, **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed (all items ticked, CI green, changelog section, tag).
+`BACKLOG.md` defines **sequential** milestones, each with its release: **M0** green build ✅ (`v0.5.0`) → **M1** security ✅ + **M2** correct APIs ✅ (`v0.6.0`) → **M3** working auth ✅ (`v0.7.0`) → **M4** content and page builder ✅ (`v0.8.0`) → **M5** admin (`v0.9.0`) → **M6** road to 1.0 (`v1.0.0`). Separately, **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed (all items ticked, CI green, changelog section, tag).
 
 ## Known state
 
@@ -100,5 +102,6 @@ Things that need a human decision, not a patch:
 - Todos: `BACKLOG.md` (`NC-n` ids) · Releases: `CHANGELOG.md` · Docs: `docs/` (`Prisma.md`, `NPM.md`) · Schema: `cms/prisma/schema.prisma`
 - CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/test/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io), `backlog-sync.yml`
 - **Backlog automation**: every push touching `BACKLOG.md` syncs the `NC-n` items to GitHub issues and the `## Mn` sections to milestones (`.github/scripts/backlog-sync.mjs`). The file is the source of truth and is never written back to — close an item by ticking it in the file, not by closing the issue.
+- **Documentation site**: `docs/index.html` (static, no build step) deployed by `pages.yml`. It states the project status publicly, so keep it honest when behaviour changes.
 - Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`

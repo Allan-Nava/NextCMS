@@ -27,6 +27,8 @@ export type UpdateComponentInput = Partial<CreateComponentInput>;
 export const componentRepo = {
     getAll,
     getById,
+    getForPage,
+    replaceForPage,
     create,
     update,
     delete: _delete,
@@ -34,7 +36,49 @@ export const componentRepo = {
 };
 //
 async function getAll(): Promise<Component[]> {
-    return prisma.component.findMany({ where: { deletedAt: null }, orderBy: { id: 'asc' } });
+    return prisma.component.findMany({ where: { deletedAt: null }, orderBy: [{ parent: 'asc' }, { position: 'asc' }] });
+}
+//
+// The blocks of one page, in layout order (NC-42).
+async function getForPage(pageId: number): Promise<Component[]> {
+    return prisma.component.findMany({
+        where: { parent: pageId, deletedAt: null },
+        orderBy: { position: 'asc' },
+    });
+}
+//
+// Persists a page's layout (NC-42). The page builder holds an ordered list, so
+// the write is a replacement rather than a diff: the previous blocks are
+// soft-deleted and the new ones inserted with their position.
+//
+// Wrapped in a transaction — a layout half-replaced is worse than one not saved,
+// because the page would render a mix of the old and new versions.
+// The array form of `$transaction` rather than the callback form: interactive
+// transactions are still a preview feature in Prisma 3, and this does not need
+// one — the operations are known up front and run in order.
+async function replaceForPage(pageId: number, blocks: CreateComponentInput[]): Promise<Component[]> {
+    const retire = prisma.component.updateMany({
+        where: { parent: pageId, deletedAt: null },
+        data: { deletedAt: new Date() },
+    });
+    const inserts = blocks.map((block, position) => {
+        const descriptor = describe({ ...block, parent: pageId });
+        return prisma.component.create({
+            data: {
+                name: block.name,
+                property: JSON.stringify(descriptor),
+                parent: pageId,
+                position,
+                template: block.path,
+                data: JSON.stringify(descriptor.props),
+            },
+        });
+    });
+    const result = await prisma.$transaction([retire, ...inserts]);
+    // The first entry is the updateMany count; the rest are the created rows.
+    const created = result.slice(1) as Component[];
+    logger.info('page layout replaced', { pageId, blocks: created.length });
+    return created;
 }
 //
 async function getById(id: number): Promise<Component | null> {

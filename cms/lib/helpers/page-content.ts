@@ -31,14 +31,15 @@ export async function loadPage(slug: string): Promise<RenderedPage | null> {
         logger.debug('no page for slug', { slug });
         return null;
     }
-    // Components are stored flat and attached to a page through `parent`.
-    const components = await componentRepo.getAll();
-    const attached = components.filter((component) => component.parent === page.id).map(componentRepo.toPageComponent);
+    // Blocks are fetched for this page only and already ordered by `position`
+    // (NC-42) — the previous version read every component in the database and
+    // filtered in memory, in whatever order the database returned them.
+    const blocks = await componentRepo.getForPage(page.id);
     return {
         slug: page.slug,
         title: page.title,
         description: page.description,
-        components: attached,
+        components: blocks.map(componentRepo.toPageComponent),
     };
 }
 //

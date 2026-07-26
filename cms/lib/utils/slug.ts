@@ -20,3 +20,18 @@ export function slugFromSegments(segments: string | string[] | undefined): strin
     return joined.length === 0 ? '/' : `/${joined}`;
 }
 //
+// Name -> url-safe slug, for categories and tags (NC-41). Accented characters
+// are decomposed rather than dropped, so "Attualità" becomes "attualita" and not
+// "attualit".
+export function slugify(value: string): string {
+    const slug = value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    // A name made only of symbols would collapse to an empty string, which is
+    // not a usable unique key.
+    return slug.length > 0 ? slug : 'untitled';
+}
+//

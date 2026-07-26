@@ -22,6 +22,11 @@ export const layoutReducer = createSlice({
   name: "layout",
   initialState,
   reducers: {
+    // Seeds the editor with a layout loaded from the API (NC-42). Without this
+    // the builder always started empty and a saved layout could not be reopened.
+    setLayout: (state, action: PayloadAction<{ components: PageComponent[] }>) => {
+      state.components = action.payload.components;
+    },
     insertItem: (state, action: PayloadAction<{ index: number, item: PageComponent }>) => {
       const { index, item } = action.payload;
 
@@ -47,7 +52,7 @@ export const layoutReducer = createSlice({
   }
 })
 
-export const {insertItem, removeItem, moveItem} = layoutReducer.actions
+export const {setLayout, insertItem, removeItem, moveItem} = layoutReducer.actions
 
 export const selectLayout = (state: RootState) => state.layout;
 

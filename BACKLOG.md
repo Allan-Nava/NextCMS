@@ -19,9 +19,9 @@ Milestones are **sequential**: each only makes sense once the previous one is cl
 | **M1** | Security | No secrets around, no password hashes in responses, guarded routes | `v0.6.0` ✅ | NC-1…10 |
 | **M2** | Correct APIs | Every endpoint answers, with the right status and the right data | `v0.6.0` ✅ | NC-11…23 |
 | **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
-| **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` | NC-41, NC-42 |
-| **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54 |
-| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55, 56 |
+| **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` ✅ | NC-41, NC-42 |
+| **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54, 58 |
+| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55…57 |
 
 Release numbering note: M1 and M2 shipped together in `v0.6.0`, so everything after moved up one minor from the original plan.
 
@@ -93,14 +93,18 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [x] **NC-40** — User profile screens. *(v0.7.0: `/profile` reads `GET /api/auth/me` and updates through `PATCH /api/user/:id`, with an empty password field meaning "leave it alone"; `/forgot-password` and `/reset-password` complete the recovery flow. All three sit behind the middleware where they need a session. Creating users stays admin-only through `POST /api/user` — the admin UI for it is NC-43.)*
 - [x] 🟠 **NC-53** — No rate limiting on `POST /api/auth/login` and `POST /api/auth/register`: credential stuffing was only slowed down by bcrypt. *(v0.7.0: fixed-window limiter in `lib/utils/rate-limit.ts` — 10 login attempts per IP per 5 minutes, 5 registrations and 5 reset requests per IP per hour, `429` with a `Retry-After` header. Bucketed by IP, not by username, so nobody can lock a known account out on purpose. **Counters are per process**: behind several instances the effective limit is per instance — a shared store is the next step if the app is scaled out.)*
 
-## M4 · Content and page builder → `v0.8.0`
+## M4 · Content and page builder → `v0.8.0` ✅
 
-- [ ] **NC-41** — Content management: posts, pages, categories, tags.
-- [ ] **NC-42** — Page builder: blocks, images, layout persistence. The drag-and-drop UI exists but nothing is saved; `Component.parent` is the attachment point the renderer already reads.
+**Closed.** Content can be created, categorised, published and composed, and a saved layout survives a reload.
+
+- [x] **NC-41** — Content management: posts, pages, categories, tags. *(v0.8.0: pages and posts share the `Page` table keyed by `type`, so they share a slug space and a renderer. New `Category` and `Tag` models — the old freeform `tags String?` column is gone, replaced by real entities that can be listed and filtered on. `publishedAt` makes drafts possible, and `GET /api/page` only returns published content to an anonymous caller. New endpoints for both taxonomies, filters `?type=`/`?category=`/`?tag=`, and the `/content` screens — list with a type filter, create, edit, delete.)*
+- [x] **NC-42** — Page builder: layout persistence. *(v0.8.0: `Component.position` added, so a layout has an order rather than whatever the database returns. `GET`/`PUT /api/page/:id/layout` read and replace it — the replacement runs in a transaction, because a half-written layout renders a mixture of two versions. The builder now edits one page (`/page-builder?page=<id>`), loads what was saved and writes it back, and its palette is the component registry rather than arbitrary database rows. **Still not built: per-block settings in the UI** (props are stored but not editable), image/media handling, and nested blocks — the data model supports them, the editor does not. Carved out as NC-58.)*
 - [x] 🟡 **NC-34** — `DynamicComponents` did `import(\`${item.path}\`)` with the path coming from the database: webpack had to bundle a whole require-context and the module loaded was decided by data. *(v0.6.0: static allow-list in `components/registry.ts`; the API refuses an unregistered path, the renderer falls back to `NoComponent`.)*
 - [x] 🟡 **NC-35** — Duplicate pages: `cms/pages/pagebuilder.tsx` and `cms/pages/page-builder.tsx`. *(v0.6.0: the older `pagebuilder.tsx` removed; `page-builder.tsx` is the guarded path.)*
 
 ## M5 · Admin → `v0.9.0`
+
+- [ ] 🟡 **NC-58** — Page builder, second half: per-block settings in the UI (props are already stored and rendered, just not editable), image and media handling, and nested blocks. Carved out of NC-42, which shipped layout persistence in v0.8.0.
 
 - [ ] ⚪ **NC-36** — `admin/package.json` duplicates ~70 devDependencies of `cms/` (Metronic and CRA leftovers) for three pages. Trim it. `react-scripts` is already gone (NC-10).
 - [ ] **NC-43** — Admin UI/UX: every entity wired up, including the admin-only user creation screen.
@@ -120,5 +124,6 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
   Two traps surfaced while doing it, both verified by building the images rather than reasoning about them:
   - **Prisma needs `openssl` installed on `-slim`.** There is no `node:24-bullseye`, so the image had to move to bookworm — and the old comment claiming Prisma 3 requires OpenSSL 1.1 was wrong (3.15 does publish a `debian-openssl-3.0.x` engine). The real problem is that `bookworm-slim` ships no `openssl` CLI, which Prisma shells out to: without it the platform resolves to `linux-<arch>-openssl-undefined` and `prisma generate` dies with `Unknown binaryTarget`. `openssl` is now installed in both the build and the runtime stage.
   - **No Node 24 devcontainer image exists.** The old base (`vscode/devcontainers/javascript-node:0-14`) is retired and its maintained successor stops at Node 22, so the devcontainer now builds on the official `node:24-bookworm-slim` and installs the `sudo`/`git` the MS base used to provide. `linuxbrew-wrapper` was also dropped from bookworm and would have failed the build outright; the two zsh plugins it existed to install come from apt now.
+- [x] 🟡 **NC-57** — The project had no published documentation: `docs/` held two scratch notes and two screenshots, and the README was three lines and a GIF. *(v0.8.1: a documentation site in `docs/` — overview, honest project status, quick start, the full environment reference, architecture, data model, complete API reference, auth guarantees, content/page-builder guide, roadmap and process. Static HTML and one stylesheet, no framework and no build step; `pages.yml` validates the markup and the anchors before deploying. **Needs one manual step: Settings → Pages → Source = "GitHub Actions".**)*
 - [x] 🟡 **NC-56** — This backlog existed only as a file: nothing carried it into GitHub, so the work was invisible to anyone not reading the repo. *(v0.7.2: `.github/scripts/backlog-sync.mjs` + `.github/workflows/backlog-sync.yml` reconcile every `NC-n` item with an issue and every `## Mn` section with a milestone, idempotently, on every push that touches `BACKLOG.md`. 12 parser tests run before each sync.)*
 - [x] 🟡 **NC-28** — `BASE_URI` was hardcoded to a Vercel URL in `cms/lib/utils/constants.ts` with the env read commented out. *(v0.6.0: both `BASE_URI` and `API_URI` come from the environment.)*

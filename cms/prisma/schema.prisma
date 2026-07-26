@@ -26,36 +26,75 @@ datasource db {
   //
 }
 // 
+// A piece of content. `type` distinguishes the kinds — "page", "post", and
+// whatever else a site needs — so posts and pages share one table, one slug
+// space and one renderer (NC-41).
 model Page {
   id                Int @id @default(autoincrement())
   title             String
   seoTitle          String?
-  description       String 
-  seoDescription    String? 
+  description       String
+  seoDescription    String?
   slug              String @unique
-  tags              String?
   type              String
   jsonld            String?
+  publishedAt       DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
 
+  categoryId        Int?
+  category          Category? @relation(fields: [categoryId], references: [id])
+  // Replaces the old freeform `tags String?` column: tags are entities now, so
+  // they can be listed and filtered on (NC-41). Breaking change for an existing
+  // database — see the release notes.
+  tags              Tag[]
   visits            Visit[]
 
   @@index([title], map: "title")
+  @@index([type], map: "page_type")
+  @@index([categoryId], map: "page_category")
 
 }
 //
+model Category {
+  id                Int @id @default(autoincrement())
+  name              String
+  slug              String @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
+
+  pages             Page[]
+}
+//
+model Tag {
+  id                Int @id @default(autoincrement())
+  name              String
+  slug              String @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+  deletedAt         DateTime?
+
+  pages             Page[]
+}
+//
+// One block of a page's layout. `parent` is the id of the page it belongs to
+// and `position` its order within that page (NC-42): without an explicit order
+// the layout came back in whatever order the database felt like.
 model Component {
   id                Int @id @default(autoincrement())
   name              String
   property          String
   parent            Int
+  position          Int @default(0)
   template          String
   data              String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
+
+  @@index([parent, position], map: "component_parent_position")
 }
 //
 model Entity {
