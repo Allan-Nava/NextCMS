@@ -15,6 +15,10 @@ import { JWTModel, JWTModelToUserModel, PublicUser, UserModel } from '../types/u
 //
 export const LOGIN_URL = '/api/auth/login';
 export const LOGOUT_URL = '/api/auth/logout';
+export const ME_URL = '/api/auth/me';
+export const REFRESH_URL = '/api/auth/refresh';
+export const FORGOT_PASSWORD_URL = '/api/auth/forgot-password';
+export const RESET_PASSWORD_URL = '/api/auth/reset-password';
 //
 export interface LoginPayload {
     access_token: string;
@@ -42,6 +46,28 @@ export function login(username: string, password: string) {
 //
 export function logout() {
     return axios.post(LOGOUT_URL);
+}
+//
+// The access-token cookie is HttpOnly, so the browser attaches it on its own —
+// no Authorization header needed for same-origin calls (NC-39).
+export function currentUser() {
+    return axios.get<ApiEnvelope<PublicUser>>(ME_URL);
+}
+//
+export function refresh(refreshToken: string) {
+    return axios.post<ApiEnvelope<LoginPayload>>(REFRESH_URL, { refresh_token: refreshToken });
+}
+//
+export function forgotPassword(email: string) {
+    return axios.post<ApiEnvelope<Record<string, never>>>(FORGOT_PASSWORD_URL, { email });
+}
+//
+export function resetPassword(token: string, password: string) {
+    return axios.post<ApiEnvelope<Record<string, never>>>(RESET_PASSWORD_URL, { token, password });
+}
+//
+export function updateProfile(id: number, patch: Record<string, unknown>) {
+    return axios.patch<ApiEnvelope<PublicUser>>(`/api/user/${id}`, patch);
 }
 //
 export function getUserByToken(token: string): UserModel {

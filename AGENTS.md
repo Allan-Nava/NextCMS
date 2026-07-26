@@ -27,12 +27,13 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 
 - Dynamic rendering: `cms/components/DynamicComponents.tsx`, resolving components through the static allow-list in `cms/components/registry.ts`; pages resolved by slug in `cms/pages/[...index].tsx` and `cms/pages/index.tsx`.
 - API: `cms/pages/api/<entity>/{index,[id]}.ts`, `switch (req.method)` with a `405` default, no inline DB logic.
-- Auth: `cms/lib/helpers/auth.ts` — token signing/verification plus the `requireAuth` / `requireAdmin` guards.
+- Auth: `cms/lib/helpers/auth.ts` — token signing/verification plus the `requireAuth` / `requireAdmin` guards. Password recovery in `password-reset.ts` (hashed, single-use, expiring tokens) and `mailer.ts` (transport seam, **no real provider configured**). Rate limiting in `lib/utils/rate-limit.ts`, per process.
+- Auth endpoints: `login`, `logout`, `register`, `me`, `refresh`, `forgot-password`, `reset-password` under `cms/pages/api/auth/`. Screens: `/login`, `/profile`, `/forgot-password`, `/reset-password`.
 - DB access: **only** `cms/lib/helpers/*-repo.ts` (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`) through `cms/lib/prisma.ts`.
 - API responses: `successResponse` / `errorResponse` from `cms/lib/types/response/response.ts`; status helpers in `cms/lib/utils/http.ts`.
 - Input validation: `cms/lib/utils/validation.ts`. Logging: `cms/lib/utils/logger.ts`.
 - UI state: Redux Toolkit in `cms/lib/reducers/`; react-dnd page builder in `cms/components/pagebuilder/`, screen at `cms/pages/page-builder.tsx`.
-- Data model: `cms/prisma/schema.prisma` (`Page`, `Component`, `Entity`, `User`, `Role`, `Visit`), postgresql provider.
+- Data model: `cms/prisma/schema.prisma` (`Page`, `Component`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`), postgresql provider. No `migrations/` directory — the project uses `prisma db push`, so push a schema change before the code that needs it can run.
 - Tests: `cms/__tests__/*.test.ts` (jest + ts-jest, node environment).
 
 ## Security invariants — do not regress these
@@ -43,6 +44,8 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - **Never log request/response objects, passwords or tokens** — they carry cookies. Use the logger (`NC-4`, `NC-7`).
 - **Authorisation happens in the API handlers**, not in `_middleware.ts`: the edge runtime cannot verify a JWT signature. The middleware only does a cookie presence check for page redirects (`NC-6`).
 - **The component registry is an allow-list**: never go back to `import(dbProvidedPath)` (`NC-34`).
+- **Reset tokens are stored hashed and are single-use**, and the production mail transport must never print one to the log (`NC-39`).
+- **`forgot-password` answers the same way for a known and an unknown address**: a different answer is an account-enumeration oracle.
 
 ## Known traps
 
@@ -55,7 +58,7 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 
 ## Roadmap
 
-Sequential milestones in `BACKLOG.md`: **M0** green build OK (`v0.5.0`) -> **M1** security OK + **M2** correct APIs OK (`v0.6.0`) -> **M3** working auth (`v0.8.0`) -> **M4** content and page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** road to 1.0 (`v1.0.0`). Separately **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed.
+Sequential milestones in `BACKLOG.md`: **M0** green build OK (`v0.5.0`) -> **M1** security OK + **M2** correct APIs OK (`v0.6.0`) -> **M3** working auth OK (`v0.7.0`) -> **M4** content and page builder (`v0.8.0`) -> **M5** admin (`v0.9.0`) -> **M6** road to 1.0 (`v1.0.0`). Separately **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed.
 
 ## Pointers
 

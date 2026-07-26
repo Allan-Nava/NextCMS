@@ -76,6 +76,25 @@ model User {
   isStaff           Boolean
   updatedAt         DateTime @default(now())
   deletedAt         DateTime?
+
+  passwordResets    PasswordResetToken[]
+}
+//
+// Password reset tokens (NC-39).
+//
+// Only the SHA-256 hash of the token is stored: a database dump must not let
+// anyone take over an account, the same reason passwords are hashed. The
+// plaintext exists only in the link sent to the user.
+model PasswordResetToken {
+  id                Int @id @default(autoincrement())
+  tokenHash         String @unique
+  userId            Int
+  user              User @relation(fields: [userId], references: [id])
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime @default(now())
+
+  @@index([userId], map: "password_reset_user")
 }
 model Role {
   id                Int @id @default(autoincrement())

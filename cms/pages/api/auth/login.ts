@@ -16,6 +16,11 @@ import { errorResponse, successResponse } from '../../../lib/types/response/resp
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { isNonEmptyString } from '../../../lib/utils/validation';
 import { logger } from '../../../lib/utils/logger';
+import { clientIp, rateLimit } from '../../../lib/utils/rate-limit';
+//
+// Ten attempts per IP per five minutes (NC-53). Bucketed by IP rather than by
+// username so an attacker cannot lock a known account out by failing on purpose.
+const LOGIN_RATE_LIMIT = { limit: 10, windowMs: 5 * 60_000 };
 //
 // POST /api/auth/login
 //
@@ -28,6 +33,12 @@ import { logger } from '../../../lib/utils/logger';
 export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     if (req.method !== 'POST') {
         return methodNotAllowed(req, res, ['POST']);
+    }
+    const limit = rateLimit(`login:${clientIp(req)}`, LOGIN_RATE_LIMIT);
+    if (!limit.allowed) {
+        res.setHeader('Retry-After', String(limit.retryAfterSeconds));
+        res.status(429).json(errorResponse({ error: 'too many login attempts, try again later' }));
+        return;
     }
     const { username, password } = (req.body ?? {}) as { username?: unknown; password?: unknown };
     if (!isNonEmptyString(username) || !isNonEmptyString(password)) {

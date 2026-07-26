@@ -16,6 +16,10 @@ import { errorResponse, successResponse } from '../../../lib/types/response/resp
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { validateUserPayload } from '../../../lib/utils/validation';
 import { envFlag } from '../../../lib/utils/env';
+import { clientIp, rateLimit } from '../../../lib/utils/rate-limit';
+//
+// Five accounts per IP per hour (NC-53).
+const REGISTER_RATE_LIMIT = { limit: 5, windowMs: 60 * 60_000 };
 //
 // POST /api/auth/register
 //
@@ -31,6 +35,12 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse):
     }
     if (!envFlag('ALLOW_PUBLIC_REGISTRATION', false)) {
         res.status(403).json(errorResponse({ error: 'public registration is disabled' }));
+        return;
+    }
+    const limit = rateLimit(`register:${clientIp(req)}`, REGISTER_RATE_LIMIT);
+    if (!limit.allowed) {
+        res.setHeader('Retry-After', String(limit.retryAfterSeconds));
+        res.status(429).json(errorResponse({ error: 'too many registration attempts, try again later' }));
         return;
     }
     const errors = validateUserPayload(req.body, { requirePassword: true });

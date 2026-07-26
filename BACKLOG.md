@@ -18,10 +18,12 @@ Milestones are **sequential**: each only makes sense once the previous one is cl
 | **M0b** | npm packages | `@nextcms/*` installable and testable | `v0.5.2` | NC-48, NC-51 |
 | **M1** | Security | No secrets around, no password hashes in responses, guarded routes | `v0.6.0` ✅ | NC-1…10 |
 | **M2** | Correct APIs | Every endpoint answers, with the right status and the right data | `v0.6.0` ✅ | NC-11…23 |
-| **M3** | Working auth | Full login/logout/register/reset flows, session shared with admin | `v0.8.0` | NC-39, NC-40 |
-| **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.9.0` | NC-41, NC-42 |
-| **M5** | Admin | The panel stops being a placeholder | `v0.10.0` | NC-36, 43, 44 |
+| **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
+| **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` | NC-41, NC-42 |
+| **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54 |
 | **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38 |
+
+Release numbering note: M1 and M2 shipped together in `v0.6.0`, so everything after moved up one minor from the original plan.
 
 **Definition of done** for a milestone: every item ticked, CI green, a section in `CHANGELOG.md`, tag created.
 
@@ -83,29 +85,32 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [x] 🟡 **NC-22** — Incomplete repo layer: `pagesRepo.update` and `userRepo.update` returned nothing (and the user one did not update), `roleRepo` had no `update`/`delete`. *(v0.6.0: every repo exposes create/read/update/delete, returns the affected row and takes a typed patch object.)*
 - [x] 🟡 **NC-23** — `api/role/index.ts` bypassed the repo layer and used `prisma` directly. *(v0.6.0: goes through `roleRepo`.)*
 
-## M3 · Working auth → `v0.8.0`
+## M3 · Working auth → `v0.7.0` ✅
 
-- [ ] **NC-39** — Complete auth and user management: forgot/reset password, refresh-token exchange endpoint, session propagated to the admin app. Login, logout and registration already work (M1/M2).
-- [ ] **NC-40** — User profile screens: read, update, create.
-- [ ] 🟠 **NC-53** — No rate limiting on `POST /api/auth/login` and `POST /api/auth/register`: credential stuffing is only slowed down by bcrypt. Carved out of NC-8.
+**Closed.** The session lifecycle is complete on the `cms` side: sign in, stay signed in, recover a lost password, edit your own account.
 
-## M4 · Content and page builder → `v0.9.0`
+- [x] **NC-39** — Complete auth and user management. *(v0.7.0: `POST /api/auth/refresh` exchanges a refresh token for a fresh access token, re-reading the user so a deleted or demoted account cannot keep renewing; `GET /api/auth/me` returns the session's user from the database rather than from stale token claims; `POST /api/auth/forgot-password` and `POST /api/auth/reset-password` implement recovery, backed by the new `PasswordResetToken` model. Only the SHA-256 hash of a reset token is stored, tokens are single-use and expire after `PASSWORD_RESET_TTL_MINUTES` (30 by default), and issuing a new one invalidates the outstanding ones. **Propagating the session to the admin app moved to NC-54 (M5)**: admin has no login UI yet, and a cross-origin cookie between ports 3000 and 4000 is a deployment-topology decision, not a code fix.)*
+- [x] **NC-40** — User profile screens. *(v0.7.0: `/profile` reads `GET /api/auth/me` and updates through `PATCH /api/user/:id`, with an empty password field meaning "leave it alone"; `/forgot-password` and `/reset-password` complete the recovery flow. All three sit behind the middleware where they need a session. Creating users stays admin-only through `POST /api/user` — the admin UI for it is NC-43.)*
+- [x] 🟠 **NC-53** — No rate limiting on `POST /api/auth/login` and `POST /api/auth/register`: credential stuffing was only slowed down by bcrypt. *(v0.7.0: fixed-window limiter in `lib/utils/rate-limit.ts` — 10 login attempts per IP per 5 minutes, 5 registrations and 5 reset requests per IP per hour, `429` with a `Retry-After` header. Bucketed by IP, not by username, so nobody can lock a known account out on purpose. **Counters are per process**: behind several instances the effective limit is per instance — a shared store is the next step if the app is scaled out.)*
+
+## M4 · Content and page builder → `v0.8.0`
 
 - [ ] **NC-41** — Content management: posts, pages, categories, tags.
 - [ ] **NC-42** — Page builder: blocks, images, layout persistence. The drag-and-drop UI exists but nothing is saved; `Component.parent` is the attachment point the renderer already reads.
 - [x] 🟡 **NC-34** — `DynamicComponents` did `import(\`${item.path}\`)` with the path coming from the database: webpack had to bundle a whole require-context and the module loaded was decided by data. *(v0.6.0: static allow-list in `components/registry.ts`; the API refuses an unregistered path, the renderer falls back to `NoComponent`.)*
 - [x] 🟡 **NC-35** — Duplicate pages: `cms/pages/pagebuilder.tsx` and `cms/pages/page-builder.tsx`. *(v0.6.0: the older `pagebuilder.tsx` removed; `page-builder.tsx` is the guarded path.)*
 
-## M5 · Admin → `v0.10.0`
+## M5 · Admin → `v0.9.0`
 
 - [ ] ⚪ **NC-36** — `admin/package.json` duplicates ~70 devDependencies of `cms/` (Metronic and CRA leftovers) for three pages. Trim it. `react-scripts` is already gone (NC-10).
-- [ ] **NC-43** — Admin UI/UX: every entity wired up.
+- [ ] **NC-43** — Admin UI/UX: every entity wired up, including the admin-only user creation screen.
 - [ ] **NC-44** — Admin API: full CRUD per entity, consuming the `cms/` API with a bearer token.
+- [ ] 🟠 **NC-54** — Session shared between `cms` (port 3000) and `admin` (port 4000). The access-token cookie is HttpOnly and scoped to its origin, so it does not travel between the two dev servers; in production the intended topology is a single origin with admin under `/admin`. Needs a decision: same-origin multi-zone, or admin holding a bearer token obtained through its own login screen. Carved out of NC-39, which shipped the rest of the auth work in v0.7.0.
 
 ## M6 · Road to 1.0 → `v1.0.0`
 
 - [ ] 🟡 **NC-27** — The root `Dockerfile` and `Dockerfile-slim` build nothing (the root has no `next` and no scripts). `Dockerfile-slim` also copies `.next/standalone` (no `output: 'standalone'` in `next.config.js`) and an `.npmrc` that does not exist. Either fix or delete them; `cms/Dockerfile` is the real one.
-- [ ] 🟡 **NC-31** — Test coverage. *(v0.6.0: jest + ts-jest set up in `cms/` with 37 tests over auth, validation and request parsing, wired into CI. Still missing: repo-layer tests against a test database, handler-level tests, and the E2E suite removed with NC-30.)*
+- [ ] 🟡 **NC-31** — Test coverage. *(v0.6.0: jest + ts-jest set up in `cms/` with 37 tests over auth, validation and request parsing, wired into CI. v0.7.0: 52 tests, adding the rate limiter and the reset-token/mailer invariants. Still missing: repo-layer tests against a test database, handler-level tests, and the E2E suite removed with NC-30.)*
 - [ ] ⚪ **NC-32** — 64 `console.*` calls in `cms/`. *(v0.6.0: `lib/utils/logger.ts` added and used by the API and repo layers; the remaining calls live in the page-builder components.)*
 - [ ] 🟡 **NC-33** — Migration to Next 13+/App Router (currently Next 12.1.1, React 17, `pages/`, legacy `_middleware.ts`). A migration, not a bump — and the prerequisite for dropping the Next 12.x advisories.
 - [ ] ⚪ **NC-37** — Duplicate lockfiles and orphan files. Root: `package-lock.json` + `yarn.lock` for a single dependency, an `.eslintrc.json` no app can resolve, and `haikus.json` (an Octocat fixture) out of context. `admin/`: `package-lock.json` and `yarn.lock` coexist, and something in the environment rewrites the latter after an `npm ci` — with two disagreeing lockfiles the install is not deterministic. npm is the declared package manager: remove the `yarn.lock` files.

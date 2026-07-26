@@ -4,6 +4,37 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.7.0] - 2026-07-26
+
+Milestone **M3 · Working auth** closed. The session lifecycle is complete on the `cms` side: sign in, stay signed in, recover a lost password, edit your own account.
+
+### Added
+
+- **`POST /api/auth/refresh`** (NC-39): exchanges a refresh token for a fresh access token. Access tokens last 15 minutes, so without this a session simply ended there. The user is re-read from the database on every refresh, so a deleted or demoted account cannot keep renewing its access for the whole refresh window, and an access token presented here is refused.
+- **`GET /api/auth/me`** (NC-39, NC-40): the session's user, read from the database rather than from the token claims — a token issued before a role change would otherwise report stale privileges until it expired.
+- **Password recovery** (NC-39): `POST /api/auth/forgot-password` and `POST /api/auth/reset-password`, backed by a new `PasswordResetToken` model. Only the SHA-256 hash of a token is stored (a database dump must not be enough to take over an account), tokens are single-use — claimed with a conditional update so two concurrent requests cannot both succeed — and they expire after `PASSWORD_RESET_TTL_MINUTES` (30 by default). Requesting a new link invalidates any outstanding one. The endpoint answers 202 whether or not the address exists, so it cannot be used to enumerate accounts.
+- **Rate limiting** (NC-53): fixed-window limiter in `lib/utils/rate-limit.ts` — 10 login attempts per IP per 5 minutes, 5 registrations and 5 reset requests per IP per hour, answering `429` with a `Retry-After` header. Bucketed by IP rather than by username, so an attacker cannot lock a known account out by failing on purpose.
+- **`lib/helpers/mailer.ts`**: a `MailTransport` seam with a development-only logging transport. **No real mail provider is configured**; in production the default transport logs an error and drops the message rather than printing a reset link into the logs.
+- **Screens** (NC-40): `/profile` (read and update your account, with an empty password field meaning "leave it alone"), `/forgot-password` and `/reset-password`. `/profile` joins `/page-builder` behind the middleware.
+- 15 more tests (52 total): the rate limiter's edges — the limit bites, the window reopens, buckets do not bleed into each other — plus the reset-token hashing and the guarantee that the production mail transport never prints the token.
+
+### Changed
+
+- `cms/prisma/schema.prisma`: added the `PasswordResetToken` model and its back-relation on `User`.
+- Release numbering: M1 and M2 shipped together in v0.6.0, so M4, M5 and M6 each moved up one minor from the original plan.
+
+### New backlog items
+
+- **NC-54** 🟠 (M5) — sharing the session between `cms` (port 3000) and `admin` (port 4000). The access-token cookie is HttpOnly and scoped to its origin, so it does not travel between the two dev servers. This was part of NC-39, but it needs a topology decision — same-origin multi-zone with admin under `/admin`, or admin holding its own bearer token — and admin has no login screen yet.
+
+### Verification
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 warning) | ✅ 52 passed | ✅ |
+
+Not verified: the new endpoints were not exercised against a live PostgreSQL instance — no database is available here — so the Prisma queries are checked by the type system and by `prisma validate`, not by execution. The `PasswordResetToken` table also needs to reach the database (`prisma migrate dev` or `prisma db push`) before the recovery flow can run.
+
 ## [0.6.0] - 2026-07-26
 
 Milestones **M1 · Security** and **M2 · Correct APIs** closed. They shipped together because both rewrite the same request handlers, and splitting them would have meant writing every route twice. All documentation and code comments were also translated to English in this release.

@@ -47,7 +47,9 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `components/DynamicComponents.tsx` — the heart of rendering: each `PageComponent` is resolved through a static allow-list of components and loaded with `next/dynamic`, falling back to `NoComponent`; it recurses into children when `supportNestedComponent` is set. Renderable components live in `components/Elements/` (`Hero`, `Navbar`, `Features`, `Layout1`) and are registered in `components/registry.ts`.
   - `pages/api/<entity>/{index,[id]}.ts` — one handler per entity (`page`, `components`, `user`, `role`, `auth`): `switch (req.method)` with a `405` default, no inline DB logic.
   - `lib/helpers/*-repo.ts` — **the only place that talks to Prisma** (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`). API routes delegate here.
-  - `lib/helpers/auth.ts` — token signing/verification and the `requireAuth` / `requireAdmin` guards used by the API routes.
+  - `lib/helpers/auth.ts` — token signing/verification, the access-token cookie, and the `requireAuth` / `requireAdmin` guards used by the API routes.
+  - `lib/helpers/password-reset.ts` — reset tokens: only their SHA-256 hash is stored, they are single-use and they expire. `lib/helpers/mailer.ts` is the transport seam — **no real mail provider is configured**.
+  - `lib/utils/rate-limit.ts` — fixed-window limiter on the auth endpoints. Counters are per process, so behind several instances the limit is per instance.
   - `lib/types/response/response.ts` — uniform envelope: `successResponse(data, message)` / `errorResponse(error)` with `DEFAULTResponse.OK|KO`.
   - `lib/utils/logger.ts` — levelled logger. Never log request or response objects.
   - `lib/reducers/` — Redux Toolkit (`auth`, `layout`, `dragAndDrop`) mounted in `store.ts`; the page builder (`components/pagebuilder/`, react-dnd) builds on it.
@@ -58,7 +60,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `core/utils` → `@nextcms/utils`: env helper, errors, sanitize/visitors (including `remove-password`).
   - `generators/app` → `@nextcms/generate-new`, `generators/generators` → `@nextcms/generators` (plop).
   - `cli/create-nextcms-app`: the `npx create-nextcms-app` scaffolder.
-- **Data** — `cms/prisma/schema.prisma`: `Page`, `Component` (tree via `parent` + `template` + `data`), `Entity`, `User`, `Role`, `Visit`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema).
+- **Data** — `cms/prisma/schema.prisma`: `Page`, `Component` (tree via `parent` + `template` + `data`), `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema). There is no `migrations/` directory: the project has always used `prisma db push`, so a schema change needs to be pushed to the database before the code that depends on it can run.
 
 ## Known traps / technical rules
 
@@ -76,20 +78,24 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 
 ## Roadmap
 
-`BACKLOG.md` defines **sequential** milestones, each with its release: **M0** green build ✅ (`v0.5.0`) → **M1** security ✅ (`v0.6.0`) → **M2** correct APIs ✅ (`v0.7.0`) → **M3** working auth (`v0.8.0`) → **M4** content and page builder (`v0.9.0`) → **M5** admin (`v0.10.0`) → **M6** road to 1.0 (`v1.0.0`). Separately, **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed (all items ticked, CI green, changelog section, tag).
+`BACKLOG.md` defines **sequential** milestones, each with its release: **M0** green build ✅ (`v0.5.0`) → **M1** security ✅ + **M2** correct APIs ✅ (`v0.6.0`) → **M3** working auth ✅ (`v0.7.0`) → **M4** content and page builder (`v0.8.0`) → **M5** admin (`v0.9.0`) → **M6** road to 1.0 (`v1.0.0`). Separately, **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed (all items ticked, CI green, changelog section, tag).
 
 ## Known state
 
-The repo is WIP. The audit on commit `7ac0299` opened 52 items in `BACKLOG.md`; M0, M1 and M2 have closed 35 of them. The apps build, the API answers correctly and the auth chain is sound. What is still missing is **product**, not repair: user management flows (`NC-39`, `NC-40`), content management (`NC-41`), page builder persistence (`NC-42`) and the admin panel (`NC-43`, `NC-44`), plus the Next 13 migration (`NC-33`) and a test suite (`NC-31`).
+The repo is WIP. The audit on commit `7ac0299` opened 54 items in `BACKLOG.md`; M0 through M3 have closed 38 of them. The apps build, the API answers correctly and the whole session lifecycle works: sign in, refresh, recover a password, edit your own account.
 
-Two things need a human decision, not a patch:
+What remains is mostly **product**, not repair: content management (`NC-41`), page builder persistence (`NC-42`) and the admin panel (`NC-43`, `NC-44`, `NC-54`), plus the Next 13 migration (`NC-33`) and deeper test coverage (`NC-31`).
+
+Things that need a human decision, not a patch:
 
 - **`NC-5`** — the Heroku Postgres credential committed in `cms/.env.example` has been removed from the file, but it is still in the git history. It must be **rotated** on the provider.
 - **`NC-51`** — `@nextcms/nextcms@0.1.19` depends on sibling versions that were never published to npm, so nobody can install it. Either publish the missing versions or switch to npm workspaces.
+- **Mail delivery** — password recovery is implemented but no provider is wired: implement `MailTransport` and call `setMailTransport`.
+- **`NC-54`** — whether admin shares an origin with cms (multi-zone under `/admin`) or holds its own bearer token.
 
 ## Pointers
 
 - Todos: `BACKLOG.md` (`NC-n` ids) · Releases: `CHANGELOG.md` · Docs: `docs/` (`Prisma.md`, `NPM.md`) · Schema: `cms/prisma/schema.prisma`
 - CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io)
-- Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
+- Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`
