@@ -4,6 +4,23 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.10.2] - 2026-07-26
+
+### Added
+
+- **Eight more items in M7 · Product** (NC-78 … NC-85), bringing it to 18. As before, each one is grounded in something checked in the code rather than taken from a list of things CMSes have. The four that matter most:
+
+  - **NC-78** 🟠 — **no list endpoint paginates.** All eleven `findMany` calls in the repo layer run without `take`/`skip`, so `GET /api/page`, `/api/user` and the taxonomies each return the whole table and the admin screens render all of it. Invisible at twenty rows, a denial of service at twenty thousand.
+  - **NC-79** 🟠 — **content has no author.** `Page` has no `authorId` and no relation to `User`; the only trace of the idea is a commented-out example at the bottom of the schema. No "my drafts", no "who published this", and no ownership to scope permissions by — which is also what makes NC-63 hard to finish.
+  - **NC-80** 🟠 — **categories and tags lead nowhere.** They can be created, assigned and filtered through the API, and no public page lists content by either: a visitor can only reach content by its exact slug. The archive routes are the missing half of the taxonomy work shipped in v0.8.0.
+  - **NC-83** 🟡 — **every public page request hits the database.** All content routes are server-rendered with no `Cache-Control`; the sitemap and robots routes are the only two places in the app that set one.
+
+  Also: an authorable 404 (NC-81), a trash for the soft-deleted rows that currently accumulate where only a database client can see them (NC-82), a feed (NC-84), and a health endpoint for the image published to ghcr.io, which today has nothing an orchestrator can probe (NC-85).
+
+### Verification
+
+Each item was checked before being written, not assumed: `grep` for `take`/`skip` across the repo layer (0 of 11), for `authorId` in the schema (only in a comment), for archive routes and `pages/404.tsx` (absent), for `Cache-Control` outside the sitemap and robots routes (none), for a restore path (none), and for a health endpoint or `HEALTHCHECK` (neither).
+
 ## [0.10.1] - 2026-07-26
 
 ### Added

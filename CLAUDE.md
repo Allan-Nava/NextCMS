@@ -91,6 +91,8 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 
 The repo is WIP. The audit on commit `7ac0299` opened 54 items in `BACKLOG.md`; M0 through M3 have closed 38 of them. The apps build, the API answers correctly and the whole session lifecycle works: sign in, refresh, recover a password, edit your own account.
 
+Known product gaps worth reading before adding a feature, because they change how you would build it: **no list endpoint paginates** (`NC-78`), **content has no author** (`NC-79`), **taxonomies have no public archive pages** (`NC-80`), and **no public route sets a cache header** (`NC-83`).
+
 What remains is mostly **product**, not repair: content management (`NC-41`), page builder persistence (`NC-42`) and the admin panel (`NC-43`, `NC-44`, `NC-54`), plus the Next 13 migration (`NC-33`) and deeper test coverage (`NC-31`).
 
 Things that need a human decision, not a patch:
