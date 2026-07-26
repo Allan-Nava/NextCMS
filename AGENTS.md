@@ -31,14 +31,17 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - Auth endpoints: `login`, `logout`, `register`, `me`, `refresh`, `forgot-password`, `reset-password` under `cms/pages/api/auth/`. Screens: `/login`, `/profile`, `/forgot-password`, `/reset-password`.
 - DB access: **only** `cms/lib/helpers/*-repo.ts` (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`) through `cms/lib/prisma.ts`.
 - API responses: `successResponse` / `errorResponse` from `cms/lib/types/response/response.ts`; status helpers in `cms/lib/utils/http.ts`.
-- Input validation: `cms/lib/utils/validation.ts`. Logging: `cms/lib/utils/logger.ts`.
-- Page head: `cms/lib/utils/seo.ts` + `components/Seo.tsx`; `/sitemap.xml` and `/robots.txt` from `cms/lib/utils/sitemap.ts`.
+- Input validation: `cms/lib/utils/validation.ts`. Logging: `cms/lib/utils/logger.ts`. Pagination: `cms/lib/utils/pagination.ts`.
+- Visibility: `cms/lib/utils/visibility.ts` is the single predicate for "may an anonymous visitor see this" — renderer, API, sitemap and feed all call it. Never reimplement it.
+- Archives: `cms/lib/helpers/archive.ts` behind `/posts`, `/category/<slug>` and `/tag/<slug>`.
+- Page head: `cms/lib/utils/seo.ts` + `components/Seo.tsx`; `/sitemap.xml` and `/robots.txt` from `cms/lib/utils/sitemap.ts`; the Atom feed at `/feed.xml` from `cms/lib/utils/feed.ts` (posts only, 50 max, 503 without `BASE_URI`).
 - UI state: Redux Toolkit in `cms/lib/reducers/`; react-dnd page builder in `cms/components/pagebuilder/`, screen at `cms/pages/page-builder.tsx`.
 - Data model: `cms/prisma/schema.prisma` (`Page`, `Component` with `parent`+`position`, `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`), postgresql provider. No `migrations/` directory — the project uses `prisma db push`, so push a schema change before the code that needs it can run.
 - Tests: `cms/__tests__/*.test.ts` (jest + ts-jest, node environment).
 
 ## Admin panel
 
+- Reads `CMS_ORIGIN` (build time) for the rewrite that proxies the cms API.
 - It holds no token: `lib/crud/AdminAPI.ts` calls same-origin `/admin/api/*`, proxied to the cms by a rewrite, so the HttpOnly cookie does the work (`NC-54`). Cookies are host-scoped, not port-scoped — that is why it works across 3000/4000.
 - Editing lives in `cms/`; the panel links across to it (`NC-76`).
 - `src/_metronic` is unused and excluded from the typecheck.

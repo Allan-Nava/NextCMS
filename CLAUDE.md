@@ -8,7 +8,7 @@
 - **Track everything, always**: no untracked work. Anything you do exists as an `NC-n` item in `BACKLOG.md` **before** you start (create it if missing), gets ticked `[x]` once released, and lands in `CHANGELOG.md` with the tag. Every closed item cites its id in the commit (`NC-12: fix login response envelope`).
 - **Document what you change**: if a change touches architecture, commands, env vars, the Prisma schema or an API contract, update `CLAUDE.md` and `AGENTS.md` in the same commit. Stale docs mean the work is not finished.
 - **Every folder is its own project**: `cms/`, `admin/` and each package under `packages/` have their own `package.json` and lockfile. Run `npm install` and the scripts **inside** the folder, never from the repo root (the root `package.json` has a single dependency and no scripts).
-- **Gate before closing**: `npm run lint` and `npm run build` green in the app you touched. There is no test suite for `cms/`/`admin/` yet — if you add non-trivial logic under `lib/helpers/*` or `lib/utils/*`, add the test with it.
+- **Gate before closing**: `npm run lint`, `npm test` and `npm run build` green in the app you touched. `cms` has 154 unit tests and `admin` 18 (jest + ts-jest, node environment), plus 24 tests for the repo scripts under `.github/scripts/`. New logic in `lib/utils/*` or `lib/helpers/*` arrives **with** its test — several of the rules in this file exist because writing the test first exposed the problem.
 - **NEVER `git push`** — the user always does it (tags included: they run `git push --follow-tags`). NEVER add `Co-Authored-By` to commits.
 - **No secrets** in code, `.env.example`, docs or logs. Credentials live only in `.env` (gitignored).
 - **Todos go to `BACKLOG.md`** (single source, stable `NC-n` ids, never reused or renumbered). Do not scatter `TODO:` comments; `TODO.md` is only a pointer.
@@ -23,9 +23,17 @@
 cd cms && npm ci && npm run dev
 npm run build && npm start
 npm run lint
+npm test
 
 # admin panel (port 4000, served under /admin)
-cd admin && npm ci && npm run dev
+# CMS_ORIGIN is where its /admin/api/* rewrite points, resolved at build time.
+cd admin && npm ci && CMS_ORIGIN=http://localhost:3000 npm run dev
+npm test
+
+# repo scripts (backlog sync, release notes, engine check)
+node --test .github/scripts/*.test.mjs
+node .github/scripts/check-engines.mjs
+DRY_RUN=1 node .github/scripts/backlog-sync.mjs
 
 # database (schema and client live in cms/)
 cd cms
@@ -45,13 +53,18 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 - **`cms/`** (`next-cms`) — the public app and the API. Port 3000.
   - `pages/[...index].tsx` — catch-all: `getServerSideProps` resolves the slug from the route segments and hands the data to `DynamicComponents`.
   - `components/DynamicComponents.tsx` — the heart of rendering: each `PageComponent` is resolved through a static allow-list of components and loaded with `next/dynamic`, falling back to `NoComponent`; it recurses into children when `supportNestedComponent` is set. Renderable components live in `components/Elements/` (`Hero`, `Navbar`, `Features`, `Layout1`) and are registered in `components/registry.ts`.
+  - Public routes beyond content: `/posts`, `/category/<slug>`, `/tag/<slug>` (paged archives), `/sitemap.xml`, `/robots.txt`, `/feed.xml`. Editor screens: `/content`, `/content/new`, `/content/:id`, `/page-builder?page=<id>`, `/profile`, plus `/login`, `/forgot-password`, `/reset-password`.
   - `pages/api/<entity>/{index,[id]}.ts` — one handler per entity (`page`, `components`, `user`, `role`, `auth`): `switch (req.method)` with a `405` default, no inline DB logic.
   - `lib/helpers/*-repo.ts` — **the only place that talks to Prisma** (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`). API routes delegate here.
   - `lib/helpers/auth.ts` — token signing/verification, the access-token cookie, and the `requireAuth` / `requireAdmin` guards used by the API routes.
   - `lib/helpers/password-reset.ts` — reset tokens: only their SHA-256 hash is stored, they are single-use and they expire. `lib/helpers/mailer.ts` is the transport seam — **no real mail provider is configured**.
   - `lib/utils/rate-limit.ts` — fixed-window limiter on the auth endpoints. Counters are per process, so behind several instances the limit is per instance.
+  - `lib/helpers/page-content.ts` — turns a stored page into what the renderer needs, shared by the home and catch-all routes. `lib/helpers/archive.ts` does the same for the `/posts`, `/category/<slug>` and `/tag/<slug>` listings.
+  - `lib/utils/visibility.ts` — `isPubliclyVisible`, the **single** predicate deciding what an anonymous visitor may see. The renderer, the API, the sitemap and the feed all use it; do not reimplement it (`NC-59`).
+  - `lib/utils/pagination.ts` — `parsePagination` / `paginationMeta` for every list endpoint (`NC-78`).
+  - `lib/utils/redirect.ts` — validates a post-login `?next=` target. `lib/utils/slug.ts` has `slugFromSegments` and `slugify`.
+  - `lib/utils/http.ts` (405/400/404/500 helpers, `parseId`), `lib/utils/validation.ts` (payload checks), `lib/utils/env.ts` (`requireEnv` fails fast on a missing secret).
   - `lib/helpers/taxonomy-repo.ts` — categories and tags; `tagRepo.ensureMany` creates tags named in a payload.
-  - Editor screens: `/content` (list), `/content/new`, `/content/:id`, `/page-builder?page=<id>`, `/profile`. All behind the session middleware.
   - `lib/types/response/response.ts` — uniform envelope: `successResponse(data, message)` / `errorResponse(error)` with `DEFAULTResponse.OK|KO`.
   - `lib/utils/logger.ts` — levelled logger. Never log request or response objects.
   - `lib/utils/seo.ts` + `components/Seo.tsx` — the page head: title/description fallbacks, canonical, Open Graph, validated JSON-LD, feed discovery. `lib/utils/sitemap.ts` backs `/sitemap.xml` and `/robots.txt`; `lib/utils/feed.ts` backs the Atom feed at `/feed.xml` (posts only, 50 max, 503 without `BASE_URI`).
@@ -63,7 +76,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `core/utils` → `@nextcms/utils`: env helper, errors, sanitize/visitors (including `remove-password`).
   - `generators/app` → `@nextcms/generate-new`, `generators/generators` → `@nextcms/generators` (plop).
   - `cli/create-nextcms-app`: the `npx create-nextcms-app` scaffolder.
-- **Data** — `cms/prisma/schema.prisma`: `Page` (content; `type` tells pages and posts apart, `publishedAt` marks drafts), `Component` (one layout block: `parent` = page id, `position` = order), `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema). There is no `migrations/` directory: the project has always used `prisma db push`, so a schema change needs to be pushed to the database before the code that depends on it can run.
+- **Data** — `cms/prisma/schema.prisma`: `Page` (content; `type` tells pages and posts apart, `publishedAt` marks drafts and future-dated schedules, `authorId` the byline, `categoryId` + `tags` the taxonomy), `Component` (one layout block: `parent` = page id, `position` = order), `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`. Provider is **postgresql** through `DATABASE_URL` (the sqlite variant is commented out in the schema). There is no `migrations/` directory: the project has always used `prisma db push`, so a schema change needs to be pushed to the database before the code that depends on it can run.
 
 ## Known traps / technical rules
 
@@ -87,22 +100,35 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 
 ## Roadmap
 
-`BACKLOG.md` defines **sequential** milestones, each with its release: **M0** green build ✅ (`v0.5.0`) → **M1** security ✅ + **M2** correct APIs ✅ (`v0.6.0`) → **M3** working auth ✅ (`v0.7.0`) → **M4** content and page builder ✅ (`v0.8.0`) → **M5** admin (`v0.9.0`) → **M6** road to 1.0 (`v1.0.0`). Separately, **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed (all items ticked, CI green, changelog section, tag).
+`BACKLOG.md` defines the milestones. **M0–M6 are sequential**; **M7 is not** — it is the product backlog, picked by need, and ships item by item rather than as one release.
+
+**M0** green build ✅ (`v0.5.0`) → **M1** security ✅ + **M2** correct APIs ✅ (`v0.6.0`) → **M3** working auth ✅ (`v0.7.0`) → **M4** content and page builder ✅ (`v0.8.0`) → **M5** admin, 4/6 (`v0.10.0`) → **M6** road to 1.0, 11/18 (`v1.0.0`). Separately **M0b** (`v0.5.2`) for the npm packages, and **M7** product, 6/18, shipping incrementally (`v0.9.0` and `v0.11.x` so far).
+
+Release numbering drifted from the original plan because M1 and M2 shipped together in `v0.6.0`; each backlog entry records the version it actually landed in. Do not open items from a later sequential milestone until the previous one is closed (all items ticked, CI green, changelog section, tag). **M5 is not closed**: `NC-58` (page builder second half) needs media first, and `NC-76` is a decision.
 
 ## Known state
 
-The repo is WIP. The audit on commit `7ac0299` opened 54 items in `BACKLOG.md`; M0 through M3 have closed 38 of them. The apps build, the API answers correctly and the whole session lifecycle works: sign in, refresh, recover a password, edit your own account.
+The repo is WIP but no longer broken. **62 of 85 backlog items are closed.** Milestones: M0 build ✅, M1 security ✅, M2 APIs ✅, M3 auth ✅, M4 content and page builder ✅, M5 admin 4/6, M6 road to 1.0 11/18, M7 product 6/18, M0b npm packages 0/2.
 
-Known product gaps worth reading before adding a feature: **no public route sets a cache header** (`NC-83`), **soft-deleted rows have no trash** (`NC-82`), and **the 404 is not authorable** (`NC-81`).
+What works, and was verified rather than assumed: both apps install, typecheck, lint, test and build; the full session lifecycle (sign in, refresh, recover a password, edit your own account); content and taxonomy CRUD with an author and pagination; layout persistence in the page builder; the public site with SEO head, archives, sitemap, robots and an Atom feed; the admin panel with dashboard, users, roles and taxonomies.
 
-What remains is mostly **product**, not repair: content management (`NC-41`), page builder persistence (`NC-42`) and the admin panel (`NC-43`, `NC-44`, `NC-54`), plus the Next 13 migration (`NC-33`) and deeper test coverage (`NC-31`).
+**Nothing has been exercised against a live database.** Every release so far was verified by the type system, `prisma validate` and unit tests — not by a running server. The schema has moved several times since, so a first real run needs `prisma db push`.
+
+Known product gaps worth reading before adding a feature:
+
+- **No public route sets a cache header** (`NC-83`) — every request recomputes the page from the database. The sitemap, robots and feed routes are the only three that cache.
+- **Soft-deleted rows have no trash** (`NC-82`): they accumulate where only a database client can see them.
+- **The 404 is not authorable** (`NC-81`), and there is no draft preview (`NC-67`).
+- **`Role` grants nothing** (`NC-63`): authorisation reads the `isAdmin`/`isStaff` booleans while `Role` rows get a full CRUD API and are ignored. `Entity` is dead code (`NC-64`), and `Visit` is never written (`NC-62`).
+- **No media handling** (`NC-61`), which is also what blocks the second half of the page builder (`NC-58`).
 
 Things that need a human decision, not a patch:
 
 - **`NC-5`** — the Heroku Postgres credential committed in `cms/.env.example` has been removed from the file, but it is still in the git history. It must be **rotated** on the provider.
-- **`NC-51`** — `@nextcms/nextcms@0.1.19` depends on sibling versions that were never published to npm, so nobody can install it. Either publish the missing versions or switch to npm workspaces.
+- **`NC-51`** — `@nextcms/nextcms@0.1.19` depends on sibling versions that were never published to npm, so nobody can install it. Either publish the missing versions or switch to npm workspaces (`NC-38`).
 - **Mail delivery** — password recovery is implemented but no provider is wired: implement `MailTransport` and call `setMailTransport`.
-- **`NC-54`** — whether admin shares an origin with cms (multi-zone under `/admin`) or holds its own bearer token.
+- **`NC-71`** — Vercel's Root Directory must be set to `cms` in the dashboard; git cannot express it.
+- **`NC-76`** — there are two editing surfaces: the forms and page builder in `cms/`, the panel in `admin/` linking across. Which app owns authoring is a decision.
 
 ## Pointers
 
@@ -116,5 +142,5 @@ Things that need a human decision, not a patch:
 - **Releases are automatic**: pushing a `v*` tag publishes a GitHub release whose body is that version's `CHANGELOG.md` section (`release.yml`). A tag with no changelog section **fails the workflow** — so writing the changelog entry is not optional, it is what makes the release publishable.
 - **Backlog automation**: every push touching `BACKLOG.md` syncs the `NC-n` items to GitHub issues and the `## Mn` sections to milestones (`.github/scripts/backlog-sync.mjs`). The file is the source of truth and is never written back to — close an item by ticking it in the file, not by closing the issue.
 - **Documentation site**: `docs/index.html` (static, no build step) deployed by `pages.yml`. It states the project status publicly, so keep it honest when behaviour changes.
-- Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`, `SITE_NAME`
+- Env: `.env.example` (root, Prisma) and `cms/.env.example` — `cms` reads `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`, `SITE_NAME`. **`admin` reads `CMS_ORIGIN`** (default `http://localhost:3000`), which is where its `/admin/api/*` rewrite points — it is resolved at build time, so CI sets it too.
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`

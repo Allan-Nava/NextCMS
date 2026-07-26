@@ -154,6 +154,16 @@
                 <td>Password recovery works, but no mail provider is wired — see below.</td>
               </tr>
               <tr>
+                <td>Archives &amp; feed</td>
+                <td><span class="pill ok">working</span></td>
+                <td><code>/posts</code>, <code>/category/&lt;slug&gt;</code>, <code>/tag/&lt;slug&gt;</code> and an Atom feed.</td>
+              </tr>
+              <tr>
+                <td>Authorship</td>
+                <td><span class="pill partial">usable</span></td>
+                <td>Content records its author, taken from the session. Permissions do not use it yet (NC-63).</td>
+              </tr>
+              <tr>
                 <td>SEO output</td>
                 <td><span class="pill ok">working</span></td>
                 <td>Title, description, canonical, Open Graph and JSON-LD, plus <code>sitemap.xml</code> and <code>robots.txt</code>.</td>
@@ -376,6 +386,26 @@ npm run dev              # http://localhost:4000/admin</code></pre>
           token, <em>admin</em> needs one whose <code>isAdmin</code> claim is true. Send it as
           <code>Authorization: Bearer &lt;token&gt;</code>, or rely on the <code>access_token</code> cookie the login
           endpoint sets.
+        </p>
+
+        <h3>Pagination</h3>
+        <p>
+          Every list endpoint is paged. <code>?page</code> defaults to 1 and <code>?perPage</code> to 20, capped at
+          <strong>100</strong> — the cap is the point, since an uncapped <code>perPage</code> would be the same
+          unbounded request that paging replaced.
+        </p>
+        <pre><code>GET /api/page?type=post&amp;page=2&amp;perPage=10
+
+{
+  "response": "OK",
+  "message": "pages retrieved",
+  "data": [ ... ],
+  "meta": { "page": 2, "perPage": 10, "total": 45, "totalPages": 5, "hasMore": true }
+}</code></pre>
+        <p>
+          <code>data</code> is still the array, so a client written before paging keeps working — it just sees the first
+          page. <code>totalPages</code> is at least 1 even when nothing matches, because a pager reading
+          <em>page 1 of 0</em> is worse than <em>page 1 of 1</em>.
         </p>
 
         <h3>Authentication</h3>
@@ -644,6 +674,41 @@ npm run dev              # http://localhost:4000/admin</code></pre>
           </p>
         </div>
 
+        <h3>Archives</h3>
+        <p>
+          Categories and tags are reachable as pages, not only as API filters. All three are paged with
+          <code>?page</code>, and an unknown slug is a <strong>404 rather than an empty list</strong> — otherwise a
+          typo'd URL would render a real-looking archive that merely happens to be empty.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Route</th>
+                <th>Lists</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/posts</code></td>
+                <td>Published content of type <code>post</code>, newest first.</td>
+              </tr>
+              <tr>
+                <td><code>/category/&lt;slug&gt;</code></td>
+                <td>Published content in that category.</td>
+              </tr>
+              <tr>
+                <td><code>/tag/&lt;slug&gt;</code></td>
+                <td>Published content carrying that tag.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Drafts and content dated in the future are excluded through the same predicate the renderer, the sitemap and
+          the feed use, so the four cannot disagree about what is public.
+        </p>
+
         <h2 id="seo">SEO output</h2>
         <p>
           Every content page emits a head built from the row: <code>&lt;title&gt;</code>,
@@ -850,9 +915,9 @@ Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.</
               </tr>
               <tr>
                 <td>M5</td>
-                <td>Admin — the panel stops being a placeholder</td>
-                <td><code>v0.9.0</code></td>
-                <td><span class="badge">next</span></td>
+                <td>Admin — dashboard, users, roles, taxonomies, shared session</td>
+                <td><code>v0.10.0</code></td>
+                <td><span class="badge warn">4 of 6</span></td>
               </tr>
               <tr>
                 <td>M6</td>

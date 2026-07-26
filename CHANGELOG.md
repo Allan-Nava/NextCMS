@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.11.2] - 2026-07-26
+
+Documentation audit rather than a rewrite: every claim was checked against the code, and this section lists what was **wrong**, not just what was added.
+
+### Fixed
+
+- **`CLAUDE.md` claimed there was no test suite.** It said *"There is no test suite for `cms/`/`admin/` yet"* — false since v0.6.0. There are 154 tests in `cms`, 18 in `admin` and 24 for the repo scripts. The gate now reads `lint`, `test` and `build`.
+- **The status section described work finished two releases earlier** as still remaining: content management (NC-41), page builder persistence (NC-42) and the admin panel (NC-43, NC-44, NC-54) were all listed as "what remains". It also claimed 54 backlog items when there are 85, and cited NC-54 as an open decision after it shipped in v0.10.0. Rewritten from counts computed out of `BACKLOG.md`: **62 of 85 closed**, per-milestone.
+- **The roadmap said M5 ships as `v0.9.0`** in both `CLAUDE.md` and the docs site; it shipped as `v0.10.0`, and it is 4/6 rather than done. It also omitted M7 and did not say that M7 is the one milestone that is *not* sequential.
+- **The data model line predated three columns**: `authorId`, `Component.position` and what `publishedAt` now means (drafts *and* future-dated schedules).
+- **The commands block had no `npm test`**, and did not mention that `admin` needs `CMS_ORIGIN` at build time.
+- **The editor-screens list appeared twice** in the architecture section.
+
+### Added
+
+- Documentation for what the last three releases changed but never wrote down:
+  - **Pagination** as an API contract on the docs site: the parameters, the cap of 100 and why it exists, the `meta` shape, and the note that `data` is still the array so an older client keeps working.
+  - **The archive routes** `/posts`, `/category/<slug>` and `/tag/<slug>`, including that an unknown slug is a 404 rather than an empty list.
+  - Two status rows — archives & feed, and authorship (marked *usable*, since permissions still ignore the author).
+  - `CLAUDE.md` and `AGENTS.md` entries for the modules added since they were last touched: `pagination.ts`, `visibility.ts`, `redirect.ts`, `slug.ts`, `http.ts`, `validation.ts`, `env.ts`, `archive.ts`, `page-content.ts`, and `CMS_ORIGIN` for the panel.
+  - An explicit note that **nothing has been exercised against a live database** — true of every release so far, and worth stating in the docs rather than only in changelog entries.
+
+### Verification
+
+The audit was mechanical where it could be: the route, module, model and environment-variable inventories were taken from the filesystem and the schema and compared with what the docs assert; the backlog counts were computed rather than counted by hand; every `lib/**` path cited in `CLAUDE.md` was checked to exist. `html-validate`, the anchor check and `stylelint` all pass.
+
 ## [0.11.1] - 2026-07-26
 
 ### Added
