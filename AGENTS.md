@@ -32,6 +32,7 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - DB access: **only** `cms/lib/helpers/*-repo.ts` (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`) through `cms/lib/prisma.ts`.
 - API responses: `successResponse` / `errorResponse` from `cms/lib/types/response/response.ts`; status helpers in `cms/lib/utils/http.ts`.
 - Input validation: `cms/lib/utils/validation.ts`. Logging: `cms/lib/utils/logger.ts`.
+- Page head: `cms/lib/utils/seo.ts` + `components/Seo.tsx`; `/sitemap.xml` and `/robots.txt` from `cms/lib/utils/sitemap.ts`.
 - UI state: Redux Toolkit in `cms/lib/reducers/`; react-dnd page builder in `cms/components/pagebuilder/`, screen at `cms/pages/page-builder.tsx`.
 - Data model: `cms/prisma/schema.prisma` (`Page`, `Component` with `parent`+`position`, `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`), postgresql provider. No `migrations/` directory — the project uses `prisma db push`, so push a schema change before the code that needs it can run.
 - Tests: `cms/__tests__/*.test.ts` (jest + ts-jest, node environment).
@@ -45,6 +46,8 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - **Authorisation happens in the API handlers**, not in `_middleware.ts`: the edge runtime cannot verify a JWT signature. The middleware only does a cookie presence check for page redirects (`NC-6`).
 - **The component registry is an allow-list**: never go back to `import(dbProvidedPath)` (`NC-34`). A layout is validated against it before it is saved.
 - **Drafts must not leak**: a public listing filters on `publishedAt`; only an authenticated caller sees unpublished content (`NC-41`).
+- **Stored JSON-LD must keep its closing tags escaped** before it is injected into a script tag (`NC-60`): an editor storing `</script>` would otherwise turn the rest into live markup.
+- **Drafts must stay out of the sitemap and get `noindex`** — all three paths use the same `isPubliclyVisible` predicate; do not reimplement it.
 - **Reset tokens are stored hashed and are single-use**, and the production mail transport must never print one to the log (`NC-39`).
 - **`forgot-password` answers the same way for a known and an unknown address**: a different answer is an account-enumeration oracle.
 

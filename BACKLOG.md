@@ -20,9 +20,9 @@ Milestones **M0–M6 are sequential**: each only makes sense once the previous o
 | **M2** | Correct APIs | Every endpoint answers, with the right status and the right data | `v0.6.0` ✅ | NC-11…23 |
 | **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
 | **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` ✅ | NC-41, NC-42 |
-| **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54, 58 |
+| **M5** | Admin | The panel stops being a placeholder | `v0.10.0` | NC-36, 43, 44, 54, 58 |
 | **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55…57, 59, 70…73 |
-| **M7** | Product | Features a CMS is expected to have and this one lacks | `v1.1.0` → | NC-60…69 |
+| **M7** | Product | Features a CMS is expected to have and this one lacks | incremental | NC-60…69 |
 
 Release numbering note: M1 and M2 shipped together in `v0.6.0`, so everything after moved up one minor from the original plan.
 
@@ -134,15 +134,15 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [x] 🟡 **NC-56** — This backlog existed only as a file: nothing carried it into GitHub, so the work was invisible to anyone not reading the repo. *(v0.7.2: `.github/scripts/backlog-sync.mjs` + `.github/workflows/backlog-sync.yml` reconcile every `NC-n` item with an issue and every `## Mn` section with a milestone, idempotently, on every push that touches `BACKLOG.md`. 12 parser tests run before each sync.)*
 - [x] 🟡 **NC-28** — `BASE_URI` was hardcoded to a Vercel URL in `cms/lib/utils/constants.ts` with the env read commented out. *(v0.6.0: both `BASE_URI` and `API_URI` come from the environment.)*
 
-## M7 · Product → `v1.1.0`
+## M7 · Product → shipped incrementally
 
-Beyond a working CMS. `v1.1.0` is where this milestone opens, not where it ends.
+Beyond a working CMS. This milestone ships item by item rather than as one release: each entry records the version it landed in. **NC-60 and NC-69 shipped in `v0.9.0`.**
 
 Everything up to M6 is about making the project **correct**: it compiles, it does not leak, the endpoints answer, the content flows. This milestone is the first one about making it **good** — features a CMS is expected to have and this one does not.
 
 Not sequential with the rest and not a promise of order: pick by what the site being built actually needs. Each item below is grounded in something that exists in the code today, not in a wish list.
 
-- [ ] 🟠 **NC-60** — **SEO fields are collected and never emitted.** The editor stores `seoTitle`, `seoDescription` and `jsonld`, the schema has carried them since the beginning, and `next/head` appears **nowhere in the codebase**: public pages ship no `<title>`, no meta description and no structured data. A CMS that collects SEO input and renders none of it is worse than one that never asked. Render them in the page head, falling back to `title`/`description`.
+- [x] 🟠 **NC-60** — **SEO fields were collected and never emitted.** The editor stores `seoTitle`, `seoDescription` and `jsonld`, the schema has carried them since the beginning, and `next/head` appears **nowhere in the codebase**: public pages ship no `<title>`, no meta description and no structured data. A CMS that collects SEO input and renders none of it is worse than one that never asked. Render them in the page head, falling back to `title`/`description`. *(v0.9.0, TDD: `lib/utils/seo.ts` built test-first — 22 tests written before a line of implementation — then `components/Seo.tsx` emits title, description, canonical, Open Graph and JSON-LD. A draft or a future-dated page gets `noindex,nofollow` from the same predicate the renderer uses. Stored JSON-LD is parsed and has its closing tags escaped before injection, because an editor could otherwise store `</script>` and have the rest become live markup.)*
 - [ ] 🟠 **NC-61** — **Media library.** There is no upload path at all: no storage adapter, no image model, no picker. `NC-58` (block settings) needs it before an image block can mean anything.
 - [ ] 🟡 **NC-62** — **`Visit` is never written.** The model exists, has a proper relation to `Page` since `NC-24`, and nothing records a visit. Either record them and build the "most read" view the table implies, or drop the model — an empty table that looks like a feature is a trap for the next reader.
 - [ ] 🟡 **NC-63** — **`Role` has no effect on anything.** Authorisation reads the `isAdmin`/`isStaff` booleans on `User`; `Role` rows are created and listed through a full CRUD API and then ignored. Either make permissions real (roles with capabilities, checked by the guards) or delete the model and its routes. Right now it is an API that pretends to control access.
@@ -151,4 +151,4 @@ Not sequential with the rest and not a promise of order: pick by what the site b
 - [ ] 🟡 **NC-66** — **Search.** Nothing searches: no full-text index, no query endpoint. `Page.title` has an index and that is the whole story.
 - [ ] 🟡 **NC-67** — **Draft preview.** Now that drafts are correctly hidden from the public (`NC-59`), an editor has no way to see one rendered. `loadPage` already takes an `includeDrafts` option for exactly this; it needs a guarded route to call it.
 - [ ] ⚪ **NC-68** — **Internationalisation.** One `Page` row is one language; the slug space is flat. Next's i18n routing plus a locale on the content model would be the shape.
-- [ ] ⚪ **NC-69** — **`sitemap.xml` and `robots.txt`.** Neither exists, and both are cheap once `publishedAt` is authoritative — which it now is.
+- [x] ⚪ **NC-69** — **`sitemap.xml` and `robots.txt`.** Neither existed. *(v0.9.0, TDD: `lib/utils/sitemap.ts` built test-first — 12 tests first — then served from `pages/sitemap.xml.ts` and `pages/robots.txt.ts`, generated per request so a newly published page needs no rebuild. Drafts, scheduled and soft-deleted content are excluded by the shared visibility predicate; slugs are XML-escaped, since one unescaped ampersand would make the whole document unparseable rather than just its own entry; entries are ordered by slug so the output is byte-stable.)*

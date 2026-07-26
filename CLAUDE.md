@@ -54,6 +54,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - Editor screens: `/content` (list), `/content/new`, `/content/:id`, `/page-builder?page=<id>`, `/profile`. All behind the session middleware.
   - `lib/types/response/response.ts` — uniform envelope: `successResponse(data, message)` / `errorResponse(error)` with `DEFAULTResponse.OK|KO`.
   - `lib/utils/logger.ts` — levelled logger. Never log request or response objects.
+  - `lib/utils/seo.ts` + `components/Seo.tsx` — the page head: title/description fallbacks, canonical, Open Graph, validated JSON-LD. `lib/utils/sitemap.ts` backs `/sitemap.xml` and `/robots.txt`.
   - `lib/reducers/` — Redux Toolkit (`auth`, `layout`, `dragAndDrop`) mounted in `store.ts`; the page builder (`components/pagebuilder/`, react-dnd) builds on it.
   - `lib/prisma.ts` — the `PrismaClient` singleton.
 - **`admin/`** (`next-admin`) — panel on the Metronic theme (`src/_metronic`), `basePath: '/admin'`, port 4000. **No Prisma**: it talks to the `cms/` API through `lib/helpers/fetchWrapper.ts`. It is the least developed part (only `_app`, `index`, `_middleware`).
@@ -74,6 +75,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 - **Auth lives in the API handlers, not in middleware**: `_middleware.ts` runs on the edge runtime, where `jsonwebtoken` cannot verify a signature. Guard routes with `requireAuth`/`requireAdmin` from `lib/helpers/auth.ts`; the middleware only does a cheap cookie presence check for page redirects.
 - **Passwords are hashed with `bcryptjs` and tokens signed with `jsonwebtoken` in the repo/auth layer**, never in a handler. `JWT_SECRET` is mandatory: the app fails fast at startup without it.
 - **Never return a raw Prisma `User`**: use `publicUserSelect` / the `PublicUser` type so the password hash cannot leak (`NC-1`).
+- **`BASE_URI` is now load-bearing**: it builds canonical URLs, the sitemap and password reset links. A wrong value is visible to search engines, not just internally.
 - **Never log a request or response object**: they carry headers and cookies, i.e. tokens. Use `lib/utils/logger.ts`.
 - After every `schema.prisma` change run `npx prisma generate`, otherwise the `Prisma.*Input` types used by the repos will not match.
 - **The Node version is pinned in five places and they must agree** (`NC-55`): `.github/workflows/ci.yml` (both jobs), `cms/Dockerfile` (build and runtime stages), `.devcontainer/devcontainer.json` (`VARIANT`) and `engines.node` in `cms/package.json` and `admin/package.json`. The current version is **24**. Vercel reads `engines.node` and it **overrides the dashboard setting**, so change it here rather than in the Vercel project — a version that only exists in the dashboard is invisible to everyone. Note there is no Node 24 devcontainer image from Microsoft (that family stops at 22), which is why `.devcontainer/` builds on plain `node:24-bookworm-slim` and installs `sudo`/`git` itself.
@@ -106,5 +108,5 @@ Things that need a human decision, not a patch:
 - **`engines.node` must stay identical in all three manifests** — root, `cms/`, `admin/` (`NC-72`). Vercel reads it from the manifest at the project's Root Directory only; putting it just in `cms/` is invisible to a project pointed at the repo root, and the dashboard's stale value wins. `check-engines.mjs` gates this in CI.
 - **Backlog automation**: every push touching `BACKLOG.md` syncs the `NC-n` items to GitHub issues and the `## Mn` sections to milestones (`.github/scripts/backlog-sync.mjs`). The file is the source of truth and is never written back to — close an item by ticking it in the file, not by closing the issue.
 - **Documentation site**: `docs/index.html` (static, no build step) deployed by `pages.yml`. It states the project status publicly, so keep it honest when behaviour changes.
-- Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
+- Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`, `SITE_NAME`
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`

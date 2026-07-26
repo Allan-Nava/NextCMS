@@ -52,6 +52,7 @@ export const pagesRepo = {
     getAll,
     getById,
     getBySlug,
+    listSitemapEntries,
     create,
     update,
     delete: _delete,
@@ -65,6 +66,17 @@ async function getAll(options: ListPagesOptions = {}): Promise<PageWithTaxonomy[
     // Public listings must not leak drafts; the editor asks without this flag.
     if (options.publishedOnly) where.publishedAt = { not: null };
     return prisma.page.findMany({ where, include: withTaxonomy, orderBy: { id: 'asc' } });
+}
+//
+// Lean projection for the sitemap (NC-69): it needs four columns for every page,
+// and pulling the taxonomy relations for each of them would be wasteful. The
+// visibility filtering happens in `buildSitemap`, where it is unit-tested.
+async function listSitemapEntries(): Promise<
+    { slug: string; updatedAt: Date; publishedAt: Date | null; deletedAt: Date | null }[]
+> {
+    return prisma.page.findMany({
+        select: { slug: true, updatedAt: true, publishedAt: true, deletedAt: true },
+    });
 }
 //
 async function getById(id: number): Promise<PageWithTaxonomy | null> {

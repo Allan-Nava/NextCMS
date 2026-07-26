@@ -4,6 +4,49 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.9.0] - 2026-07-26
+
+First two items of **M7 · Product**, both built test-first.
+
+### Added
+
+- **SEO output** (NC-60). `seoTitle`, `seoDescription` and `jsonld` had been in the schema since the first release and the editor had been storing them for two milestones, while `next/head` appeared nowhere in the codebase: public pages shipped no title, no description and no structured data.
+
+  `lib/utils/seo.ts` resolves it all — title and description with a fallback chain where a blank stored value counts as absent, canonical URL, Open Graph (`article` for a post, `website` for a page) and validated JSON-LD. `components/Seo.tsx` writes the tags, and both public routes use it.
+
+  Two behaviours worth calling out, both pinned by tests:
+  - A draft or a page dated in the future gets `noindex,nofollow`, derived from the same visibility predicate the renderer and the sitemap use, so the three cannot disagree.
+  - Stored JSON-LD is parsed before use — malformed input yields no tag instead of throwing mid-render — and its closing tags are escaped. Without that, an editor storing `</script>` in a field would end the script element and have everything after it become live markup.
+
+- **`sitemap.xml` and `robots.txt`** (NC-69), served from `pages/sitemap.xml.ts` and `pages/robots.txt.ts` and generated per request, so a newly published page appears without a rebuild. Drafts, scheduled and soft-deleted content are excluded by the shared predicate. Slugs are XML-escaped: one unescaped ampersand would make the whole document unparseable rather than just its own entry. Entries are ordered by slug so the document is byte-stable between fetches.
+
+- `SITE_NAME` (optional, defaults to `NextCMS`) for `og:site_name`, and a lean `listSitemapEntries` projection so the sitemap does not pull the taxonomy relations of every page.
+
+- 34 tests (106 total).
+
+### Method
+
+Written **test-first**, in that order:
+
+1. `__tests__/seo.test.ts` and `__tests__/sitemap.test.ts` were written against modules that did not exist.
+2. The suite was run and **failed** — `Cannot find module '../lib/utils/seo'`, 2 suites failing, 7 passing.
+3. The implementations were written to satisfy those tests.
+4. The suite went green at 106 passing.
+
+The red step is the reason two of the rules above exist at all: writing the JSON-LD test made the `</script>` break-out obvious before any code was written, and the XML-escaping test made it clear that one bad slug should not be able to take the whole sitemap down.
+
+### Changed
+
+- The roadmap: M7 ships item by item rather than as one release, so each entry records the version it landed in, and M5 moves to `v0.10.0`.
+
+### Verification
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 pre-existing warning) | ✅ 106 passed | ✅ |
+
+`/sitemap.xml` and `/robots.txt` appear in the build output as server-rendered routes. Not verified: nothing was exercised against a live database or a running server, so the rendered head and the served documents are covered by the unit tests and the type system, not by an HTTP response.
+
 ## [0.8.5] - 2026-07-26
 
 ### Changed

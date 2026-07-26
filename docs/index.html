@@ -35,6 +35,7 @@
             <li><a href="#api">API reference</a></li>
             <li><a href="#auth">Authentication</a></li>
             <li><a href="#content">Content &amp; page builder</a></li>
+            <li><a href="#seo">SEO output</a></li>
             <li><a href="#deploy">Deploying</a></li>
           </ul>
           <p class="group">Project</p>
@@ -154,8 +155,8 @@
               </tr>
               <tr>
                 <td>SEO output</td>
-                <td><span class="pill none">not built</span></td>
-                <td>SEO fields are stored by the editor but no page renders them yet (NC-60).</td>
+                <td><span class="pill ok">working</span></td>
+                <td>Title, description, canonical, Open Graph and JSON-LD, plus <code>sitemap.xml</code> and <code>robots.txt</code>.</td>
               </tr>
             </tbody>
           </table>
@@ -266,7 +267,13 @@ npm run dev              # http://localhost:4000/admin</code></pre>
                 <td><code>BASE_URI</code></td>
                 <td>no</td>
                 <td>—</td>
-                <td>Public site URL. Used to build password reset links.</td>
+                <td>Public site URL. Builds canonical URLs, the sitemap and password reset links — a wrong value here is visible to search engines.</td>
+              </tr>
+              <tr>
+                <td><code>SITE_NAME</code></td>
+                <td>no</td>
+                <td><code>NextCMS</code></td>
+                <td>Emitted as <code>og:site_name</code>.</td>
               </tr>
               <tr>
                 <td><code>API_URI</code></td>
@@ -637,6 +644,48 @@ npm run dev              # http://localhost:4000/admin</code></pre>
           </p>
         </div>
 
+        <h2 id="seo">SEO output</h2>
+        <p>
+          Every content page emits a head built from the row: <code>&lt;title&gt;</code>,
+          <code>meta description</code>, <code>link rel=canonical</code>, Open Graph tags and, when the editor stored
+          one, a JSON-LD block. <code>seoTitle</code> and <code>seoDescription</code> win when set, and fall back to the
+          content's own title and description — a blank value counts as absent rather than producing an empty tag.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Route</th>
+                <th>What it serves</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/sitemap.xml</code></td>
+                <td>
+                  Every publicly visible page, with <code>lastmod</code>. Generated per request, so a newly published
+                  page appears without a rebuild. Ordered by slug, so the document is byte-stable.
+                </td>
+              </tr>
+              <tr>
+                <td><code>/robots.txt</code></td>
+                <td>
+                  Allows crawling, keeps crawlers out of the editor screens and the API, and points at the sitemap when
+                  <code>BASE_URI</code> is set.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <p>
+            Two rules that are covered by tests rather than by good intentions. A draft or a page scheduled for the
+            future gets <code>noindex,nofollow</code> and never appears in the sitemap — the same predicate the renderer
+            uses, so the three cannot disagree. And stored JSON-LD has its closing tags escaped before injection: an
+            editor could otherwise store <code>&lt;/script&gt;</code> in a field and have the rest become live markup.
+          </p>
+        </div>
+
         <h2 id="deploy">Deploying</h2>
 
         <h3>Vercel</h3>
@@ -805,9 +854,9 @@ Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.</
               </tr>
               <tr>
                 <td>M7</td>
-                <td>Product — SEO output, media library, revisions, search, i18n</td>
-                <td><code>v1.1.0</code> →</td>
-                <td><span class="badge">backlog</span></td>
+                <td>Product — SEO output shipped; media library, revisions, search, i18n next</td>
+                <td>incremental</td>
+                <td><span class="badge">in progress</span></td>
               </tr>
             </tbody>
           </table>

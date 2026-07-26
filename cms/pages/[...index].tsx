@@ -11,11 +11,14 @@
  */
 import type { GetServerSideProps, NextPage } from 'next';
 import DynamicComponents from '../components/DynamicComponents';
+import Seo from '../components/Seo';
 import { loadPage, slugFromSegments } from '../lib/helpers/page-content';
 import { PageComponent } from '../lib/types/page';
+import { SeoMetadata } from '../lib/utils/seo';
 //
 interface CatchAllProps {
     components: PageComponent[];
+    seo: SeoMetadata;
 }
 //
 // Catch-all route: every slug that is not a concrete file lands here.
@@ -24,8 +27,13 @@ interface CatchAllProps {
 // returned `props: { basePages }` while the component destructured `{ data }`,
 // and the slug was taken from `context.req.url` — path plus query string —
 // instead of the route segments.
-const CatchAllPage: NextPage<CatchAllProps> = ({ components }) => {
-    return <DynamicComponents page={components} />;
+const CatchAllPage: NextPage<CatchAllProps> = ({ components, seo }) => {
+    return (
+        <>
+            <Seo seo={seo} />
+            <DynamicComponents page={components} />
+        </>
+    );
 };
 //
 export const getServerSideProps: GetServerSideProps<CatchAllProps> = async (context) => {
@@ -34,7 +42,7 @@ export const getServerSideProps: GetServerSideProps<CatchAllProps> = async (cont
     if (!page) {
         return { notFound: true };
     }
-    return { props: { components: page.components } };
+    return { props: { components: page.components, seo: page.seo } };
 };
 //
 export default CatchAllPage;

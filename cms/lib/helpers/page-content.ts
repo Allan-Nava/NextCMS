@@ -7,15 +7,16 @@
  * Copyright 2022 - 2026 ©
  */
 //
-// Turns a stored page into the component list the renderer expects, shared by
-// the home page and the catch-all route so they cannot drift apart (NC-18,
-// NC-19).
+// Turns a stored page into what the renderer needs, shared by the home page and
+// the catch-all route so they cannot drift apart (NC-18, NC-19).
 //
 import { pagesRepo } from './page-repo';
 import { componentRepo } from './component-repo';
 import { PageComponent } from '../types/page';
 import { logger } from '../utils/logger';
 import { isPubliclyVisible } from '../utils/visibility';
+import { SeoMetadata, buildSeo } from '../utils/seo';
+import { envOrDefault } from '../utils/env';
 //
 export { slugFromSegments } from '../utils/slug';
 //
@@ -24,6 +25,7 @@ export interface RenderedPage {
     title: string;
     description: string;
     components: PageComponent[];
+    seo: SeoMetadata;
 }
 //
 // `includeDrafts` exists for a future editor preview (NC-67) and defaults to
@@ -48,6 +50,12 @@ export async function loadPage(slug: string, options: { includeDrafts?: boolean 
         title: page.title,
         description: page.description,
         components: blocks.map(componentRepo.toPageComponent),
+        // Built here so every route that renders content emits the same head
+        // (NC-60).
+        seo: buildSeo(page, {
+            baseUrl: envOrDefault('BASE_URI', ''),
+            siteName: envOrDefault('SITE_NAME', 'NextCMS'),
+        }),
     };
 }
 //
