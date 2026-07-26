@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="NextCMS">
+  <title>NextCMS</title>
+  <!-- Three stacked blocks: a page in this CMS is an ordered list of component
+       blocks, so the mark says what the product is. Kept to three heavy shapes
+       so it still reads at 16px as a favicon. -->
+  <rect x="4" y="4" width="24" height="7" rx="2" fill="#0969da" />
+  <rect x="4" y="13.5" width="17" height="7" rx="2" fill="#54aeff" />
+  <rect x="4" y="23" width="24" height="5" rx="2" fill="#0969da" opacity="0.55" />
+</svg>

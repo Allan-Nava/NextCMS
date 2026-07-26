@@ -4,6 +4,31 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.8.5] - 2026-07-26
+
+### Changed
+
+- **The documentation site got a visual identity** (NC-73). The first version was readable but flat, and one flaw mattered more than looks: **every status pill rendered the same grey**, so "working" and "placeholder" were indistinguishable — the opposite of the point of an honest status table.
+  - An SVG mark of three stacked blocks — what a page actually is in this CMS — used as the logo and the favicon. It stays legible at 16px.
+  - A hero panel with the mark, the tagline, the badges and three calls to action (Quick start, API reference, GitHub).
+  - The three parts of the repository as cards rather than a bare table.
+  - **Status pills coloured by meaning**: green works, blue works with caveats, amber unfinished, red absent.
+  - Sidebar highlights the section in view (IntersectionObserver, ~25 lines, progressive enhancement — the site is fully usable with JavaScript off).
+  - `og:`/`twitter:` meta so a shared link looks intentional.
+  - On narrow screens the nav is capped at 45vh and scrolls, instead of pushing the page below twenty links. CSS only: an earlier attempt added a `<details>` toggle whose body was empty, which would have shown a control that opened nothing.
+
+### Added
+
+- Stylesheet and SVG linting to the Pages workflow, with `docs/.stylelintrc.json`.
+
+### Verification
+
+Reviewed by rendering the page headless and **looking at it** — dark theme, light theme (by disabling the dark media query in a copy, since headless inherits the host theme) and a narrow viewport. That is also how two defects were caught that no validator would have flagged: the empty disclosure above, and a dead duplicate `.sidebar .brand` rule that stylelint then confirmed.
+
+One measurement worth recording: the narrow-viewport screenshot appeared to clip the hero, which looked like horizontal overflow. Measuring `documentElement.scrollWidth` against `innerWidth` showed **500 = 500** — no overflow. Chrome on macOS clamps a headless window to 500px wide, so a 390px screenshot was cropping the image, not the layout. The widest element is a table, and it scrolls inside its own container as intended.
+
+`html-validate` 0 errors · anchors 16/16 resolve · stylelint 0 problems · `xmllint` on the SVG clean.
+
 ## [0.8.4] - 2026-07-26
 
 ### Fixed

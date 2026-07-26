@@ -110,11 +110,19 @@ pre code {
 }
 
 .sidebar .brand {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--fg);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
+}
+
+.sidebar .brand img {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
 }
 
 .sidebar .brand-note {
@@ -321,4 +329,164 @@ footer {
   border-top: 1px solid var(--border);
   color: var(--fg-muted);
   font-size: 0.875rem;
+}
+
+/* --------------------------------------------------------------- identity --- */
+
+/* Added in v0.8.5 (NC-73). The first version was readable but flat: no mark, no
+   hero, and every status pill was the same grey — so "working" and "placeholder"
+   looked identical, which is the opposite of what an honest status table is for. */
+
+.hero {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem 1.75rem 1.5rem;
+  margin: 0 0 2.5rem;
+  background:
+    radial-gradient(120% 140% at 0% 0%, var(--accent-soft) 0%, transparent 60%),
+    var(--bg-soft);
+}
+
+.hero h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.hero h1 img {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.hero .lead {
+  max-width: 46rem;
+  margin-bottom: 1.25rem;
+}
+
+.hero .badges {
+  margin-bottom: 1.25rem;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.cta a {
+  display: inline-block;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cta a:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cta a.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.cta a.primary:hover {
+  color: #fff;
+  filter: brightness(1.08);
+}
+
+/* ------------------------------------------------------------------ cards --- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.85rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  background: var(--bg-soft);
+}
+
+.card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+}
+
+.card .port {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+
+/* ------------------------------------------------------- status semantics --- */
+
+/* A status table whose states all look the same is decoration. These carry the
+   meaning: green works, blue works with caveats, amber is unfinished, red is
+   absent. */
+.pill.ok {
+  color: var(--ok);
+  border-color: currentcolor;
+}
+
+.pill.partial {
+  color: var(--accent);
+  border-color: currentcolor;
+}
+
+.pill.todo {
+  color: var(--warn);
+  border-color: currentcolor;
+}
+
+.pill.none {
+  color: var(--danger);
+  border-color: currentcolor;
+}
+
+/* --------------------------------------------------------------- nav state --- */
+
+.sidebar nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 60rem) {
+  /* The nav stacks above the content on narrow screens, and twenty links would
+     push the page itself off the first screen. Cap it and let it scroll instead:
+     CSS only, no toggle to get wrong. */
+  .sidebar {
+    max-height: 45vh;
+  }
+
+  .hero {
+    padding: 1.25rem;
+  }
+
+  h1 {
+    font-size: 1.625rem;
+  }
 }

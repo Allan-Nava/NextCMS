@@ -43,6 +43,18 @@ jobs:
       - name: Check that every internal anchor resolves
         run: node .github/scripts/check-anchors.mjs docs/index.html
 
+      # A dead duplicate selector and a malformed logo are both invisible in a
+      # screenshot; stylelint caught one of each while this page was built.
+      - name: Lint the stylesheet
+        run: npx --yes --package stylelint@16 --package stylelint-config-recommended@14 stylelint --config docs/.stylelintrc.json "docs/assets/*.css"
+
+      - name: SVG assets are well-formed
+        run: |
+          for file in docs/assets/*.svg; do
+            echo "checking $file"
+            xmllint --noout "$file"
+          done
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

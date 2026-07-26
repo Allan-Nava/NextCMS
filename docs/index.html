@@ -8,12 +8,17 @@
       name="description"
       content="NextCMS: a headless-ish CMS on Next.js 12, TypeScript and Prisma. Quick start, configuration, API reference and roadmap."
     >
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+    <meta property="og:title" content="NextCMS — documentation">
+    <meta property="og:description" content="A headless-ish CMS on Next.js 12, TypeScript and Prisma. Quick start, API reference and an honest project status.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="stylesheet" href="assets/style.css">
   </head>
   <body>
     <div class="layout">
       <aside class="sidebar">
-        <a class="brand" href="#top">NextCMS</a>
+        <a class="brand" href="#top"><img src="assets/logo.svg" alt="" width="24" height="24">NextCMS</a>
         <p class="brand-note">Next.js 12 · TypeScript · Prisma</p>
         <nav aria-label="Documentation">
           <p class="group">Start</p>
@@ -48,57 +53,53 @@
       </aside>
 
       <main class="content" id="top">
-        <h1>NextCMS</h1>
-        <p class="lead">
-          A headless-ish content management system built on Next.js 12, TypeScript and Prisma. Pages are data, not code:
-          content lives in the database and the renderer composes it from a registry of React components.
-        </p>
-        <ul class="badges">
-          <li class="badge">MIT licensed</li>
-          <li class="badge warn">Work in progress</li>
-          <li class="badge">Next 12 · React 17</li>
-          <li class="badge">PostgreSQL via Prisma</li>
-        </ul>
+        <div class="hero">
+          <h1><img src="assets/logo.svg" alt="" width="36" height="36">NextCMS</h1>
+          <p class="lead">
+            A headless-ish content management system built on Next.js 12, TypeScript and Prisma. Pages are data, not
+            code: content lives in the database and the renderer composes it from a registry of React components.
+          </p>
+          <ul class="badges">
+            <li class="badge">MIT licensed</li>
+            <li class="badge warn">Work in progress</li>
+            <li class="badge">Next 12 · React 17</li>
+            <li class="badge">PostgreSQL via Prisma</li>
+          </ul>
+          <div class="cta">
+            <a class="primary" href="#quick-start">Quick start</a>
+            <a href="#api">API reference</a>
+            <a href="https://github.com/Allan-Nava/NextCMS">GitHub</a>
+          </div>
+        </div>
 
         <h2 id="overview">Overview</h2>
         <p>
           The repository holds three independent things. It is not an npm workspace — each folder installs and builds on
           its own.
         </p>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Part</th>
-                <th>What it is</th>
-                <th>Port</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>cms/</code></td>
-                <td>The public site and the whole HTTP API. Owns the Prisma schema.</td>
-                <td>3000</td>
-              </tr>
-              <tr>
-                <td><code>admin/</code></td>
-                <td>
-                  Admin panel on the Metronic theme, served under <code>/admin</code>. Has no database access: it talks
-                  to the <code>cms/</code> API. Still mostly a placeholder.
-                </td>
-                <td>4000</td>
-              </tr>
-              <tr>
-                <td><code>packages/</code></td>
-                <td>
-                  The <code>@nextcms/*</code> npm packages — a CLI and scaffolder, CommonJS, independent of the two Next
-                  apps.
-                </td>
-                <td>—</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ul class="cards">
+          <li class="card">
+            <h3>cms/</h3>
+            <p>The public site and the whole HTTP API. Owns the Prisma schema.</p>
+            <span class="port">port 3000</span>
+          </li>
+          <li class="card">
+            <h3>admin/</h3>
+            <p>
+              Admin panel on the Metronic theme, served under <code>/admin</code>. No database access: it talks to the
+              <code>cms/</code> API. Still mostly a placeholder.
+            </p>
+            <span class="port">port 4000</span>
+          </li>
+          <li class="card">
+            <h3>packages/</h3>
+            <p>
+              The <code>@nextcms/*</code> npm packages — a CLI and scaffolder, CommonJS, independent of the two Next
+              apps.
+            </p>
+            <span class="port">not installable yet</span>
+          </li>
+        </ul>
         <p>
           The idea worth knowing before reading any code: a page is a row in the <code>Page</code> table plus an ordered
           list of <code>Component</code> rows. Rendering resolves each block through a static allow-list
@@ -123,37 +124,37 @@
             <tbody>
               <tr>
                 <td>Build &amp; CI</td>
-                <td><span class="pill">working</span></td>
+                <td><span class="pill ok">working</span></td>
                 <td>Typecheck, lint, unit tests and build gate both apps on every push.</td>
               </tr>
               <tr>
                 <td>Authentication</td>
-                <td><span class="pill">working</span></td>
+                <td><span class="pill ok">working</span></td>
                 <td>Login, logout, refresh, password recovery, profile. Rate limited.</td>
               </tr>
               <tr>
                 <td>Content API</td>
-                <td><span class="pill">working</span></td>
+                <td><span class="pill ok">working</span></td>
                 <td>Pages, posts, categories, tags, layouts. Guarded per route.</td>
               </tr>
               <tr>
                 <td>Page builder</td>
-                <td><span class="pill">usable</span></td>
+                <td><span class="pill partial">usable</span></td>
                 <td>Drag and drop with a save; block settings and image handling are not built yet.</td>
               </tr>
               <tr>
                 <td>Admin panel</td>
-                <td><span class="pill">placeholder</span></td>
+                <td><span class="pill todo">placeholder</span></td>
                 <td>Three pages and no session sharing with <code>cms/</code> yet.</td>
               </tr>
               <tr>
                 <td>Email delivery</td>
-                <td><span class="pill">not configured</span></td>
+                <td><span class="pill none">not configured</span></td>
                 <td>Password recovery works, but no mail provider is wired — see below.</td>
               </tr>
               <tr>
                 <td>SEO output</td>
-                <td><span class="pill">not built</span></td>
+                <td><span class="pill none">not built</span></td>
                 <td>SEO fields are stored by the editor but no page renders them yet (NC-60).</td>
               </tr>
             </tbody>
@@ -854,5 +855,39 @@ Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.</
         </footer>
       </main>
     </div>
+    <script>
+      // Progressive enhancement only: highlights the sidebar entry for the section
+      // in view. The site is fully usable with JavaScript off — this just saves the
+      // reader from losing their place in a long single page.
+      (function () {
+        var links = Array.prototype.slice.call(document.querySelectorAll('.sidebar nav a[href^="#"]'));
+        if (!links.length || !('IntersectionObserver' in window)) return;
+        var byId = {};
+        links.forEach(function (link) {
+          byId[link.getAttribute('href').slice(1)] = link;
+        });
+        var targets = Object.keys(byId)
+          .map(function (id) {
+            return document.getElementById(id);
+          })
+          .filter(Boolean);
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              links.forEach(function (link) {
+                link.classList.remove('active');
+              });
+              var link = byId[entry.target.id];
+              if (link) link.classList.add('active');
+            });
+          },
+          { rootMargin: '-10% 0px -80% 0px' }
+        );
+        targets.forEach(function (target) {
+          observer.observe(target);
+        });
+      })();
+    </script>
   </body>
 </html>
