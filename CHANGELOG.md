@@ -4,6 +4,34 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.8.2] - 2026-07-26
+
+### Fixed
+
+- **Drafts were served publicly** (NC-59). `GET /api/page` filtered on `publishedAt`, but the page renderer did not: `loadPage` checked only `deletedAt`, so an unpublished page was rendered to anyone who knew its slug. Introduced in v0.8.0 by the same change that added drafts — the API grew the filter and the renderer did not.
+
+  The rule now lives in one Prisma-free predicate, `isPubliclyVisible` in `lib/utils/visibility.ts`, so the two paths cannot disagree again. It also treats a `publishedAt` in the future as not-yet-published, which makes scheduled publishing work rather than leaking early. `loadPage` takes an `includeDrafts` option for the editor preview that NC-67 will add.
+
+### Added
+
+- **Milestone M7 · Product** in `BACKLOG.md`: the first milestone about making the project *good* rather than *correct*, with ten items (NC-60…NC-69). Every one is grounded in something that exists in the code today, not in a wish list. The three that stand out:
+  - **NC-60** — SEO fields are collected and never emitted. `seoTitle`, `seoDescription` and `jsonld` have been in the schema from the beginning and the editor stores them, but `next/head` appears **nowhere in the codebase**: public pages ship no `<title>`, no meta description and no structured data.
+  - **NC-63** — `Role` has no effect on anything. Authorisation reads the `isAdmin`/`isStaff` booleans; `Role` rows are created and listed through a full CRUD API and then ignored. It is an API that pretends to control access.
+  - **NC-64** — `Entity` is dead code: the model and its repo exist, nothing imports them, there is no route and no UI.
+- Six regression tests for the visibility predicate (72 total).
+
+### Changed
+
+- M7 is marked as **not sequential** in the roadmap, unlike M0–M6: it is a product backlog to be picked from by need.
+
+### Verification
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 pre-existing warning) | ✅ 72 passed | ✅ |
+
+The backlog parser reads 69 items across 9 milestones. Not verified: the draft fix was not exercised against a live database — the predicate is unit-tested, its integration with Prisma is checked by the type system only.
+
 ## [0.8.1] - 2026-07-26
 
 ### Added

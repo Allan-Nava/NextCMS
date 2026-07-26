@@ -10,7 +10,7 @@ Severity: 🔴 critical · 🟠 high · 🟡 medium · ⚪ debt.
 
 ## Roadmap
 
-Milestones are **sequential**: each only makes sense once the previous one is closed. One rule — you do not build features on a project that does not compile, and you do not ship an auth layer that leaks password hashes.
+Milestones **M0–M6 are sequential**: each only makes sense once the previous one is closed. One rule — you do not build features on a project that does not compile, and you do not ship an auth layer that leaks password hashes. **M7 is not**: it is the product backlog, picked by need rather than in order.
 
 | # | Milestone | Goal | Release | Items |
 |---|---|---|---|---|
@@ -21,7 +21,8 @@ Milestones are **sequential**: each only makes sense once the previous one is cl
 | **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
 | **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` ✅ | NC-41, NC-42 |
 | **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54, 58 |
-| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55…57 |
+| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55…57, 59 |
+| **M7** | Product | Features a CMS is expected to have and this one lacks | `v1.1.0` → | NC-60…69 |
 
 Release numbering note: M1 and M2 shipped together in `v0.6.0`, so everything after moved up one minor from the original plan.
 
@@ -119,6 +120,7 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [ ] 🟡 **NC-33** — Migration to Next 13+/App Router (currently Next 12.1.1, React 17, `pages/`, legacy `_middleware.ts`). A migration, not a bump — and the prerequisite for dropping the Next 12.x advisories.
 - [ ] ⚪ **NC-37** — Duplicate lockfiles and orphan files. Root: `package-lock.json` + `yarn.lock` for a single dependency, an `.eslintrc.json` no app can resolve, and `haikus.json` (an Octocat fixture) out of context. `admin/`: `package-lock.json` and `yarn.lock` coexist, and something in the environment rewrites the latter after an `npm ci` — with two disagreeing lockfiles the install is not deterministic. npm is the declared package manager: remove the `yarn.lock` files.
 - [ ] ⚪ **NC-38** — Consider npm workspaces to avoid installing folder by folder (and to unblock NC-51).
+- [x] 🟠 **NC-59** — **Drafts were served publicly.** `GET /api/page` filtered on `publishedAt`, but the page renderer did not: `loadPage` checked only `deletedAt`, so an unpublished page was rendered to anyone who knew its slug. Introduced in v0.8.0 by the same change that added drafts. *(v0.8.2: the rule moved into one Prisma-free predicate, `isPubliclyVisible` in `lib/utils/visibility.ts`, so the API and the renderer cannot disagree again. It also treats a future `publishedAt` as not-yet-published. Six regression tests.)*
 - [x] 🟠 **NC-55** — The Node runtime was **Node 14 in the devcontainer and Node 18 in CI and Docker**, and the Vercel project was still set to `14.x` — a version Vercel has discontinued, so the deploy failed before it built (`Found invalid or discontinued Node.js Version: "14.x"`). Node 18 is EOL too, so CI was testing on a runtime nobody should deploy. *(v0.7.3: aligned on **Node 24** across `.github/workflows/ci.yml` (both jobs), `cms/Dockerfile`, `.devcontainer/`, and an `engines.node` pin in `cms/package.json` and `admin/package.json` — Vercel reads `engines` and it **overrides the dashboard setting**, so the version now lives in git instead of untracked project settings.)*
 
   Two traps surfaced while doing it, both verified by building the images rather than reasoning about them:
@@ -127,3 +129,22 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [x] 🟡 **NC-57** — The project had no published documentation: `docs/` held two scratch notes and two screenshots, and the README was three lines and a GIF. *(v0.8.1: a documentation site in `docs/` — overview, honest project status, quick start, the full environment reference, architecture, data model, complete API reference, auth guarantees, content/page-builder guide, roadmap and process. Static HTML and one stylesheet, no framework and no build step; `pages.yml` validates the markup and the anchors before deploying. **Needs one manual step: Settings → Pages → Source = "GitHub Actions".**)*
 - [x] 🟡 **NC-56** — This backlog existed only as a file: nothing carried it into GitHub, so the work was invisible to anyone not reading the repo. *(v0.7.2: `.github/scripts/backlog-sync.mjs` + `.github/workflows/backlog-sync.yml` reconcile every `NC-n` item with an issue and every `## Mn` section with a milestone, idempotently, on every push that touches `BACKLOG.md`. 12 parser tests run before each sync.)*
 - [x] 🟡 **NC-28** — `BASE_URI` was hardcoded to a Vercel URL in `cms/lib/utils/constants.ts` with the env read commented out. *(v0.6.0: both `BASE_URI` and `API_URI` come from the environment.)*
+
+## M7 · Product → `v1.1.0`
+
+Beyond a working CMS. `v1.1.0` is where this milestone opens, not where it ends.
+
+Everything up to M6 is about making the project **correct**: it compiles, it does not leak, the endpoints answer, the content flows. This milestone is the first one about making it **good** — features a CMS is expected to have and this one does not.
+
+Not sequential with the rest and not a promise of order: pick by what the site being built actually needs. Each item below is grounded in something that exists in the code today, not in a wish list.
+
+- [ ] 🟠 **NC-60** — **SEO fields are collected and never emitted.** The editor stores `seoTitle`, `seoDescription` and `jsonld`, the schema has carried them since the beginning, and `next/head` appears **nowhere in the codebase**: public pages ship no `<title>`, no meta description and no structured data. A CMS that collects SEO input and renders none of it is worse than one that never asked. Render them in the page head, falling back to `title`/`description`.
+- [ ] 🟠 **NC-61** — **Media library.** There is no upload path at all: no storage adapter, no image model, no picker. `NC-58` (block settings) needs it before an image block can mean anything.
+- [ ] 🟡 **NC-62** — **`Visit` is never written.** The model exists, has a proper relation to `Page` since `NC-24`, and nothing records a visit. Either record them and build the "most read" view the table implies, or drop the model — an empty table that looks like a feature is a trap for the next reader.
+- [ ] 🟡 **NC-63** — **`Role` has no effect on anything.** Authorisation reads the `isAdmin`/`isStaff` booleans on `User`; `Role` rows are created and listed through a full CRUD API and then ignored. Either make permissions real (roles with capabilities, checked by the guards) or delete the model and its routes. Right now it is an API that pretends to control access.
+- [ ] 🟡 **NC-64** — **`Entity` is dead code.** The model and `entity-repo.ts` exist; nothing imports the repo, there is no route and no UI. It looks like the start of user-defined content types — a good feature, and the reason to either finish it or remove it.
+- [ ] 🟡 **NC-65** — **Revisions.** Editing content overwrites it: there is no history and no way back. The soft-delete columns show the intent was there.
+- [ ] 🟡 **NC-66** — **Search.** Nothing searches: no full-text index, no query endpoint. `Page.title` has an index and that is the whole story.
+- [ ] 🟡 **NC-67** — **Draft preview.** Now that drafts are correctly hidden from the public (`NC-59`), an editor has no way to see one rendered. `loadPage` already takes an `includeDrafts` option for exactly this; it needs a guarded route to call it.
+- [ ] ⚪ **NC-68** — **Internationalisation.** One `Page` row is one language; the slug space is flat. Next's i18n routing plus a locale on the content model would be the shape.
+- [ ] ⚪ **NC-69** — **`sitemap.xml` and `robots.txt`.** Neither exists, and both are cheap once `publishedAt` is authoritative — which it now is.
