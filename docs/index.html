@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NextCMS — documentation</title>
+    <meta
+      name="description"
+      content="NextCMS: a headless-ish CMS on Next.js 12, TypeScript and Prisma. Quick start, configuration, API reference and roadmap."
+    >
+    <link rel="stylesheet" href="assets/style.css">
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="brand" href="#top">NextCMS</a>
+        <p class="brand-note">Next.js 12 · TypeScript · Prisma</p>
+        <nav aria-label="Documentation">
+          <p class="group">Start</p>
+          <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#status">Project status</a></li>
+            <li><a href="#quick-start">Quick start</a></li>
+            <li><a href="#configuration">Configuration</a></li>
+          </ul>
+          <p class="group">Reference</p>
+          <ul>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#data-model">Data model</a></li>
+            <li><a href="#api">API reference</a></li>
+            <li><a href="#auth">Authentication</a></li>
+            <li><a href="#content">Content &amp; page builder</a></li>
+          </ul>
+          <p class="group">Project</p>
+          <ul>
+            <li><a href="#roadmap">Roadmap</a></li>
+            <li><a href="#process">How work is tracked</a></li>
+            <li><a href="#packages">npm packages</a></li>
+          </ul>
+          <p class="group">Links</p>
+          <ul>
+            <li><a href="https://github.com/Allan-Nava/NextCMS">GitHub repository</a></li>
+            <li><a href="https://github.com/Allan-Nava/NextCMS/blob/main/BACKLOG.md">Backlog</a></li>
+            <li><a href="https://github.com/Allan-Nava/NextCMS/blob/main/CHANGELOG.md">Changelog</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="content" id="top">
+        <h1>NextCMS</h1>
+        <p class="lead">
+          A headless-ish content management system built on Next.js 12, TypeScript and Prisma. Pages are data, not code:
+          content lives in the database and the renderer composes it from a registry of React components.
+        </p>
+        <ul class="badges">
+          <li class="badge">MIT licensed</li>
+          <li class="badge warn">Work in progress</li>
+          <li class="badge">Next 12 · React 17</li>
+          <li class="badge">PostgreSQL via Prisma</li>
+        </ul>
+
+        <h2 id="overview">Overview</h2>
+        <p>
+          The repository holds three independent things. It is not an npm workspace — each folder installs and builds on
+          its own.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Part</th>
+                <th>What it is</th>
+                <th>Port</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>cms/</code></td>
+                <td>The public site and the whole HTTP API. Owns the Prisma schema.</td>
+                <td>3000</td>
+              </tr>
+              <tr>
+                <td><code>admin/</code></td>
+                <td>
+                  Admin panel on the Metronic theme, served under <code>/admin</code>. Has no database access: it talks
+                  to the <code>cms/</code> API. Still mostly a placeholder.
+                </td>
+                <td>4000</td>
+              </tr>
+              <tr>
+                <td><code>packages/</code></td>
+                <td>
+                  The <code>@nextcms/*</code> npm packages — a CLI and scaffolder, CommonJS, independent of the two Next
+                  apps.
+                </td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The idea worth knowing before reading any code: a page is a row in the <code>Page</code> table plus an ordered
+          list of <code>Component</code> rows. Rendering resolves each block through a static allow-list
+          (<code>cms/components/registry.ts</code>) and loads it with <code>next/dynamic</code>. Nothing is imported from
+          a path stored in the database.
+        </p>
+
+        <h2 id="status">Project status</h2>
+        <p>
+          This is an honest status section, not a marketing one. What works, works because it was verified; what is
+          missing is listed.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>State</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Build &amp; CI</td>
+                <td><span class="pill">working</span></td>
+                <td>Typecheck, lint, unit tests and build gate both apps on every push.</td>
+              </tr>
+              <tr>
+                <td>Authentication</td>
+                <td><span class="pill">working</span></td>
+                <td>Login, logout, refresh, password recovery, profile. Rate limited.</td>
+              </tr>
+              <tr>
+                <td>Content API</td>
+                <td><span class="pill">working</span></td>
+                <td>Pages, posts, categories, tags, layouts. Guarded per route.</td>
+              </tr>
+              <tr>
+                <td>Page builder</td>
+                <td><span class="pill">usable</span></td>
+                <td>Drag and drop with a save; block settings and image handling are not built yet.</td>
+              </tr>
+              <tr>
+                <td>Admin panel</td>
+                <td><span class="pill">placeholder</span></td>
+                <td>Three pages and no session sharing with <code>cms/</code> yet.</td>
+              </tr>
+              <tr>
+                <td>Email delivery</td>
+                <td><span class="pill">not configured</span></td>
+                <td>Password recovery works, but no mail provider is wired — see below.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn">
+          <p>
+            <strong>No mail provider is configured.</strong> Password recovery creates and validates tokens correctly,
+            but the default transport only logs the message outside production, and in production it drops it. To send
+            real email, implement <code>MailTransport</code> and call <code>setMailTransport</code> —
+            <code>cms/lib/helpers/mailer.ts</code>.
+          </p>
+        </div>
+
+        <h2 id="quick-start">Quick start</h2>
+        <p>Node 24 and a PostgreSQL database. Run everything from inside <code>cms/</code>.</p>
+        <pre><code>git clone https://github.com/Allan-Nava/NextCMS.git
+cd NextCMS/cms
+npm ci
+
+cp .env.example .env
+# Fill in DATABASE_URL, and generate a secret:
+#   openssl rand -base64 48   -&gt;  JWT_SECRET
+
+npx prisma generate      # generate the client
+npx prisma db push       # create the tables
+npx prisma db seed       # optional: one example page
+
+npm run dev              # http://localhost:3000</code></pre>
+        <p>The admin panel is a separate install:</p>
+        <pre><code>cd admin
+npm ci
+npm run dev              # http://localhost:4000/admin</code></pre>
+        <div class="note">
+          <p>
+            There is no <code>prisma/migrations</code> directory: this project has always used
+            <code>prisma db push</code>. After changing <code>schema.prisma</code>, push it and re-run
+            <code>prisma generate</code>, otherwise the generated types will not match the code.
+          </p>
+        </div>
+
+        <h3>Creating the first user</h3>
+        <p>
+          Self-registration is off by default, and user creation is admin-only — which leaves a chicken-and-egg problem
+          on a fresh database. Two ways out: set <code>ALLOW_PUBLIC_REGISTRATION=true</code>, register, then flip
+          <code>isAdmin</code> with <code>npx prisma studio</code> and turn the flag back off; or insert the first admin
+          directly with Prisma Studio (the password column expects a bcrypt hash).
+        </p>
+
+        <h2 id="configuration">Configuration</h2>
+        <p>
+          Everything is read from the environment. <code>cms/.env.example</code> is the documented list; the table below
+          is the same set with the defaults spelled out.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Required</th>
+                <th>Default</th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>DATABASE_URL</code></td>
+                <td>yes</td>
+                <td>—</td>
+                <td>PostgreSQL connection string used by Prisma.</td>
+              </tr>
+              <tr>
+                <td><code>JWT_SECRET</code></td>
+                <td>yes</td>
+                <td>—</td>
+                <td>Signs access and refresh tokens. The app throws if it is missing rather than falling back.</td>
+              </tr>
+              <tr>
+                <td><code>JWT_ACCESS_TTL</code></td>
+                <td>no</td>
+                <td><code>15m</code></td>
+                <td>Access token lifetime.</td>
+              </tr>
+              <tr>
+                <td><code>JWT_REFRESH_TTL</code></td>
+                <td>no</td>
+                <td><code>7d</code></td>
+                <td>Refresh token lifetime.</td>
+              </tr>
+              <tr>
+                <td><code>ALLOW_PUBLIC_REGISTRATION</code></td>
+                <td>no</td>
+                <td><code>false</code></td>
+                <td>Opens <code>POST /api/auth/register</code>. It can never create an administrator.</td>
+              </tr>
+              <tr>
+                <td><code>PASSWORD_RESET_TTL_MINUTES</code></td>
+                <td>no</td>
+                <td><code>30</code></td>
+                <td>Lifetime of a password reset link.</td>
+              </tr>
+              <tr>
+                <td><code>LOG_LEVEL</code></td>
+                <td>no</td>
+                <td><code>info</code> in production, else <code>debug</code></td>
+                <td><code>debug</code> | <code>info</code> | <code>warn</code> | <code>error</code>.</td>
+              </tr>
+              <tr>
+                <td><code>BASE_URI</code></td>
+                <td>no</td>
+                <td>—</td>
+                <td>Public site URL. Used to build password reset links.</td>
+              </tr>
+              <tr>
+                <td><code>API_URI</code></td>
+                <td>no</td>
+                <td>—</td>
+                <td>Public API URL, exposed to the browser.</td>
+              </tr>
+              <tr>
+                <td><code>ADMIN_URL</code></td>
+                <td>no</td>
+                <td>—</td>
+                <td>Where the admin app lives.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="architecture">Architecture</h2>
+        <p>Inside <code>cms/</code> the layering is strict, and it is the one rule worth respecting when adding code:</p>
+        <ul>
+          <li>
+            <strong>API routes</strong> (<code>pages/api/…</code>) parse the request, apply a guard, validate the
+            payload, and delegate. No SQL, no business rules.
+          </li>
+          <li>
+            <strong>Repositories</strong> (<code>lib/helpers/*-repo.ts</code>) are the only code that touches Prisma.
+            Password hashing lives here, not in a handler.
+          </li>
+          <li>
+            <strong>Helpers</strong> — <code>auth.ts</code> (tokens and guards), <code>password-reset.ts</code>,
+            <code>mailer.ts</code>, <code>page-content.ts</code>.
+          </li>
+          <li>
+            <strong>Utilities</strong> — <code>http.ts</code> (status helpers), <code>validation.ts</code>,
+            <code>rate-limit.ts</code>, <code>logger.ts</code>, <code>env.ts</code>, <code>slug.ts</code>.
+          </li>
+        </ul>
+        <p>Every response uses the same envelope, so a client never has to guess the shape:</p>
+        <pre><code>{ "response": "OK", "message": "pages retrieved", "data": … }
+{ "response": "KO", "error": { "error": "authentication required" } }</code></pre>
+        <div class="note">
+          <p>
+            Authorisation is enforced in the API handlers, never in <code>_middleware.ts</code>. Middleware runs on the
+            edge runtime, where a JWT signature cannot be verified — so it only checks whether a session cookie exists,
+            to redirect logged-out visitors away from the editor screens.
+          </p>
+        </div>
+
+        <h2 id="data-model">Data model</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>Page</code></td>
+                <td>
+                  A piece of content. <code>type</code> tells pages and posts apart, so they share one slug space and one
+                  renderer. Carries SEO fields, an optional category, tags and <code>publishedAt</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>Component</code></td>
+                <td>
+                  One block of a page's layout. <code>parent</code> is the page id and <code>position</code> the order
+                  within it; <code>template</code> is the registry path.
+                </td>
+              </tr>
+              <tr>
+                <td><code>Category</code>, <code>Tag</code></td>
+                <td>Taxonomies. A page has at most one category and any number of tags.</td>
+              </tr>
+              <tr>
+                <td><code>User</code>, <code>Role</code></td>
+                <td>Accounts. <code>isAdmin</code> and <code>isStaff</code> are the flags the guards read.</td>
+              </tr>
+              <tr>
+                <td><code>PasswordResetToken</code></td>
+                <td>Only the SHA-256 hash of a token is stored. Single use, expiring.</td>
+              </tr>
+              <tr>
+                <td><code>Visit</code></td>
+                <td>A visit to a page. Not yet recorded by anything.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Deletes are soft everywhere: <code>deletedAt</code> is set and every listing filters on it. Nothing is removed
+          from the database by an API call.
+        </p>
+
+        <h2 id="api">API reference</h2>
+        <p>
+          All routes live under <code>/api</code>. <em>Public</em> needs no token, <em>auth</em> needs a valid access
+          token, <em>admin</em> needs one whose <code>isAdmin</code> claim is true. Send it as
+          <code>Authorization: Bearer &lt;token&gt;</code>, or rely on the <code>access_token</code> cookie the login
+          endpoint sets.
+        </p>
+
+        <h3>Authentication</h3>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Endpoint</th>
+                <th>Access</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/login</code></td>
+                <td><span class="pill">public</span></td>
+                <td>
+                  Body <code>{username, password}</code>. Returns
+                  <code>{access_token, refresh_token, user}</code> and sets an HttpOnly cookie. 10 attempts per IP per 5
+                  minutes.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/logout</code></td>
+                <td><span class="pill">public</span></td>
+                <td>Clears the cookie. Tokens are stateless, so a held bearer token must be dropped by the client.</td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/register</code></td>
+                <td><span class="pill">public</span></td>
+                <td>
+                  403 unless <code>ALLOW_PUBLIC_REGISTRATION=true</code>. Cannot set role flags. 409 on a duplicate.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/auth/me</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>The session's user, read from the database rather than from the token claims.</td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/refresh</code></td>
+                <td><span class="pill">public</span></td>
+                <td>
+                  Body <code>{refresh_token}</code>. Re-reads the user, so a deleted or demoted account stops renewing.
+                  An access token presented here is refused.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/forgot-password</code></td>
+                <td><span class="pill">public</span></td>
+                <td>Always answers 202, so it cannot be used to find out which addresses have accounts.</td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/auth/reset-password</code></td>
+                <td><span class="pill">public</span></td>
+                <td>Body <code>{token, password}</code>. The token is single use.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Content</h3>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Endpoint</th>
+                <th>Access</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="method get">GET</span> <code>/page</code></td>
+                <td><span class="pill">public</span></td>
+                <td>
+                  Filters: <code>?type=post</code>, <code>?category=&lt;id&gt;</code>, <code>?tag=&lt;slug&gt;</code>. An
+                  anonymous caller only sees published content; an authenticated one also sees drafts.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/page</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>
+                  Body: <code>title</code>, <code>slug</code> (must start with <code>/</code>),
+                  <code>description</code>, optional <code>type</code>, <code>categoryId</code>,
+                  <code>tagNames[]</code>, <code>published</code>. Unknown tags are created.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/page/:id</code></td>
+                <td><span class="pill">public</span></td>
+                <td>404 for a soft-deleted page.</td>
+              </tr>
+              <tr>
+                <td><span class="method patch">PATCH</span> <code>/page/:id</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>Partial update. <code>tagNames</code> replaces the whole tag list.</td>
+              </tr>
+              <tr>
+                <td><span class="method delete">DELETE</span> <code>/page/:id</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>Soft delete.</td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/page/:id/layout</code></td>
+                <td><span class="pill">public</span></td>
+                <td>The page's blocks, in order.</td>
+              </tr>
+              <tr>
+                <td><span class="method put">PUT</span> <code>/page/:id/layout</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>
+                  Body <code>{components: [{name, path, props?}]}</code>. Replaces the layout in a transaction. A path
+                  that is not in the component registry is rejected.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/components</code></td>
+                <td><span class="pill">public</span></td>
+                <td>Every stored block. <span class="method post">POST</span> creates one (auth).</td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/components/:id</code></td>
+                <td><span class="pill">public</span></td>
+                <td><span class="method patch">PATCH</span> and <span class="method delete">DELETE</span> need auth.</td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/category</code>, <code>/tag</code></td>
+                <td><span class="pill">public</span></td>
+                <td>
+                  List taxonomies. <span class="method post">POST</span> creates (auth); the slug is derived from the
+                  name when not supplied.
+                </td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/category/:id</code>, <code>/tag/:id</code></td>
+                <td><span class="pill">public</span></td>
+                <td><span class="method patch">PATCH</span> and <span class="method delete">DELETE</span> need auth.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Users and roles</h3>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Endpoint</th>
+                <th>Access</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="method get">GET</span> <code>/user</code></td>
+                <td><span class="pill">admin</span></td>
+                <td>Never includes the password hash — no endpoint does.</td>
+              </tr>
+              <tr>
+                <td><span class="method post">POST</span> <code>/user</code></td>
+                <td><span class="pill">admin</span></td>
+                <td>The only way to create a privileged account.</td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/user/:id</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>Your own record, or any record if you are an admin.</td>
+              </tr>
+              <tr>
+                <td><span class="method patch">PATCH</span> <code>/user/:id</code></td>
+                <td><span class="pill">auth</span></td>
+                <td>Own record or admin. Only an admin may change <code>isAdmin</code>/<code>isStaff</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="method delete">DELETE</span> <code>/user/:id</code></td>
+                <td><span class="pill">admin</span></td>
+                <td>Hard delete for users.</td>
+              </tr>
+              <tr>
+                <td><span class="method get">GET</span> <code>/role</code>, <code>/role/:id</code></td>
+                <td><span class="pill">admin</span></td>
+                <td>Full CRUD, admin only.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="auth">Authentication</h2>
+        <p>The flow, and the guarantees behind it:</p>
+        <ol>
+          <li><code>POST /api/auth/login</code> returns an access token (15 min) and a refresh token (7 days).</li>
+          <li>
+            The access token also arrives as an HttpOnly cookie, so server-rendered pages and the middleware can see
+            that a session exists. JavaScript cannot read it.
+          </li>
+          <li><code>POST /api/auth/refresh</code> trades the refresh token for a new pair before expiry.</li>
+          <li><code>POST /api/auth/logout</code> clears the cookie.</li>
+        </ol>
+        <p>Properties that are covered by regression tests:</p>
+        <ul>
+          <li>A token carries only <code>{sub, username, isAdmin, isStaff}</code> — never the user row, never a hash.</li>
+          <li>A tampered or foreign-signed token is refused.</li>
+          <li>A refresh token cannot be used as an access token, and the reverse is also false.</li>
+          <li>A missing <code>JWT_SECRET</code> throws instead of falling back to a default.</li>
+        </ul>
+        <div class="note">
+          <p>
+            Rate limit counters live in the process memory. Behind more than one instance the effective limit is per
+            instance; a shared store is the next step if the app is scaled out.
+          </p>
+        </div>
+
+        <h2 id="content">Content and the page builder</h2>
+        <p>
+          Pages and posts are the same table, told apart by <code>type</code>. The editor screens live in the
+          <code>cms</code> app and sit behind the session middleware:
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Screen</th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/content</code></td>
+                <td>List everything, filter by type, jump to the editor or the layout, delete.</td>
+              </tr>
+              <tr>
+                <td><code>/content/new</code>, <code>/content/:id</code></td>
+                <td>Create and edit: title, slug, description, type, category, tags, SEO fields, published flag.</td>
+              </tr>
+              <tr>
+                <td><code>/page-builder?page=:id</code></td>
+                <td>Drag blocks from the palette, reorder or remove them, then save.</td>
+              </tr>
+              <tr>
+                <td><code>/profile</code></td>
+                <td>Your own account: email, name, password.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The builder's palette is the component registry, not the database — those are the components the renderer can
+          actually draw. Adding one is a single line in <code>cms/components/registry.ts</code> next to a real
+          <code>import()</code>, which is what lets webpack resolve it statically:
+        </p>
+        <pre><code>export const COMPONENT_REGISTRY: Record&lt;string, ComponentType&lt;any&gt;&gt; = {
+  './Elements/Navbar': dynamic(() =&gt; import('./Elements/Navbar')),
+  './Elements/Hero': dynamic(() =&gt; import('./Elements/Hero')),
+  // add yours here
+};</code></pre>
+        <p>
+          Saving a layout replaces it: the previous blocks are soft-deleted and the new ones inserted with their
+          position, inside a transaction — a half-written layout would render a mixture of two versions.
+        </p>
+        <div class="note warn">
+          <p>
+            Not built yet: per-block settings in the UI (props are stored but not editable), image and media handling,
+            and nested blocks (the data model supports them, the editor does not).
+          </p>
+        </div>
+
+        <h2 id="roadmap">Roadmap</h2>
+        <p>
+          Milestones are sequential, and each ships as a tagged release. The full item list lives in
+          <a href="https://github.com/Allan-Nava/NextCMS/blob/main/BACKLOG.md">BACKLOG.md</a>.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Milestone</th>
+                <th>Goal</th>
+                <th>Release</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>M0</td>
+                <td>Green build — the project compiles and CI checks it</td>
+                <td><code>v0.5.0</code></td>
+                <td><span class="badge ok">done</span></td>
+              </tr>
+              <tr>
+                <td>M1</td>
+                <td>Security — no leaked hashes, no hardcoded secrets, guarded routes</td>
+                <td><code>v0.6.0</code></td>
+                <td><span class="badge ok">done</span></td>
+              </tr>
+              <tr>
+                <td>M2</td>
+                <td>Correct APIs — every endpoint answers, with the right status</td>
+                <td><code>v0.6.0</code></td>
+                <td><span class="badge ok">done</span></td>
+              </tr>
+              <tr>
+                <td>M3</td>
+                <td>Working auth — refresh, recovery, profile</td>
+                <td><code>v0.7.0</code></td>
+                <td><span class="badge ok">done</span></td>
+              </tr>
+              <tr>
+                <td>M4</td>
+                <td>Content and page builder — taxonomies, drafts, layout persistence</td>
+                <td><code>v0.8.0</code></td>
+                <td><span class="badge ok">done</span></td>
+              </tr>
+              <tr>
+                <td>M5</td>
+                <td>Admin — the panel stops being a placeholder</td>
+                <td><code>v0.9.0</code></td>
+                <td><span class="badge">next</span></td>
+              </tr>
+              <tr>
+                <td>M6</td>
+                <td>Road to 1.0 — debt, deeper tests, Next 13 migration</td>
+                <td><code>v1.0.0</code></td>
+                <td><span class="badge">planned</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="process">How work is tracked</h2>
+        <p>Three rules, and they are enforced by tooling rather than by good intentions:</p>
+        <ul>
+          <li>
+            <strong>Every task is an item.</strong> <code>BACKLOG.md</code> is the single source of truth, with stable
+            <code>NC-n</code> ids that are never reused or renumbered. A push that touches it syncs the items to GitHub
+            issues and the sections to milestones, so ticking an item in the file closes its issue.
+          </li>
+          <li>
+            <strong>Every feature is a tagged release</strong> with its own <code>CHANGELOG.md</code> section, including
+            what was verified and what was not.
+          </li>
+          <li>
+            <strong>Documentation ships with the change.</strong> A change to the architecture, the env vars, the schema
+            or an API contract updates the docs in the same commit.
+          </li>
+        </ul>
+
+        <h2 id="packages">npm packages</h2>
+        <div class="note danger">
+          <p>
+            <strong>The <code>@nextcms/*</code> packages cannot currently be installed.</strong>
+            <code>@nextcms/nextcms@0.1.19</code> depends on sibling versions that were never published to npm
+            (<code>@nextcms/generators@0.1.4</code>, <code>@nextcms/utils@0.1.10</code>), so <code>npm install</code>
+            fails with <code>notarget</code>. Fixing it means either publishing the missing versions or resolving the
+            siblings locally through npm workspaces. Tracked as NC-51.
+          </p>
+        </div>
+        <p>
+          The packages themselves are a Strapi-inspired CLI and scaffolder on Koa, independent of the two Next apps in
+          this repository.
+        </p>
+
+        <footer>
+          <p>
+            NextCMS is MIT licensed. This site is built from
+            <code>docs/</code> in the repository and deployed by GitHub Actions on every push to
+            <code>main</code>.
+          </p>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+name: Pages
+
+# Publishes the documentation site in docs/ to GitHub Pages (NC-57).
+#
+# The site is plain static files — one HTML page and one stylesheet, no Jekyll and
+# no build step — so this workflow only uploads and deploys it. `.nojekyll` keeps
+# Pages from running its Jekyll pass over the directory.
+#
+# One-time setup in the repository: Settings → Pages → Source = "GitHub Actions".
+# Without that this workflow succeeds at building and fails at deploying.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and never cancel one halfway: an interrupted deploy
+# can leave the site on a partial upload.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Catches a broken tag or a duplicate id before it reaches the published
+      # site — the reason this job exists at all rather than deploying straight
+      # from the push.
+      - name: Validate the HTML
+        run: npx --yes html-validate@9 docs/index.html
+
+      - name: Check that every internal anchor resolves
+        run: node .github/scripts/check-anchors.mjs docs/index.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

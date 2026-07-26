@@ -1,0 +1,324 @@
+/*
+ * File: style.css
+ * Project: next-cms
+ * File Created: Sunday, 26th July 2026
+ * Author: Allan Nava (allan.nava@hiway.media)
+ * -----
+ * Copyright 2022 - 2026 ©
+ */
+
+/* Documentation site (NC-57). No framework and no build step: the whole site is
+   one HTML file plus this stylesheet, so it can be opened from disk and deployed
+   as static files. */
+
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f6f8fa;
+  --fg: #1f2328;
+  --fg-muted: #59636e;
+  --border: #d1d9e0;
+  --accent: #0969da;
+  --accent-soft: #ddf4ff;
+  --code-bg: #f6f8fa;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --danger: #cf222e;
+  --sidebar-width: 16rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --bg-soft: #151b23;
+    --fg: #e6edf3;
+    --fg-muted: #9198a1;
+    --border: #3d444d;
+    --accent: #4493f8;
+    --accent-soft: #121d2f;
+    --code-bg: #151b23;
+    --ok: #3fb950;
+    --warn: #d29922;
+    --danger: #f85149;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+code {
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------- layout --- */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+  border-right: 1px solid var(--border);
+  background: var(--bg-soft);
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar .brand {
+  display: block;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--fg);
+  margin-bottom: 0.25rem;
+}
+
+.sidebar .brand-note {
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  margin: 0 0 1.5rem;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.sidebar nav .group {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  margin: 0 0 0.4rem;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 0.9375rem;
+}
+
+.sidebar nav a:hover {
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2.5rem 3rem 5rem;
+  max-width: 60rem;
+}
+
+@media (max-width: 60rem) {
+  .layout {
+    display: block;
+  }
+
+  .sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .content {
+    padding: 1.5rem 1.25rem 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- content --- */
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.375rem;
+  margin: 3rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 1rem;
+}
+
+h3 {
+  font-size: 1.0625rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 1rem;
+}
+
+.lead {
+  font-size: 1.0625rem;
+  color: var(--fg-muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  color: var(--fg-muted);
+}
+
+.badge.ok {
+  color: var(--ok);
+  border-color: currentcolor;
+}
+
+.badge.warn {
+  color: var(--warn);
+  border-color: currentcolor;
+}
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 1rem;
+  border-radius: 0 6px 6px 0;
+  margin: 0 0 1.25rem;
+}
+
+.note.warn {
+  border-left-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+.note.danger {
+  border-left-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.note :last-child {
+  margin-bottom: 0;
+}
+
+/* Wide tables scroll inside their own container: the page itself must never
+   scroll sideways. */
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9375rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--bg-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td code {
+  white-space: nowrap;
+}
+
+.method {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.method.get {
+  color: var(--ok);
+}
+
+.method.post,
+.method.put,
+.method.patch {
+  color: var(--accent);
+}
+
+.method.delete {
+  color: var(--danger);
+}
+
+.pill {
+  font-size: 0.75rem;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+footer {
+  margin-top: 4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+}
