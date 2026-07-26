@@ -4,6 +4,37 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.11.1] - 2026-07-26
+
+### Added
+
+- **An Atom feed at `/feed.xml`** (NC-84), built test-first: 13 tests before a line of implementation. A CMS with a `post` type and a `publishedAt` had everything a feed needs and published neither.
+
+  **Atom rather than RSS 2.0**, for one practical reason: RSS requires RFC-822 dates, which are locale-sensitive to format by hand and a classic cause of feeds that break for some readers only. Atom uses RFC 3339, which is `toISOString()`.
+
+  Decisions the tests pin down:
+  - Only `type=post` is included. Pages are a site's furniture; posts are what someone subscribes to.
+  - Capped at 50 entries — an unbounded feed grows until it is too big to fetch.
+  - `updated` is the newest entry's date, **not** the current time. A feed whose `updated` moves on every request tells a reader that everything changed, every time.
+  - With no `BASE_URI` it answers **503** instead of serving relative links. Atom requires absolute URLs and a feed is read away from the site that served it, so that document would be broken rather than merely degraded.
+  - Drafts, scheduled and soft-deleted content are excluded by the same predicate the renderer and the sitemap use.
+
+- **Feed discovery**: a `rel="alternate" type="application/atom+xml"` link in every content page's head. A feed nobody can find is not a feature.
+
+### Verification
+
+Beyond the 13 unit tests, a feed was generated with deliberately hostile input — `&`, `<`, `>`, `"` and `'` in the title, summary and slug, plus a draft — written to disk and checked with `xmllint`: **well-formed**, the escaping intact, and no trace of the draft. That is the check that matters, because a single unescaped ampersand makes the whole document unparseable rather than just its own entry.
+
+| | typecheck | lint | tests | build |
+|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ 154 passed | ✅ |
+
+`/feed.xml` appears in the build output. Not verified against a live database.
+
+### Still open in M7
+
+Four of the eight: the authorable 404 (NC-81), the trash (NC-82), caching on public routes (NC-83) and a health endpoint (NC-85).
+
 ## [0.11.0] - 2026-07-26
 
 Three M7 items, in the order they were recommended: author, pagination, archives. The first two changed contracts, so they came before there is much content or many clients.

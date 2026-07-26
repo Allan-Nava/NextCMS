@@ -54,7 +54,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - Editor screens: `/content` (list), `/content/new`, `/content/:id`, `/page-builder?page=<id>`, `/profile`. All behind the session middleware.
   - `lib/types/response/response.ts` — uniform envelope: `successResponse(data, message)` / `errorResponse(error)` with `DEFAULTResponse.OK|KO`.
   - `lib/utils/logger.ts` — levelled logger. Never log request or response objects.
-  - `lib/utils/seo.ts` + `components/Seo.tsx` — the page head: title/description fallbacks, canonical, Open Graph, validated JSON-LD. `lib/utils/sitemap.ts` backs `/sitemap.xml` and `/robots.txt`.
+  - `lib/utils/seo.ts` + `components/Seo.tsx` — the page head: title/description fallbacks, canonical, Open Graph, validated JSON-LD, feed discovery. `lib/utils/sitemap.ts` backs `/sitemap.xml` and `/robots.txt`; `lib/utils/feed.ts` backs the Atom feed at `/feed.xml` (posts only, 50 max, 503 without `BASE_URI`).
   - `lib/reducers/` — Redux Toolkit (`auth`, `layout`, `dragAndDrop`) mounted in `store.ts`; the page builder (`components/pagebuilder/`, react-dnd) builds on it.
   - `lib/prisma.ts` — the `PrismaClient` singleton.
 - **`admin/`** (`next-admin`) — the panel, `basePath: '/admin'`, port 4000. **No Prisma and no token**: every call goes through `lib/crud/AdminAPI.ts` to a same-origin `/admin/api/*` path that `next.config.js` proxies to the cms, so the HttpOnly cookie travels and there is no CORS (`NC-54`). Screens: dashboard, content overview (read-only, links into the cms editors), users, roles, taxonomies. `src/_metronic` is a vendored theme that is **not** in use — excluded from the typecheck, and adopting it means restoring the packages it imports.

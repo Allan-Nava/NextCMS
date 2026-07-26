@@ -668,6 +668,14 @@ npm run dev              # http://localhost:4000/admin</code></pre>
                 </td>
               </tr>
               <tr>
+                <td><code>/feed.xml</code></td>
+                <td>
+                  Atom feed of the 50 most recent published posts. Atom rather than RSS because RSS wants RFC-822 dates,
+                  which are locale-sensitive to hand-format. Answers 503 without <code>BASE_URI</code>: a feed with
+                  relative links is broken, not degraded.
+                </td>
+              </tr>
+              <tr>
                 <td><code>/robots.txt</code></td>
                 <td>
                   Allows crawling, keeps crawlers out of the editor screens and the API, and points at the sitemap when
