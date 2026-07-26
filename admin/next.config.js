@@ -40,6 +40,7 @@ const nextConfig = {
   basePath: '/admin'
 }
 //
-console.log("nextConfig ", nextConfig);
+// NOTE (NC-4): do not log the config or `process.env` here — this runs at build
+// time and at boot, so it would leak into build and container logs.
 module.exports = nextConfig;
 //

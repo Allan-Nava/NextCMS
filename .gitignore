@@ -36,3 +36,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# local sqlite database (the configured provider is postgresql)
+*.db
+*.db-journal

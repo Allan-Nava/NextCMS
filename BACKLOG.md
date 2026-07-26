@@ -1,108 +1,113 @@
 # BACKLOG — NextCMS
 
-Sorgente unica dei todo. Ogni item ha un **id stabile `NC-n`**: gli id non si riusano e non si rinumerano, anche se l'item cambia milestone. Si spunta `[x]` quando la cosa è fatta *e* rilasciata (tag + riga nel [`CHANGELOG.md`](CHANGELOG.md)).
+Single source of todos. Every item has a **stable `NC-n` id**: ids are never reused and never renumbered, even when an item moves milestone. Tick `[x]` when the work is done *and* released (tag + entry in [`CHANGELOG.md`](CHANGELOG.md)).
 
-Stato iniziale popolato dall'**audit del 2026-07-25** sul commit `7ac0299`.
+Initial state populated from the **audit of 2026-07-25** on commit `7ac0299`.
 
-Legenda severità: 🔴 critico · 🟠 alto · 🟡 medio · ⚪ debito.
+Severity: 🔴 critical · 🟠 high · 🟡 medium · ⚪ debt.
 
 ---
 
 ## Roadmap
 
-Le milestone sono **sequenziali**: ognuna ha senso solo se la precedente è chiusa. La regola è una sola — non si costruiscono feature sopra un progetto che non compila, e non si mette in rete un'auth che perde gli hash.
+Milestones are **sequential**: each only makes sense once the previous one is closed. One rule — you do not build features on a project that does not compile, and you do not ship an auth layer that leaks password hashes.
 
-| # | Milestone | Obiettivo | Release | Item |
+| # | Milestone | Goal | Release | Items |
 |---|---|---|---|---|
-| **M0** | Build verde (app) | `prisma generate`, `tsc`, `next build` passano su cms e admin, e la CI lo verifica | `v0.5.0` ✅ | NC-24…26, 29, 30, 45…47, 49, 50, 52 |
-| **M0b** | Pacchetti npm | `@nextcms/*` installabili e testabili | `v0.5.1` | NC-48, NC-51 |
-| **M1** | Sicurezza | Nessun segreto in giro, niente hash password nelle risposte, route protette | `v0.6.0` | NC-1…10 |
-| **M2** | API corrette | Ogni endpoint risponde, con lo status giusto e i dati giusti | `v0.7.0` | NC-11…23 |
-| **M3** | Auth funzionante | Login/logout/register end-to-end, sessione propagata a cms e admin | `v0.8.0` | NC-39, NC-40 |
-| **M4** | Contenuti e page builder | Pagine e componenti creabili, salvabili e renderizzati dal DB | `v0.9.0` | NC-34, 35, 41, 42 |
-| **M5** | Admin | Il pannello smette di essere un placeholder | `v0.10.0` | NC-36, 43, 44 |
-| **M6** | Strada per 1.0 | Debito, test, migrazione Next | `v1.0.0` | NC-27, 28, 31…33, 37, 38 |
+| **M0** | Green build | `prisma generate`, `tsc`, `next build` pass for cms and admin, and CI checks it | `v0.5.0` ✅ | NC-24…26, 29, 30, 45…47, 49, 50, 52 |
+| **M0b** | npm packages | `@nextcms/*` installable and testable | `v0.5.2` | NC-48, NC-51 |
+| **M1** | Security | No secrets around, no password hashes in responses, guarded routes | `v0.6.0` ✅ | NC-1…10 |
+| **M2** | Correct APIs | Every endpoint answers, with the right status and the right data | `v0.6.0` ✅ | NC-11…23 |
+| **M3** | Working auth | Full login/logout/register/reset flows, session shared with admin | `v0.8.0` | NC-39, NC-40 |
+| **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.9.0` | NC-41, NC-42 |
+| **M5** | Admin | The panel stops being a placeholder | `v0.10.0` | NC-36, 43, 44 |
+| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38 |
 
-**Definition of done** di ogni milestone: tutti i suoi item spuntati, CI verde, sezione nel `CHANGELOG.md`, tag creato.
+**Definition of done** for a milestone: every item ticked, CI green, a section in `CHANGELOG.md`, tag created.
 
 ---
 
-## M0 · Build verde (app) → `v0.5.0` ✅
+## M0 · Green build (apps) → `v0.5.0` ✅
 
-**Chiusa.** `cms` e `admin` installano, typecheckano, lintano e buildano; la sequenza è verificata dalla CI. Il track dei pacchetti npm è separato (M0b), perché bloccato da una causa indipendente.
+**Closed.** `cms` and `admin` install, typecheck, lint and build; CI verifies the sequence.
 
-- [x] 🔴 **NC-24** — `cms/prisma/schema.prisma`: `Visit` dichiarava `Page Page? @relation(fields: [id], references: [id])` senza il campo opposto su `Page` → `prisma generate` falliva (P1012), e usava la primary key come foreign key. *(v0.5.0: relazione ridisegnata con `pageId` + `Page.visits Visit[]` e indice dedicato; `prisma validate` passa.)*
-- [x] 🟠 **NC-25** — Campi obbligatori mancanti nelle create. *(v0.5.0: `type` aggiunto a `pagesRepo.create` (default `"page"`) e a `prisma/seed.ts`; `template` e `data` aggiunti a `componentRepo.create`.)*
-- [x] 🟠 **NC-26** — `cms/` non aveva **nessun lockfile**. *(v0.5.0: `cms/package-lock.json` generato e `admin/package-lock.json` rigenerato — quello committato era lockfileVersion 2 e ometteva i binari SWC opzionali, quindi `npm ci` produceva un build rotto. `ci.yml` passa a `npm ci` con cache npm.)*
-- [x] 🟠 **NC-29** — Nessun gate di build in CI. *(v0.4.0: aggiunta `ci.yml` con typecheck + lint + build per cms e admin, prisma validate/generate, unit test dei package.)*
-- [x] 🟡 **NC-30** — `cypress.yml` girava a ogni push senza test Cypress nel repo. *(v0.4.0: workflow rimossa; l'E2E rientra con NC-31.)*
-- [x] 🟠 **NC-45** — `codeql.yml` usava `codeql-action@v2`, ritirata da GitHub a gennaio 2025: la workflow falliva sempre. *(v0.4.0: portata a v3 + `javascript-typescript` + query `security-and-quality`.)*
-- [x] 🟠 **NC-46** — `docker-publish.yml` usava `::set-output`, comando disabilitato da GitHub, e action v1/v2/v3: non pubblicava più. *(v0.4.0: riscritta con `docker/metadata-action@v5` e action aggiornate.)*
-- [x] 🟡 **NC-47** — `cms/` e `admin/` non avevano config ESLint (solo la root, non risolvibile dalle app): `next lint` in CI sarebbe partito in modalità setup interattiva. *(v0.4.0: `.eslintrc.json` per app.)*
-- [x] 🟡 **NC-49** — `cms/Dockerfile` non poteva funzionare: tag base inesistente (`node:17.4-stretch`), `apt -y install curl` senza `apt-get update`, nessun `prisma generate` (il postinstall di `@prisma/client` girava prima che lo schema fosse nell'immagine) e lo stage di produzione copiava le dipendenze senza il client generato. *(v0.5.0: riscritto su `node:18-bullseye-slim` con `npm ci`, `prisma generate` esplicito e copia di `node_modules/.prisma` nel runtime.)*
-- [x] 🔴 **NC-50** — `npm install` in `cms/` e `admin/` **falliva con ERESOLVE**: `@popperjs/core` pinnato `~2.10.1` contro `bootstrap@5.3.x` che pretende `^2.11.8`, e `apexcharts@^3.27.1` contro `react-apexcharts@1.9.x` che pretende `>=4`. Il progetto non era installabile con npm 7+ senza `--legacy-peer-deps`. *(v0.5.0: `@popperjs/core` a `^2.11.8`, coppia apexcharts allineata su `^3.41.0` / `~1.5.0`.)*
-- [x] 🟠 **NC-52** — `bootstrap: "^5.1.3"` floatava a 5.3.x, che ha spostato `$theme-colors-rgb` in `_maps.scss`: il sass di Metronic (`styles/sass/_init.scss`, sequenza di import 5.1) non compilava più e `next build` moriva con `SassError: Undefined variable`. *(v0.5.0: pin a `~5.1.3`, la versione per cui il tema è scritto. L'aggiornamento del design system è lavoro a sé.)*
+- [x] 🔴 **NC-24** — `cms/prisma/schema.prisma`: `Visit` declared `Page Page? @relation(fields: [id], references: [id])` with no opposite field on `Page` → `prisma generate` failed with P1012, and it reused the primary key as a foreign key. *(v0.5.0: relation redesigned with `pageId` + `Page.visits Visit[]` and its own index; `prisma validate` passes.)*
+- [x] 🟠 **NC-25** — Mandatory fields missing from create calls. *(v0.5.0: `type` added to `pagesRepo.create` (default `"page"`) and to `prisma/seed.ts`; `template` and `data` added to `componentRepo.create`.)*
+- [x] 🟠 **NC-26** — `cms/` had **no lockfile at all**. *(v0.5.0: `cms/package-lock.json` generated and `admin/package-lock.json` regenerated — the committed one was lockfileVersion 2 and omitted the optional SWC binaries, so `npm ci` produced a broken build. `ci.yml` moved to `npm ci` with npm cache.)*
+- [x] 🟠 **NC-29** — No build gate in CI. *(v0.5.0: `ci.yml` added with typecheck, lint and build for cms and admin, plus prisma validate/generate.)*
+- [x] 🟡 **NC-30** — `cypress.yml` ran on every push with no Cypress tests in the repo. *(v0.5.0: workflow removed; E2E returns with NC-31.)*
+- [x] 🟠 **NC-45** — `codeql.yml` used `codeql-action@v2`, retired by GitHub in January 2025, so the workflow always failed. *(v0.5.0: moved to v3 with `javascript-typescript` and the `security-and-quality` queries.)*
+- [x] 🟠 **NC-46** — `docker-publish.yml` used `::set-output`, a command GitHub has disabled, plus v1/v2/v3 actions: it no longer published. *(v0.5.0: rewritten with `docker/metadata-action@v5` and current actions.)*
+- [x] 🟡 **NC-47** — `cms/` and `admin/` had no ESLint config (only the root one, which the apps cannot resolve): `next lint` in CI would have started its interactive setup. *(v0.5.0: `.eslintrc.json` per app.)*
+- [x] 🟡 **NC-49** — `cms/Dockerfile` could not work: non-existent base tag (`node:17.4-stretch`), `apt -y install curl` without `apt-get update`, no `prisma generate` (the `@prisma/client` postinstall ran before the schema was in the image) and a production stage that copied dependencies without the generated client. *(v0.5.0: rewritten on `node:18-bullseye-slim` with `npm ci`, an explicit `prisma generate` and `node_modules/.prisma` copied into the runtime stage.)*
+- [x] 🔴 **NC-50** — `npm install` **failed with ERESOLVE** in both apps: `@popperjs/core` pinned `~2.10.1` against `bootstrap@5.3.x` requiring `^2.11.8`, and `apexcharts@^3.27.1` against `react-apexcharts@1.9.x` requiring `>=4`. The project was not installable with npm 7+ without `--legacy-peer-deps`. *(v0.5.0: `@popperjs/core` to `^2.11.8`, apexcharts pair aligned on `^3.41.0` / `~1.5.0`.)*
+- [x] 🟠 **NC-52** — `bootstrap: "^5.1.3"` floated to 5.3.x, which moved `$theme-colors-rgb` into `_maps.scss`: the Metronic sass (`styles/sass/_init.scss`, 5.1 import sequence) stopped compiling and `next build` died with `SassError: Undefined variable`. *(v0.5.0: pinned to `~5.1.3`, the version the theme is written for. Upgrading the design system is separate work.)*
 
-## M0b · Pacchetti npm → `v0.5.1`
+## M0b · npm packages → `v0.5.2`
 
-Track indipendente dalle app: i pacchetti `@nextcms/*` sono bloccati da una causa sola.
+Independent of the apps: the `@nextcms/*` packages are blocked by a single cause.
 
-- [ ] 🔴 **NC-51** — `@nextcms/nextcms` dipende da versioni dei propri fratelli **mai pubblicate su npm**: chiede `@nextcms/generators@0.1.4` (pubblicate solo fino a 0.1.2) e `@nextcms/utils@0.1.10` (solo 0.1.0). `npm install` fallisce con `notarget`, quindi il pacchetto pubblicato `@nextcms/nextcms@0.1.19` **non è installabile da nessuno** e i suoi test non possono girare. Le strade: pubblicare le versioni mancanti, oppure risolvere i fratelli in locale con i workspace npm (vedi NC-38).
-- [ ] 🟡 **NC-48** — `packages/core/nextcms` dichiarava `"test:unit": "jest --verbose"` senza avere jest tra le devDependencies. *(v0.5.0: jest `^29.7.0` e config `jest` aggiunti al package.json — non verificabile finché NC-51 blocca l'install.)*
+- [ ] 🔴 **NC-51** — `@nextcms/nextcms` depends on sibling versions **never published to npm**: it asks for `@nextcms/generators@0.1.4` (only up to 0.1.2 published) and `@nextcms/utils@0.1.10` (only 0.1.0). `npm install` fails with `notarget`, so the published `@nextcms/nextcms@0.1.19` **cannot be installed by anyone** and its tests cannot run. Options: publish the missing versions, or resolve the siblings locally with npm workspaces (see NC-38). **Needs a human decision** — publishing is not something an agent should do unprompted.
+- [ ] 🟡 **NC-48** — `packages/core/nextcms` declared `"test:unit": "jest --verbose"` without jest in its devDependencies. *(v0.5.0: jest `^29.7.0` and a `jest` config added to package.json — not verifiable while NC-51 blocks the install.)*
 
-## M1 · Sicurezza → `v0.6.0`
+## M1 · Security → `v0.6.0` ✅
 
-- [ ] 🔴 **NC-1** — `GET /api/user` e `GET /api/user/[id]` ritornano il record utente completo, **hash password incluso** (`userRepo.getAll/getById` fanno `findMany`/`findUnique` senza `select`). Anche `POST /api/auth/register` risponde `201` con l'oggetto utente intero. Introdurre una proiezione pubblica dell'utente e usarla ovunque.
-- [ ] 🔴 **NC-2** — JWT firmato con segreto **hardcodato** `'shhhhh'` in `cms/lib/helpers/user-repo.ts`. Spostare su `process.env.JWT_SECRET` (fail-fast se assente).
-- [ ] 🔴 **NC-3** — Il JWT ha come payload **l'intero record utente, hash password compreso**, ed è senza `expiresIn`. Firmare solo `{ id, username, isAdmin, isStaff }` con scadenza.
-- [ ] 🔴 **NC-4** — `cms/next.config.js` fa `console.log("process ", process.env)` e `console.log("DATABASE_URL ", ...)`: dump di tutte le variabili d'ambiente (credenziali DB incluse) nei log di build e di runtime. Rimuovere.
-- [ ] 🔴 **NC-5** — Credenziale Postgres Heroku reale committata in `cms/.env.example`. Ruotare la password sul provider, bonificare il file (e valutare la riscrittura della history).
-- [ ] 🔴 **NC-6** — Nessuna route è protetta: `_middleware.ts` (cms e admin) fa solo `NextResponse.next()` e nessun handler verifica la sessione. Le API di scrittura (`user`, `page`, `components`, `role`) sono pubbliche.
-- [ ] 🟠 **NC-7** — `console.log("req ", req, "res ", res)` in `api/page/index.ts`, `api/auth/login.ts`, `api/auth/register.ts`, `api/user/[id].ts`: logga header e cookie, quindi i token, in chiaro.
-- [ ] 🟠 **NC-8** — `POST /api/user` e `POST /api/auth/register` sono aperti e senza validazione né rate limit: registrazione utenti non controllata.
-- [ ] 🟠 **NC-9** — `cms/prisma/dev.db` (SQLite, 45 KB) è tracciato in git mentre il provider è `postgresql`. Rimuovere dal tracking e aggiungere a `.gitignore`.
-- [ ] 🟠 **NC-10** — Dipendenze su versioni con vulnerabilità note: `next@12.1.1`, `jsonwebtoken@8.5.1`, `axios@0.21.1`, `react-scripts@4.0.3` (devDep). Aggiornare quelle che non sono migrazioni (Next è a sé, vedi NC-33).
+**Closed.** Regression tests for the token invariants live in `cms/__tests__/auth.test.ts`.
 
-## M2 · API corrette → `v0.7.0`
+- [x] 🔴 **NC-1** — `GET /api/user` and `GET /api/user/[id]` returned the full user row, **bcrypt hash included** (`userRepo` used `findMany`/`findUnique` with no `select`), and `POST /api/auth/register` answered 201 with the whole object. *(v0.6.0: `publicUserSelect` / `PublicUser` introduced in `lib/types/user.ts` and used by every read; `verifyCredentials` is the only path that touches the password column.)*
+- [x] 🔴 **NC-2** — JWTs were signed with the **hardcoded** secret `'shhhhh'`. *(v0.6.0: `JWT_SECRET` read from the environment through `requireEnv`, which throws when it is missing — lazily, so `next build` does not need it.)*
+- [x] 🔴 **NC-3** — The JWT payload was **the entire user row, password hash included**, with no `expiresIn`. *(v0.6.0: claims reduced to `{sub, username, isAdmin, isStaff}` with `JWT_ACCESS_TTL` (15m default); separate refresh token marked `type: 'refresh'` so it cannot be replayed as an access token.)*
+- [x] 🔴 **NC-4** — `cms/next.config.js` ran `console.log("process ", process.env)` and printed `DATABASE_URL`: every environment variable, credentials included, landed in build and runtime logs. *(v0.6.0: removed from both apps, with a comment explaining why it must not come back.)*
+- [x] 🔴 **NC-5** — A live Heroku Postgres credential was committed in `cms/.env.example`. *(v0.6.0: file replaced with documented placeholders. ⚠️ **The credential is still in the git history and must be rotated on the provider** — that part is not something a code change can fix.)*
+- [x] 🔴 **NC-6** — No route was protected: `_middleware.ts` only called `NextResponse.next()` and no handler checked a session, so the `user`, `page`, `components` and `role` write endpoints were public. *(v0.6.0: `requireAuth` / `requireAdmin` guards applied per route; the middleware now redirects unauthenticated visitors away from `/page-builder` with a cookie presence check, and the comment states plainly that this is not the authorisation decision.)*
+- [x] 🟠 **NC-7** — `console.log("req ", req, "res ", res)` in several handlers logged headers and cookies, i.e. tokens, in clear text. *(v0.6.0: all removed; `lib/utils/logger.ts` logs identifiers only.)*
+- [x] 🟠 **NC-8** — `POST /api/user` and `POST /api/auth/register` were open, with no validation or rate limiting. *(v0.6.0: `lib/utils/validation.ts` added; user creation is admin-only; self-registration is off unless `ALLOW_PUBLIC_REGISTRATION=true` and can never mint an admin. Rate limiting is still open — see NC-53.)*
+- [x] 🟠 **NC-9** — `cms/prisma/dev.db` (SQLite, 45 KB) was tracked while the provider is `postgresql`. *(v0.6.0: untracked and `*.db` added to `.gitignore`.)*
+- [x] 🟠 **NC-10** — Dependencies on versions with known advisories. *(v0.6.0: `jsonwebtoken` 8.5.1 → `^9.0.2`, `axios` 0.21.1 → `^1.12.2`, `react-scripts@4.0.3` removed from both apps as an unused CRA leftover — it alone pulled in ~1700 transitive packages. Next stays on 12.1.1: moving off it is NC-33.)*
 
-- [ ] 🔴 **NC-11** — **Login rotto end-to-end**: `userRepo.login` ritorna una stringa (il token), l'handler la incarta in `successResponse(user, ...)` → `{data: "<jwt>"}`, mentre `pages/login.tsx` si aspetta `data.data.access_token` e `refresh_token`. Il login va sempre nel ramo `catch`.
-- [ ] 🟠 **NC-12** — `lib/crud/AuthCRUD.ts` invia un `FormData` forzando `Content-Type: application/x-www-form-urlencoded`: il body parser di Next non popola `req.body.username/password`.
-- [ ] 🟠 **NC-13** — Credenziali errate: `userRepo.login` fa `throw`, l'handler non ha try/catch → 500 generico. Il ramo `errorResponse` in `api/auth/login.ts` è codice morto.
-- [ ] 🟠 **NC-14** — Handler che **non rispondono mai** (richiesta appesa fino al timeout): `POST /api/auth/logout` (funzione vuota), gli stub `handleDELETE` di `page/[id]`, `user/[id]`, `role/[id]`, e il ramo `catch` di `api/role/index.ts`.
-- [ ] 🟠 **NC-15** — Le route dinamiche leggono `req.body.id` invece di `req.query.id` su GET/DELETE: `parseInt(undefined)` → `NaN` → errore Prisma. Riguarda `page/[id]`, `user/[id]`, `components/[id]`, `role/[id]`.
-- [ ] 🟡 **NC-16** — Metodo non supportato: le route `[id]` fanno `throw new Error(...)` → 500, mentre le route `index` rispondono 405. Uniformare su 405.
-- [ ] 🟠 **NC-17** — `POST /api/page` e `POST /api/components` hanno la create commentata e rispondono `200 {}`: fingono successo senza scrivere nulla.
-- [ ] 🔴 **NC-18** — `pages/[...index].tsx`: `getServerSideProps` ritorna `props: { basePages }` ma il componente destruttura `{ data }` → sempre `undefined`, la pagina renderizza vuoto. In più usa `context.req.url` (path + querystring) come slug invece dei segmenti di route.
-- [ ] 🟠 **NC-19** — `pages/index.tsx` chiama `pagesRepo.getBySlug("/")`, poi **ignora** il risultato e renderizza un array di componenti hardcoded (`navbar`/`hero`/`features`).
-- [ ] 🟡 **NC-20** — `api/auth/register.ts` passa `req.body.username` anche come `email`: email = username, e `email` è `@unique`.
-- [x] 🟡 **NC-21** — `componentRepo.create` salvava `property: bodyComponent.toString()` → la stringa `"[object Object]"`. *(v0.5.0: chiuso in anticipo, era la stessa riga toccata da NC-25; ora usa `JSON.stringify` come l'`update`.)*
-- [ ] 🟡 **NC-22** — Repo layer incompleto: `pagesRepo.update` e `userRepo.update` non ritornano nulla (e `userRepo.update` non aggiorna), `roleRepo` non ha `update`/`delete`.
-- [ ] 🟡 **NC-23** — `api/role/index.ts` bypassa il repo layer e usa `prisma` direttamente: unica route che rompe la regola architetturale.
+## M2 · Correct APIs → `v0.6.0` ✅
 
-## M3 · Auth funzionante → `v0.8.0`
+**Closed.** Shipped together with M1: both milestones rewrite the same handlers, and splitting them would have meant writing every route twice.
 
-- [ ] **NC-39** — Auth e user management completi: login, logout, register, forgot password.
-- [ ] **NC-40** — Profilo utente: lettura, update, creazione.
+- [x] 🔴 **NC-11** — **Login broken end to end**: `userRepo.login` returned a string (the token), the handler wrapped it as `successResponse(user, ...)` → `{data: "<jwt>"}`, while `pages/login.tsx` expected `data.data.access_token` and `refresh_token`. *(v0.6.0: contract is now `data: { access_token, refresh_token, user }`, and both sides agree on it.)*
+- [x] 🟠 **NC-12** — `lib/crud/AuthCRUD.ts` sent a `FormData` body while forcing `Content-Type: application/x-www-form-urlencoded`, so Next's body parser never populated `req.body`. *(v0.6.0: sends JSON. The pointless one-second `setTimeout` around the login call is gone too.)*
+- [x] 🟠 **NC-13** — Bad credentials made `userRepo.login` throw with no try/catch in the handler → generic 500, and the `errorResponse` branch was dead code. *(v0.6.0: `verifyCredentials` returns null and the route answers 401.)*
+- [x] 🟠 **NC-14** — Handlers that **never answered** (request hung until timeout): `POST /api/auth/logout`, the `handleDELETE` stubs of `page/[id]`, `user/[id]`, `role/[id]`, and the catch branch of `api/role/index.ts`. *(v0.6.0: every branch answers; deletes are implemented as soft deletes.)*
+- [x] 🟠 **NC-15** — Dynamic routes read `req.body.id` instead of `req.query.id` on GET/DELETE: `parseInt(undefined)` → `NaN` → Prisma error. *(v0.6.0: `parseId` in `lib/utils/http.ts`, used by every `[id]` route and covered by tests.)*
+- [x] 🟡 **NC-16** — Unsupported methods: `[id]` routes threw `new Error(...)` → 500, while the `index` routes answered 405. *(v0.6.0: `methodNotAllowed` everywhere, with an `Allow` header.)*
+- [x] 🟠 **NC-17** — `POST /api/page` and `POST /api/components` had their create call commented out and answered `200 {}`, faking success. *(v0.6.0: both create, validate their payload and answer 201.)*
+- [x] 🔴 **NC-18** — `pages/[...index].tsx` returned `props: { basePages }` while the component destructured `{ data }`, so the page always rendered empty; it also used `context.req.url` (path plus query string) as the slug. *(v0.6.0: props aligned, slug derived from the route segments by `slugFromSegments`, unknown slug → 404.)*
+- [x] 🟠 **NC-19** — `pages/index.tsx` called `pagesRepo.getBySlug("/")` and then **ignored** the result, rendering a hardcoded component list. *(v0.6.0: renders the `/` page from the database through the shared `loadPage`.)*
+- [x] 🟡 **NC-20** — `api/auth/register.ts` passed `username` as the email too, and `email` is `@unique`. *(v0.6.0: email is a validated, separate field; a collision is a 409, not a 500.)*
+- [x] 🟡 **NC-21** — `componentRepo.create` stored `property: bodyComponent.toString()`, i.e. the string `"[object Object]"`. *(v0.5.0: uses `JSON.stringify`, like `update` already did.)*
+- [x] 🟡 **NC-22** — Incomplete repo layer: `pagesRepo.update` and `userRepo.update` returned nothing (and the user one did not update), `roleRepo` had no `update`/`delete`. *(v0.6.0: every repo exposes create/read/update/delete, returns the affected row and takes a typed patch object.)*
+- [x] 🟡 **NC-23** — `api/role/index.ts` bypassed the repo layer and used `prisma` directly. *(v0.6.0: goes through `roleRepo`.)*
 
-## M4 · Contenuti e page builder → `v0.9.0`
+## M3 · Working auth → `v0.8.0`
 
-- [ ] 🟡 **NC-34** — `DynamicComponents` fa `import(\`${item.path}\`)` con path proveniente dal DB: webpack genera un context bundle enorme e il modulo caricato è deciso dai dati. Passare a una allow-list/registry di componenti.
-- [ ] 🟡 **NC-35** — Pagine duplicate: `cms/pages/pagebuilder.tsx` e `cms/pages/page-builder.tsx`. Tenerne una.
-- [ ] **NC-41** — Content management: post, pagine, categorie, tag.
-- [ ] **NC-42** — Page builder: blocchi, immagini, persistenza del layout.
+- [ ] **NC-39** — Complete auth and user management: forgot/reset password, refresh-token exchange endpoint, session propagated to the admin app. Login, logout and registration already work (M1/M2).
+- [ ] **NC-40** — User profile screens: read, update, create.
+- [ ] 🟠 **NC-53** — No rate limiting on `POST /api/auth/login` and `POST /api/auth/register`: credential stuffing is only slowed down by bcrypt. Carved out of NC-8.
+
+## M4 · Content and page builder → `v0.9.0`
+
+- [ ] **NC-41** — Content management: posts, pages, categories, tags.
+- [ ] **NC-42** — Page builder: blocks, images, layout persistence. The drag-and-drop UI exists but nothing is saved; `Component.parent` is the attachment point the renderer already reads.
+- [x] 🟡 **NC-34** — `DynamicComponents` did `import(\`${item.path}\`)` with the path coming from the database: webpack had to bundle a whole require-context and the module loaded was decided by data. *(v0.6.0: static allow-list in `components/registry.ts`; the API refuses an unregistered path, the renderer falls back to `NoComponent`.)*
+- [x] 🟡 **NC-35** — Duplicate pages: `cms/pages/pagebuilder.tsx` and `cms/pages/page-builder.tsx`. *(v0.6.0: the older `pagebuilder.tsx` removed; `page-builder.tsx` is the guarded path.)*
 
 ## M5 · Admin → `v0.10.0`
 
-- [ ] ⚪ **NC-36** — `admin/package.json` duplica ~70 devDependencies di `cms/` (inclusi `react-scripts`, `react-router-dom`, residui CRA) per 3 pagine. Sfoltire.
-- [ ] **NC-43** — Admin UI/UX: integrazione di tutte le entità.
-- [ ] **NC-44** — Admin API: CRUD completo per ogni entità.
+- [ ] ⚪ **NC-36** — `admin/package.json` duplicates ~70 devDependencies of `cms/` (Metronic and CRA leftovers) for three pages. Trim it. `react-scripts` is already gone (NC-10).
+- [ ] **NC-43** — Admin UI/UX: every entity wired up.
+- [ ] **NC-44** — Admin API: full CRUD per entity, consuming the `cms/` API with a bearer token.
 
-## M6 · Strada per 1.0 → `v1.0.0`
+## M6 · Road to 1.0 → `v1.0.0`
 
-- [ ] 🟡 **NC-27** — `Dockerfile` e `Dockerfile-slim` di root non buildano nulla (la root non ha `next` né script). `Dockerfile-slim` inoltre copia `.next/standalone` (manca `output: 'standalone'` in `next.config.js`) e un `.npmrc` che non esiste.
-- [ ] 🟡 **NC-28** — `BASE_URI` è hardcodato su un URL Vercel in `cms/lib/utils/constants.ts`, con la lettura da env commentata.
-- [ ] 🟡 **NC-31** — Zero test per `cms/` e `admin/`. Serve almeno una copertura sui repo layer e sugli handler API, più il ritorno dell'E2E rimosso con NC-30.
-- [ ] ⚪ **NC-32** — 64 chiamate `console.*` in `cms/`: sostituire con un logger con livelli.
-- [ ] 🟡 **NC-33** — Migrazione a Next 13+/App Router (oggi: Next 12.1.1, React 17, `pages/`, `_middleware.ts` legacy). Migrazione, non bump.
-- [ ] 🟡 **NC-37** — Lockfile doppi e file orfani. Root: `package-lock.json` + `yarn.lock` per una sola dipendenza, `.eslintrc.json` non risolvibile da nessuna app, `haikus.json` (fixture Octocat) fuori contesto. `admin/`: convivono `package-lock.json` e `yarn.lock`, e qualcosa nell'ambiente riscrive il secondo dopo un `npm ci` — con due lockfile in disaccordo l'install non è deterministico. Il package manager dichiarato è npm: rimuovere gli `yarn.lock`.
-- [ ] ⚪ **NC-38** — Valutare i workspace npm per evitare l'install cartella-per-cartella.
+- [ ] 🟡 **NC-27** — The root `Dockerfile` and `Dockerfile-slim` build nothing (the root has no `next` and no scripts). `Dockerfile-slim` also copies `.next/standalone` (no `output: 'standalone'` in `next.config.js`) and an `.npmrc` that does not exist. Either fix or delete them; `cms/Dockerfile` is the real one.
+- [ ] 🟡 **NC-31** — Test coverage. *(v0.6.0: jest + ts-jest set up in `cms/` with 37 tests over auth, validation and request parsing, wired into CI. Still missing: repo-layer tests against a test database, handler-level tests, and the E2E suite removed with NC-30.)*
+- [ ] ⚪ **NC-32** — 64 `console.*` calls in `cms/`. *(v0.6.0: `lib/utils/logger.ts` added and used by the API and repo layers; the remaining calls live in the page-builder components.)*
+- [ ] 🟡 **NC-33** — Migration to Next 13+/App Router (currently Next 12.1.1, React 17, `pages/`, legacy `_middleware.ts`). A migration, not a bump — and the prerequisite for dropping the Next 12.x advisories.
+- [ ] ⚪ **NC-37** — Duplicate lockfiles and orphan files. Root: `package-lock.json` + `yarn.lock` for a single dependency, an `.eslintrc.json` no app can resolve, and `haikus.json` (an Octocat fixture) out of context. `admin/`: `package-lock.json` and `yarn.lock` coexist, and something in the environment rewrites the latter after an `npm ci` — with two disagreeing lockfiles the install is not deterministic. npm is the declared package manager: remove the `yarn.lock` files.
+- [ ] ⚪ **NC-38** — Consider npm workspaces to avoid installing folder by folder (and to unblock NC-51).
+- [x] 🟡 **NC-28** — `BASE_URI` was hardcoded to a Vercel URL in `cms/lib/utils/constants.ts` with the env read commented out. *(v0.6.0: both `BASE_URI` and `API_URI` come from the environment.)*

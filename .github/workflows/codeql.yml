@@ -1,8 +1,8 @@
 name: "CodeQL"
 
-# Analisi statica di sicurezza su JavaScript/TypeScript.
-# Aggiornata in v0.4.0 (NC-45): girava su codeql-action@v2, ritirata da GitHub
-# a gennaio 2025 — la workflow falliva a ogni esecuzione.
+# Static security analysis for JavaScript/TypeScript.
+# Updated in v0.4.0 (NC-45): it ran on codeql-action@v2, retired by GitHub in
+# January 2025 — the workflow failed on every run.
 
 on:
   push:
@@ -35,12 +35,12 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          # security-and-quality aggiunge le query di qualità a quelle di
-          # sicurezza: su un repo WIP conviene vederle tutte.
+          # security-and-quality adds the quality queries on top of the
+          # security ones: on a WIP repo it is worth seeing all of them.
           queries: security-and-quality
 
-      # Nessun autobuild: il progetto è interpretato, e buildarlo qui
-      # duplicherebbe il lavoro di ci.yml.
+      # No autobuild: the project is interpreted, and building it here would
+      # duplicate what ci.yml already does.
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:

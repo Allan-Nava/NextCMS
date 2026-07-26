@@ -4,46 +4,74 @@
  * File Created: Tuesday, 5th April 2022 9:49:50 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Friday, 29th April 2022 8:09:00 am
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
-import { roleRepo } from './../../../lib/helpers/role-repo';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { RoleDetailNextApiRequest } from '../../../lib/types/request/role-request';
+import { Prisma } from '@prisma/client';
+import { roleRepo } from '../../../lib/helpers/role-repo';
+import { requireAdmin } from '../../../lib/helpers/auth';
+import { successResponse } from '../../../lib/types/response/response';
+import { badRequest, methodNotAllowed, notFound, parseId, serverError } from '../../../lib/utils/http';
+import { isNonEmptyString } from '../../../lib/utils/validation';
 //
-//
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    const id = req.query.id;
-  //
-  if (req.method === 'GET') {
-    getRole(req);
-  } else if (req.method === 'DELETE') {
-    handleDELETE(id, res)
-  } else {
-    throw new Error(
-      `The HTTP ${req.method} method is not supported at this route.`
-    )
-  }
-  
-  //
-  async function getRole(req : RoleDetailNextApiRequest) {
-    try {
-        console.log("req.body ", req.body);
-        // req.body.email?
-        let user = await roleRepo.getById(req.body.id);
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(400).json({ message: error });
+// GET    /api/role/:id   read         (admin only)
+// PATCH  /api/role/:id   rename       (admin only)
+// DELETE /api/role/:id   soft delete  (admin only)
+export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    const id = parseId(req.query.id);
+    if (id === null) {
+        return badRequest(res, 'id must be a positive integer');
     }
-  }
-  //
+    if (!requireAdmin(req, res)) return;
+    switch (req.method) {
+        case 'GET':
+            return getRole(res, id);
+        case 'PATCH':
+            return updateRole(req, res, id);
+        case 'DELETE':
+            return deleteRole(res, id);
+        default:
+            return methodNotAllowed(req, res, ['GET', 'PATCH', 'DELETE']);
+    }
 }
-
-
-// DELETE /api/role/:id
-async function handleDELETE(id : string|string[] , res: NextApiResponse) {
-    // need to create the safe delete 
-    /*;*/
-};
+//
+async function getRole(res: NextApiResponse, id: number): Promise<void> {
+    try {
+        const role = await roleRepo.getById(id);
+        if (!role || role.deletedAt !== null) return notFound(res, 'role not found');
+        res.status(200).json(successResponse(role, 'role retrieved'));
+    } catch (error) {
+        serverError(res, 'get role', error);
+    }
+}
+//
+async function updateRole(req: NextApiRequest, res: NextApiResponse, id: number): Promise<void> {
+    const { name } = (req.body ?? {}) as { name?: unknown };
+    if (!isNonEmptyString(name)) {
+        return badRequest(res, 'name is required');
+    }
+    try {
+        res.status(200).json(successResponse(await roleRepo.update(id, name), 'role updated'));
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            return notFound(res, 'role not found');
+        }
+        serverError(res, 'update role', error);
+    }
+}
+//
+async function deleteRole(res: NextApiResponse, id: number): Promise<void> {
+    try {
+        await roleRepo.delete(id);
+        res.status(200).json(successResponse({ id }, 'role deleted'));
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            return notFound(res, 'role not found');
+        }
+        serverError(res, 'delete role', error);
+    }
+}
+//

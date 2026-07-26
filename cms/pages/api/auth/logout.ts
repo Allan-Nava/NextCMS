@@ -4,28 +4,27 @@
  * File Created: Monday, 25th April 2022 4:58:21 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Monday, 25th April 2022 4:58:23 pm
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
-
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { pagesRepo } from '../../../lib/helpers/page-repo';
-import { AuthLoginNextApiRequest } from '../../../lib/types/request/auth-request';
+import { clearAccessCookie } from '../../../lib/helpers/auth';
+import { successResponse } from '../../../lib/types/response/response';
+import { methodNotAllowed } from '../../../lib/utils/http';
 //
+// POST /api/auth/logout
 //
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    console.log("req ", req, "res ", res);
-    switch (req.method) {
-        case 'POST':
-            return authLogout(req);
-        default:
-            return res.status(405).end(`Method ${req.method} Not Allowed`)
+// The previous handler had an empty body and never answered, so the request
+// hung until the client gave up (NC-14). Logout is stateless — tokens are not
+// tracked server-side — so all it does is clear the cookie; a client holding a
+// bearer token must drop it.
+export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    if (req.method !== 'POST') {
+        return methodNotAllowed(req, res, ['POST']);
     }
-    // need to change with the correct request
-    async function authLogout(req: AuthLoginNextApiRequest) {
-        console.log("req ", req);
-        
-    }
+    clearAccessCookie(res);
+    res.status(200).json(successResponse({}, 'user logged out successfully'));
 }
+//

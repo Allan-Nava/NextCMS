@@ -1,67 +1,62 @@
 # AGENTS.md — NextCMS
 
-**NextCMS**: CMS in Next.js 12 + TypeScript + Prisma (WIP, MIT). Tre parti indipendenti: `cms/` (app pubblica + API, porta 3000), `admin/` (pannello Metronic, porta 4000, `basePath /admin`), `packages/` (pacchetti npm `@nextcms/*`, CLI/framework in JS CommonJS).
+**NextCMS**: a CMS on Next.js 12 + TypeScript + Prisma (WIP, MIT). Three independent parts: `cms/` (public app + API, port 3000), `admin/` (Metronic panel, port 4000, `basePath /admin`), `packages/` (the `@nextcms/*` npm packages, CommonJS).
 
-Questo file definisce le regole operative per gli agent (Copilot, Claude, altri tool AI) quando lavorano in questo repository.
+This file defines the working rules for agents (Copilot, Claude, other AI tools) operating in this repository.
 
-## Regole di lavoro (SEMPRE)
+## Working rules (ALWAYS)
 
-- **Ogni feature = un tag `vX.Y.Z`**: sezione in `CHANGELOG.md` (Keep a Changelog, italiano) + `git tag -a vX.Y.Z -m "Release X.Y.Z"`. `minor` per feature, `patch` per fix e doc.
-- **Tracciare tutto**: ogni lavoro esiste come item `NC-n` in `BACKLOG.md` prima di iniziare, si spunta quando e' rilasciato, e il commit ne cita l'id (`NC-12: fix login response envelope`).
-- **Documentare**: modifiche ad architettura, comandi, env, schema Prisma o contratto API aggiornano `CLAUDE.md` e `AGENTS.md` nello stesso commit.
-- **Nessun workspace**: `npm install` e gli script si lanciano dentro `cms/`, `admin/` o il singolo package. Mai dalla root (nessuno script lì).
-- **Gate prima di chiudere**: `npm run lint` + `npm run build` verdi nell'app toccata. `cms/`/`admin/` non hanno test: se aggiungi logica non banale in `lib/`, aggiungi anche il test (jest è già in `packages/core/nextcms`).
-- **MAI `git push`**: lo fa sempre l'utente, tag inclusi. MAI `Co-Authored-By` nei commit.
-- **Niente segreti** in codice, `.env.example`, doc o log. (`cms/.env.example` ne contiene uno reale: va bonificato, non replicato — `NC-5`.)
-- **Todo -> `BACKLOG.md`** (id stabili `NC-n`), niente `TODO:` sparsi nei commenti.
-- **Header di file**: replica il blocco `File / Project / Author / Copyright` presente in tutti i sorgenti.
-- **Lingua = inglese** per codice, commenti e output user-facing.
-- **Next 12 + React 17, `pages/` router**: non fare bump maggiori (Next 13+/App Router) senza chiederlo.
+- **Every feature = one tag `vX.Y.Z`**: a section in `CHANGELOG.md` (Keep a Changelog) plus `git tag -a vX.Y.Z -m "Release X.Y.Z"`. `minor` for features, `patch` for fixes and docs.
+- **Track everything**: every piece of work exists as an `NC-n` item in `BACKLOG.md` before you start, gets ticked when released, and the commit cites its id (`NC-12: fix login response envelope`).
+- **Document it**: changes to architecture, commands, env vars, the Prisma schema or an API contract update `CLAUDE.md` and `AGENTS.md` in the same commit.
+- **No workspaces**: run `npm ci` and the scripts inside `cms/`, `admin/` or the individual package. Never from the repo root (no scripts there).
+- **Gate before closing**: `npm run lint`, `npm test` and `npm run build` green in the app you touched.
+- **NEVER `git push`**: the user always does it, tags included. NEVER add `Co-Authored-By`.
+- **No secrets** in code, `.env.example`, docs or logs.
+- **Todos go to `BACKLOG.md`** (stable `NC-n` ids); no scattered `TODO:` comments.
+- **Language is English** for code, comments, docs and user-facing output.
+- **Next 12 + React 17, `pages/` router**: no major bumps (Next 13+/App Router) without asking.
 
-## Comandi
+## Commands
 
-- `cd cms && npm run dev` (3000) - `npm run build` - `npm start` - `npm run lint`
+- `cd cms && npm run dev` (3000) · `npm run build` · `npm start` · `npm run lint` · `npm test`
 - `cd admin && npm run dev` (4000)
-- Prisma (da `cms/`): `npx prisma generate` - `npx prisma migrate dev` - `npx prisma db seed` - `npx prisma studio`
-- Package: `cd packages/core/nextcms && npm run test:unit` - `npm publish --access public`
+- Prisma (from `cms/`): `npx prisma validate` · `npx prisma generate` · `npx prisma migrate dev` · `npx prisma db seed` · `npx prisma studio`
 
-## Dove sta cosa
+## Where things live
 
-- Rendering dinamico: `cms/components/DynamicComponents.tsx` (import via `next/dynamic` sul `path` del componente, fallback `NoComponent`); pagine risolte per slug in `cms/pages/[...index].tsx`.
-- API: `cms/pages/api/<entity>/{index,[id]}.ts`, `switch (req.method)` + `405` di default, zero logica DB inline.
-- Accesso al DB: **solo** `cms/lib/helpers/*-repo.ts` (`pagesRepo`, `userRepo`, ...) via `cms/lib/prisma.ts`.
-- Risposte API: `successResponse` / `errorResponse` da `cms/lib/types/response/response.ts`.
-- Stato UI: Redux Toolkit in `cms/lib/reducers/` (`auth`, `layout`, `dragAndDrop`), page builder react-dnd in `cms/components/pagebuilder/`.
-- Schema dati: `cms/prisma/schema.prisma` (`Page`, `Component`, `Entity`, `User`, `Role`, `Visit`), provider postgresql.
+- Dynamic rendering: `cms/components/DynamicComponents.tsx`, resolving components through the static allow-list in `cms/components/registry.ts`; pages resolved by slug in `cms/pages/[...index].tsx` and `cms/pages/index.tsx`.
+- API: `cms/pages/api/<entity>/{index,[id]}.ts`, `switch (req.method)` with a `405` default, no inline DB logic.
+- Auth: `cms/lib/helpers/auth.ts` — token signing/verification plus the `requireAuth` / `requireAdmin` guards.
+- DB access: **only** `cms/lib/helpers/*-repo.ts` (`pagesRepo`, `userRepo`, `componentRepo`, `roleRepo`, `entityRepo`) through `cms/lib/prisma.ts`.
+- API responses: `successResponse` / `errorResponse` from `cms/lib/types/response/response.ts`; status helpers in `cms/lib/utils/http.ts`.
+- Input validation: `cms/lib/utils/validation.ts`. Logging: `cms/lib/utils/logger.ts`.
+- UI state: Redux Toolkit in `cms/lib/reducers/`; react-dnd page builder in `cms/components/pagebuilder/`, screen at `cms/pages/page-builder.tsx`.
+- Data model: `cms/prisma/schema.prisma` (`Page`, `Component`, `Entity`, `User`, `Role`, `Visit`), postgresql provider.
+- Tests: `cms/__tests__/*.test.ts` (jest + ts-jest, node environment).
 
-## Rotto oggi (dettagli in BACKLOG.md)
+## Security invariants — do not regress these
 
-Il progetto **compila** (M0 chiusa in v0.5.0), ma a runtime:
+- **Never return a raw Prisma `User`**: use `publicUserSelect` / `PublicUser`, otherwise the bcrypt hash leaks (`NC-1`).
+- **`JWT_SECRET` comes from the environment** and the app fails fast without it. Never reintroduce a default (`NC-2`).
+- **Tokens carry `{sub, username, isAdmin, isStaff}` only** — never the user row (`NC-3`). A refresh token cannot be used as an access token.
+- **Never log request/response objects, passwords or tokens** — they carry cookies. Use the logger (`NC-4`, `NC-7`).
+- **Authorisation happens in the API handlers**, not in `_middleware.ts`: the edge runtime cannot verify a JWT signature. The middleware only does a cookie presence check for page redirects (`NC-6`).
+- **The component registry is an allow-list**: never go back to `import(dbProvidedPath)` (`NC-34`).
 
-- Login non funzionante end-to-end (`NC-11`, `NC-12`); credenziali errate danno 500 generico (`NC-13`).
-- Route `[id].ts` leggono `req.body.id` invece di `req.query.id` (`NC-15`); alcuni handler non rispondono mai (`NC-14`).
-- API espongono l'hash password (`NC-1`); JWT con segreto hardcodato e utente intero nel payload (`NC-2`, `NC-3`); `next.config.js` logga tutte le env (`NC-4`).
-- `POST /api/page` e `POST /api/components` rispondono 200 senza scrivere (`NC-17`); `[...index].tsx` passa props con nome sbagliato e renderizza vuoto (`NC-18`).
-- I pacchetti `@nextcms/*` non sono installabili: dipendenze su versioni mai pubblicate (`NC-51`).
+## Known traps
 
-## Trappole note
-
-- `Dockerfile` e `Dockerfile-slim` di root non buildano nulla (la root non ha `next`): l'immagine reale la produce `docker-publish.yml` da `cms/Dockerfile`. `Dockerfile-slim` presuppone `output: 'standalone'` e `.npmrc`, entrambi assenti.
-- `bootstrap` e' pinnato a `~5.1.3` di proposito (`NC-52`): il sass di Metronic usa la sequenza di import 5.1, da 5.3 il build muore con `SassError`.
-- `@popperjs/core` e la coppia apexcharts sono allineati per far risolvere npm (`NC-50`): non tornare indietro.
-- Lockfile: rigenerarli sempre da zero (`rm -rf node_modules package-lock.json`), altrimenti si eredita l'omissione dei binari SWC opzionali e il build fallisce con *Failed to load SWC binary*.
-- `_middleware.ts` (cms e admin) e' uno stub `NextResponse.next()`: nessuna route e' protetta a livello di middleware.
-- `BASE_URI` in `cms/lib/utils/constants.ts` e' hardcodato su un URL Vercel (lettura da env commentata).
-- Le API route fanno `console.log` della request intera: non aggiungerne, mai loggare credenziali o token.
-- Hashing password (`bcryptjs`, cost 8) e JWT stanno nel repo layer (`userRepo`), non negli handler: non duplicarli.
-- Dopo ogni modifica a `schema.prisma` serve `npx prisma generate`, altrimenti i tipi `Prisma.*Input` non combaciano.
-- I package `@nextcms/*` dichiarano `engines: node >=12.22.0 <=17.x.x`.
-- Due lockfile in root (`package-lock.json` + `yarn.lock`) per una dipendenza: nelle app si usa **npm**.
+- `bootstrap` is pinned to `~5.1.3` on purpose (`NC-52`): the Metronic sass uses the 5.1 import sequence, and 5.3 breaks the build with `SassError`.
+- `@popperjs/core` and the apexcharts pair are aligned so npm can resolve (`NC-50`): do not move them back.
+- Lockfiles: always regenerate from scratch (`rm -rf node_modules package-lock.json`), otherwise you inherit the missing optional SWC binaries and the build fails with *Failed to load SWC binary*.
+- The root `Dockerfile` and `Dockerfile-slim` build nothing (the root has no `next`): the real image comes from `cms/Dockerfile` via `docker-publish.yml` (`NC-27`).
+- The `@nextcms/*` packages are not installable: they depend on versions never published to npm (`NC-51`). That is why CI has no `packages` job.
+- The `cms/.env.example` credential has been removed from the file but is still in the git history: it must be **rotated** (`NC-5`).
 
 ## Roadmap
 
-Milestone sequenziali in `BACKLOG.md`: **M0** build verde OK (`v0.5.0`) -> **M1** sicurezza (`v0.6.0`) -> **M2** API corrette (`v0.7.0`) -> **M3** auth (`v0.8.0`) -> **M4** contenuti e page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** strada per 1.0 (`v1.0.0`). A parte **M0b** (`v0.5.1`) per i pacchetti npm. Non si aprono item di una milestone successiva finche' la precedente non e' chiusa.
+Sequential milestones in `BACKLOG.md`: **M0** green build OK (`v0.5.0`) -> **M1** security OK + **M2** correct APIs OK (`v0.6.0`) -> **M3** working auth (`v0.8.0`) -> **M4** content and page builder (`v0.9.0`) -> **M5** admin (`v0.10.0`) -> **M6** road to 1.0 (`v1.0.0`). Separately **M0b** (`v0.5.2`) for the npm packages. Do not open items from a later milestone until the previous one is closed.
 
-## Puntatori
+## Pointers
 
-- Todo: `BACKLOG.md` (id `NC-n`) - Rilasci: `CHANGELOG.md` - Doc: `docs/` - CI: `.github/workflows/` (`ci.yml`, `codeql.yml`, `docker-publish.yml`) - Env: `.env.example`, `cms/.env.example` (`DATABASE_URL`, `ADMIN_URL`, `API_URI`, `BASE_URI`)
+- Todos: `BACKLOG.md` (`NC-n`) · Releases: `CHANGELOG.md` · Docs: `docs/` · CI: `.github/workflows/` (`ci.yml`, `codeql.yml`, `docker-publish.yml`) · Env: `cms/.env.example`

@@ -4,24 +4,53 @@
  * File Created: Tuesday, 5th April 2022 9:04:29 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Tuesday, 5th April 2022 9:04:31 pm
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
 import type { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
+import { roleRepo } from '../../../lib/helpers/role-repo';
+import { requireAdmin } from '../../../lib/helpers/auth';
+import { successResponse } from '../../../lib/types/response/response';
+import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
+import { isNonEmptyString } from '../../../lib/utils/validation';
 //
+// GET  /api/role   list roles   (admin only)
+// POST /api/role   create role  (admin only)
 //
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    // need to add the filters
-    try{ 
-        const data = await prisma.role.findMany()
-        res.json(data);
-    } catch (error) {
-        console.error("error ", error );
-        // expected output: ReferenceError: nonExistentFunction is not defined
-        // Note - error messages will vary depending on browser
+// This was the one route that reached for `prisma` directly, bypassing the repo
+// layer, and whose catch branch never answered the request (NC-14, NC-23).
+export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    switch (req.method) {
+        case 'GET':
+            return listRoles(req, res);
+        case 'POST':
+            return createRole(req, res);
+        default:
+            return methodNotAllowed(req, res, ['GET', 'POST']);
     }
-};
+}
+//
+async function listRoles(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    if (!requireAdmin(req, res)) return;
+    try {
+        res.status(200).json(successResponse(await roleRepo.getAll(), 'roles retrieved'));
+    } catch (error) {
+        serverError(res, 'list roles', error);
+    }
+}
+//
+async function createRole(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    if (!requireAdmin(req, res)) return;
+    const { name } = (req.body ?? {}) as { name?: unknown };
+    if (!isNonEmptyString(name)) {
+        return badRequest(res, 'name is required');
+    }
+    try {
+        res.status(201).json(successResponse(await roleRepo.create(name), 'role created'));
+    } catch (error) {
+        serverError(res, 'create role', error);
+    }
+}
 //

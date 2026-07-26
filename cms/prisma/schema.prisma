@@ -84,10 +84,9 @@ model Role {
   deletedAt         DateTime?
 }
 //
-// Una visita a una pagina. La relazione usa una foreign key dedicata
-// (`pageId`): la versione precedente riusava la primary key di Visit come FK
-// verso Page e non dichiarava il campo opposto, quindi `prisma generate`
-// falliva con P1012 (NC-24).
+// A visit to a page. The relation uses a dedicated foreign key (`pageId`): the
+// previous version reused Visit's own primary key as the FK to Page and never
+// declared the opposite field, so `prisma generate` failed with P1012 (NC-24).
 model Visit {
   id                Int @id @default(autoincrement())
   pageId            Int

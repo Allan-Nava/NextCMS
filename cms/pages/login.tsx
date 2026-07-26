@@ -42,22 +42,23 @@ const Login = () => {
   const formik = useFormik({
     initialValues,
     validationSchema: loginSchema,
+    // The response envelope is { response, message, data: { access_token,
+    // refresh_token, user } } — see lib/crud/AuthCRUD.ts (NC-11). The artificial
+    // one-second setTimeout that used to wrap this call is gone: it only delayed
+    // the request.
     onSubmit: (values, { setStatus, setSubmitting }) => {
       setLoading(true)
-      setTimeout(() => {
-        login(values.email, values.password)
-          .then(({ data: { data: { access_token, refresh_token } } }) => {
-
-            setLoading(false)
-            setSubmitting(false)
-            dispatch(actions.login(access_token, refresh_token))
-          })
-          .catch(() => {
-            setLoading(false)
-            setSubmitting(false)
-            setStatus('The login detail is incorrect')
-          })
-      }, 1000)
+      login(values.email, values.password)
+        .then(({ data: { data: { access_token, refresh_token } } }) => {
+          setLoading(false)
+          setSubmitting(false)
+          dispatch(actions.login(access_token, refresh_token))
+        })
+        .catch(() => {
+          setLoading(false)
+          setSubmitting(false)
+          setStatus('The login detail is incorrect')
+        })
     },
   })
 

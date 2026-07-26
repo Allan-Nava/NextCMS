@@ -4,83 +4,89 @@
  * File Created: Friday, 22nd April 2022 8:54:55 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Sunday, 24th April 2022 10:53:04 am
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
-//const fs = require('fs');
-//let users = require('data/users.json');
 import prisma from '../prisma';
-import { Prisma } from '@prisma/client'
+import { Prisma, Page } from '@prisma/client';
+import { logger } from '../utils/logger';
+//
+export interface CreatePageInput {
+    title: string;
+    slug: string;
+    description: string;
+    type?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    tags?: string;
+    jsonld?: string;
+}
+//
+export type UpdatePageInput = Partial<CreatePageInput>;
 //
 export const pagesRepo = {
     getAll,
     getById,
-    create,
     getBySlug,
+    create,
     update,
-    delete: _delete
+    delete: _delete,
 };
 //
-async function getAll() {
-    const pages = await prisma.page.findMany();
-    console.info("getAll ", pages);
-    return pages;
-    //const baseObject = JSON.parse(JSON.stringify(pages)); 
-    //return baseObject;
+async function getAll(): Promise<Page[]> {
+    return prisma.page.findMany({ where: { deletedAt: null }, orderBy: { id: 'asc' } });
 }
 //
-async function getById( id : string ) {
-    console.info("getById ", id);
-    const page = await prisma.page.findUnique({
-        where: { "id": parseInt(id) }
-    });
-    return page;
-    //const baseObject = JSON.parse(JSON.stringify(page)); 
-    //return baseObject; 
+async function getById(id: number): Promise<Page | null> {
+    return prisma.page.findUnique({ where: { id } });
 }
 //
-async function getBySlug( slug : string ) {
-    console.info("getBySlug ", slug);
-    const page = await prisma.page.findUnique({
-        where: { "slug": slug }
-    });
-    console.info("getBySlug ", page);
-    return page;
-    //const baseObject = JSON.parse(JSON.stringify(page)); 
-    //return baseObject;
+// `slug` is unique, so this is the lookup the public pages use.
+async function getBySlug(slug: string): Promise<Page | null> {
+    return prisma.page.findUnique({ where: { slug } });
 }
 //
-// `type` e' obbligatorio a schema e non ha default: va passato dal chiamante
-// (NC-25). Il default "page" copre il caso piu' comune.
-async function create(title : string, slug : string, description : string, type : string = "page",) {
-    console.log("title", title);
-    //
-    let body : Prisma.PageCreateInput = {
-        title: title,
-        slug: slug,
-        description: description,
-        type: type,
-    }
-    const page  = await prisma.page.create({data: body});
+// `type` is mandatory in the schema and has no default, so it is set here rather
+// than left to the caller to forget (NC-25).
+async function create(input: CreatePageInput): Promise<Page> {
+    const data: Prisma.PageCreateInput = {
+        title: input.title,
+        slug: input.slug,
+        description: input.description,
+        type: input.type ?? 'page',
+        seoTitle: input.seoTitle,
+        seoDescription: input.seoDescription,
+        tags: input.tags,
+        jsonld: input.jsonld,
+    };
+    const page = await prisma.page.create({ data });
+    logger.info('page created', { id: page.id, slug: page.slug });
     return page;
 }
 //
-async function update(id: number, title : string, slug : string, description : string,) {
-    console.log("title", title);
-    //
-    let body : Prisma.PageUpdateInput = {
-        title: title,
-        slug: slug,
-        description: description,
-    }
-    const page  = await prisma.page.update({data: body, where: {id: id }});
+// Returns the updated row — the previous version returned nothing (NC-22).
+async function update(id: number, patch: UpdatePageInput): Promise<Page> {
+    const data: Prisma.PageUpdateInput = { updatedAt: new Date() };
+    if (patch.title !== undefined) data.title = patch.title;
+    if (patch.slug !== undefined) data.slug = patch.slug;
+    if (patch.description !== undefined) data.description = patch.description;
+    if (patch.type !== undefined) data.type = patch.type;
+    if (patch.seoTitle !== undefined) data.seoTitle = patch.seoTitle;
+    if (patch.seoDescription !== undefined) data.seoDescription = patch.seoDescription;
+    if (patch.tags !== undefined) data.tags = patch.tags;
+    if (patch.jsonld !== undefined) data.jsonld = patch.jsonld;
+    const page = await prisma.page.update({ where: { id }, data });
+    logger.info('page updated', { id: page.id });
+    return page;
 }
 //
-async function _delete( id : string ) {
-    return await prisma.page.delete({
-        where: { "id": parseInt(id) }
-    });
+// Soft delete: the schema carries `deletedAt`, and `getAll` filters on it, so a
+// removed page stops being listed without losing its visit history.
+async function _delete(id: number): Promise<Page> {
+    const page = await prisma.page.update({ where: { id }, data: { deletedAt: new Date() } });
+    logger.info('page soft-deleted', { id });
+    return page;
 }
 //

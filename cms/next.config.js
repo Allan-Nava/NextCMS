@@ -11,9 +11,10 @@
  */
 /** @type {import('next').NextConfig} */
 const path = require('path');
-//const { ADMIN_URL } = process.env;
-console.log("process ", process.env);
-console.log("DATABASE_URL ", process.env.DATABASE_URL);
+//
+// NOTE (NC-4): do not log `process.env` or any single variable here. This file
+// runs at build time and at boot, so anything printed lands in build logs and
+// container logs — DATABASE_URL and JWT_SECRET included.
 //
 const nextConfig = {
   reactStrictMode: true,

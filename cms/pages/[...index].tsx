@@ -1,55 +1,41 @@
 /*
- * File: index.tsx
+ * File: [...index].tsx
  * Project: next-cms
  * File Created: Saturday, 26th March 2022 10:04:25 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Saturday, 26th March 2022 10:24:49 pm
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
-//
-import type { GetServerSideProps, NextPage, GetStaticProps } from 'next';
-import type { AppProps } from 'next/app';
+import type { GetServerSideProps, NextPage } from 'next';
 import DynamicComponents from '../components/DynamicComponents';
-import { pagesRepo } from '../lib/helpers/page-repo';
+import { loadPage, slugFromSegments } from '../lib/helpers/page-content';
+import { PageComponent } from '../lib/types/page';
 //
-// need to pass the props from server side render
-const Home: NextPage = ( { data }: any) => {
-  console.log("data ", data);
-  return (
-    <DynamicComponents page={data} />
-  )
+interface CatchAllProps {
+    components: PageComponent[];
 }
 //
+// Catch-all route: every slug that is not a concrete file lands here.
 //
+// Two bugs used to make this render nothing (NC-18): `getServerSideProps`
+// returned `props: { basePages }` while the component destructured `{ data }`,
+// and the slug was taken from `context.req.url` — path plus query string —
+// instead of the route segments.
+const CatchAllPage: NextPage<CatchAllProps> = ({ components }) => {
+    return <DynamicComponents page={components} />;
+};
 //
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  // API CALL TO GET SLUG PAGE INFORMATION
-  // IF THE SLUG IS NOT PRESENT ON THE DB PAGE TABLE REDIRECT TO 404
-  //const page: Page = await prisma.page.getPage(context.req.url)
-  // if (page.statusCode == 400)
-  //   return {
-  //     notFound: true
-  //   };
-  console.log("getServerSideProps context ", context);
-  // need to fix with base url programmatically
-  if(context.req.url != null){
-    console.log("getServerSideProps context.req.url ", context.req.url);
-    const pages = await pagesRepo.getBySlug(context.req.url);
-    console.log("pages", pages);
-    const basePages = JSON.parse(JSON.stringify(pages));
-    return {
-      props: { basePages },
+export const getServerSideProps: GetServerSideProps<CatchAllProps> = async (context) => {
+    const slug = slugFromSegments(context.params?.index as string[] | undefined);
+    const page = await loadPage(slug);
+    if (!page) {
+        return { notFound: true };
     }
-  } else {
-    return {
-      notFound: true
-    }
-  }
-  //
-}
+    return { props: { components: page.components } };
+};
 //
-export default Home;
+export default CatchAllPage;
 //

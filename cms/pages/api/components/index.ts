@@ -4,40 +4,59 @@
  * File Created: Tuesday, 5th April 2022 8:54:51 pm
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Tuesday, 5th April 2022 8:54:53 pm
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { componentRepo } from './../../../lib/helpers/component-repo';
-import { ComponentNextApiRequest } from '../../../lib/types/request/component-request';
+import { componentRepo } from '../../../lib/helpers/component-repo';
+import { requireAuth } from '../../../lib/helpers/auth';
+import { successResponse } from '../../../lib/types/response/response';
+import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
+import { validateComponentPayload } from '../../../lib/utils/validation';
+import { isRegisteredComponent, registeredComponentPaths } from '../../../components/registry';
 //
+// GET  /api/components   list components   (public: needed to render pages)
+// POST /api/components   create component  (authenticated)
 //
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    // 
+// The POST used to answer `200 {}` with the create call commented out (NC-17).
+export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     switch (req.method) {
         case 'GET':
-            return getComponents();
+            return listComponents(res);
         case 'POST':
-            return createComponent(req);
+            return createComponent(req, res);
         default:
-            return res.status(405).end(`Method ${req.method} Not Allowed`)
+            return methodNotAllowed(req, res, ['GET', 'POST']);
     }
-    //
-    async function getComponents() {
-        const pages = await componentRepo.getAll();
-        return res.status(200).json(pages);
+}
+//
+async function listComponents(res: NextApiResponse): Promise<void> {
+    try {
+        res.status(200).json(successResponse(await componentRepo.getAll(), 'components retrieved'));
+    } catch (error) {
+        serverError(res, 'list components', error);
     }
-    //
-    async function createComponent(req : ComponentNextApiRequest) {
-        try {
-            console.log("req.body ", req.body);
-            //let page = await componentRepo.create(req.body);
-            return res.status(200).json({});
-        } catch (error) {
-            return res.status(400).json({ message: error });
-        }
+}
+//
+async function createComponent(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+    if (!requireAuth(req, res)) return;
+    const errors = validateComponentPayload(req.body);
+    if (errors.length > 0) {
+        return badRequest(res, errors.join('; '));
     }
-};
+    const { name, path, parent, props, supportNestedComponent } = req.body;
+    // The renderer only loads components from a static allow-list (NC-34), so
+    // refuse an unknown path here instead of storing a row that can never render.
+    if (!isRegisteredComponent(path)) {
+        return badRequest(res, `unknown component path; available: ${registeredComponentPaths().join(', ')}`);
+    }
+    try {
+        const component = await componentRepo.create({ name, path, parent, props, supportNestedComponent });
+        res.status(201).json(successResponse(component, 'component created'));
+    } catch (error) {
+        serverError(res, 'create component', error);
+    }
+}
 //

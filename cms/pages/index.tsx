@@ -4,59 +4,33 @@
  * File Created: Sunday, 27th March 2022 10:42:47 am
  * Author: Allan Nava (allan.nava@hiway.media)
  * -----
- * Last Modified: Sunday, 27th March 2022 10:49:39 am
+ * Last Modified: Sunday, 26th July 2026
  * Modified By: Allan Nava (allan.nava@hiway.media>)
  * -----
- * Copyright 2022 - 2022 © 
+ * Copyright 2022 - 2026 ©
  */
+import type { GetServerSideProps, NextPage } from 'next';
+import DynamicComponents from '../components/DynamicComponents';
+import { loadPage } from '../lib/helpers/page-content';
+import { PageComponent } from '../lib/types/page';
 //
-import type { GetServerSideProps, NextPage } from 'next'
-import DynamicComponents from '../components/DynamicComponents'
-import { pagesRepo } from '../lib/helpers/page-repo'
-import { PageComponent } from '../lib/types/page'
+interface IndexProps {
+    components: PageComponent[];
+}
 //
-// 
-interface IProps {
-  page: PageComponent[]
-}
-const Index: NextPage<IProps> = ({page}) => {
-  //const [indexComponent, setIndexComponent] = useState<Component>()
-  //render component arrived from server side call
-  return <DynamicComponents page={page} />
-}
-// 
-// 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  //
-  // API CALL TO GET INDEX PAGE INFORMATION WITH COMPONENTS
-  // run inside `async` function
-  const pages = await pagesRepo.getBySlug("/");
-  const basePages = JSON.parse(JSON.stringify(pages));
-  console.log("basePages ", basePages);
-  //
-  return {
-    props: {
-      pages: basePages,
-      page: [{
-        name: "navbar",
-        path: "./Elements/Navbar",
-        props: {"ciao": "ciao"},
-        supportNestedComponent: false
-      },
-      {
-        name: "hero",
-        path: "./Elements/Hero",
-        supportNestedComponent: false
-      },
-      {
-        name: "features",
-        path: "./Elements/Features",
-        supportNestedComponent: false
-      }] // COMPONENTS RETRIEVED BY PAGE API CALL
-    }
-  }
-  // ...
-}
+// Home page: the "/" slug, rendered from the database like any other page.
+//
+// The previous version fetched the page and then ignored it, rendering a
+// hardcoded navbar/hero/features list instead (NC-19).
+const Index: NextPage<IndexProps> = ({ components }) => {
+    return <DynamicComponents page={components} />;
+};
+//
+export const getServerSideProps: GetServerSideProps<IndexProps> = async () => {
+    const page = await loadPage('/');
+    // An empty home page is a valid state for a fresh install — no 404 here.
+    return { props: { components: page?.components ?? [] } };
+};
 //
 export default Index;
 //

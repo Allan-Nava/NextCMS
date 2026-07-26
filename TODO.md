@@ -1,6 +1,6 @@
 # NEXT CMS TODO
 
-I todo si tracciano in **[`BACKLOG.md`](BACKLOG.md)**, con id stabili `NC-n`.
-Le feature di prodotto elencate qui in passato sono ora gli item **NC-39 … NC-44** (milestone M6).
+Todos are tracked in **[`BACKLOG.md`](BACKLOG.md)**, with stable `NC-n` ids.
+The product features that used to be listed here are now items **NC-39 … NC-44** (milestone M6 planning).
 
-Non aggiungere todo in questo file né come `TODO:` nei commenti: vanno in `BACKLOG.md`.
+Do not add todos to this file, and do not scatter `TODO:` comments in the code — they go in `BACKLOG.md`.

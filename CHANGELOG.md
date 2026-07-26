@@ -1,79 +1,132 @@
 # Changelog
 
-Tutte le modifiche rilevanti a questo progetto sono documentate qui.
+All notable changes to this project are documented here.
 
-Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il versionamento è [Semantic Versioning](https://semver.org/lang/it/). **Ogni feature = un tag `vX.Y.Z`** con la sua sezione qui sotto.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
+
+## [0.6.0] - 2026-07-26
+
+Milestones **M1 · Security** and **M2 · Correct APIs** closed. They shipped together because both rewrite the same request handlers, and splitting them would have meant writing every route twice. All documentation and code comments were also translated to English in this release.
+
+### Security
+
+- **User projection** (NC-1): `publicUserSelect` / `PublicUser` added in `lib/types/user.ts` and used by every read in `userRepo`. The API previously returned the whole row, bcrypt hash included, from `GET /api/user`, `GET /api/user/:id` and `POST /api/auth/register`. `verifyCredentials` is now the only code path that touches the password column.
+- **JWT secret** (NC-2): tokens were signed with the hardcoded string `'shhhhh'`. `JWT_SECRET` now comes from the environment through `requireEnv`, which throws when it is absent. It is read lazily, so `next build` does not need production secrets.
+- **JWT payload** (NC-3): the token used to carry the entire user row — password hash included — with no expiry, and a JWT is only base64. Claims are now `{sub, username, isAdmin, isStaff}` with a 15-minute default lifetime, plus a separate refresh token tagged `type: 'refresh'` so it cannot be replayed as an access token.
+- **Environment dump** (NC-4): `cms/next.config.js` logged `process.env` and `DATABASE_URL` at build time and at boot, so every credential landed in build and container logs. Removed from both apps.
+- **Committed credential** (NC-5): `cms/.env.example` carried a live Heroku Postgres connection string; the file now holds documented placeholders. ⚠️ **The credential remains in the git history and must be rotated on the provider** — no code change can undo that.
+- **Route guards** (NC-6): `requireAuth` / `requireAdmin` in `lib/helpers/auth.ts`, applied per route. The `user` and `role` endpoints are admin-only; content writes require authentication; content reads stay public. `_middleware.ts` redirects unauthenticated visitors away from `/page-builder`, and its comment states plainly that this is a cookie presence check, not the authorisation decision — the edge runtime cannot verify a JWT signature.
+- **Request logging** (NC-7): `console.log("req ", req, "res ", res)` logged headers and cookies, i.e. bearer tokens, in clear text. Replaced by `lib/utils/logger.ts`, which logs identifiers only.
+- **Input validation** (NC-8): `lib/utils/validation.ts` added. User creation is admin-only, self-registration is disabled unless `ALLOW_PUBLIC_REGISTRATION=true`, and a public endpoint can never mint an administrator. A user cannot promote themselves through `PATCH /api/user/:id`.
+- **Tracked database** (NC-9): `cms/prisma/dev.db` untracked and `*.db` added to `.gitignore`.
+- **Dependencies** (NC-10): `jsonwebtoken` 8.5.1 → `^9.0.2`, `axios` 0.21.1 → `^1.12.2`, and `react-scripts@4.0.3` removed from both apps as an unused CRA leftover — it alone accounted for ~1700 transitive packages.
+
+### Fixed
+
+- **Login end to end** (NC-11, NC-12, NC-13): `userRepo.login` returned a bare token string that the handler wrapped as `data`, while the client expected `data.access_token`; the client sent a `FormData` body labelled `x-www-form-urlencoded`, so `req.body` was empty; and wrong credentials threw, producing a 500 with the `errorResponse` branch unreachable. The contract is now `data: { access_token, refresh_token, user }`, the client sends JSON, and bad credentials are a 401.
+- **Handlers that never answered** (NC-14): `POST /api/auth/logout`, the empty `handleDELETE` stubs and the catch branch of `api/role/index.ts` left requests hanging until the client timed out. Every branch answers; deletes are soft deletes that set `deletedAt`.
+- **Route ids** (NC-15): `[id]` routes read `req.body.id` on GET/DELETE, where there is no body, so every lookup was `parseInt(undefined)` = NaN. `parseId` in `lib/utils/http.ts` reads and validates `req.query.id`.
+- **Unsupported methods** (NC-16): `[id]` routes threw, which Next turns into an opaque 500. All routes now answer 405 with an `Allow` header.
+- **Silent no-op creates** (NC-17): `POST /api/page` and `POST /api/components` had their create call commented out and answered `200 {}`. Both now validate, create and answer 201.
+- **Empty pages** (NC-18, NC-19): the catch-all returned `props: { basePages }` while the component destructured `{ data }`, and derived the slug from `context.req.url` — path plus query string. The home page fetched its data and then rendered a hardcoded list instead. Both now render from the database through a shared `loadPage`, with the slug built from the route segments.
+- **Registration email** (NC-20): the username was copied into the email field, which is `@unique`, so the second registration always collided. Email is a validated field of its own and a collision is a 409.
+- **Repo layer** (NC-22, NC-23): every repo now exposes create/read/update/delete, returns the affected row and takes a typed patch object. `api/role/index.ts` no longer reaches for `prisma` directly.
+- **Component loading** (NC-34): `DynamicComponents` did `import(dbProvidedPath)`, forcing webpack to bundle a require-context and letting data decide which module loads. Components are now resolved through the static allow-list in `components/registry.ts`; the API refuses an unregistered path and the renderer falls back to `NoComponent`.
+- **Hardcoded base URL** (NC-28): `BASE_URI` pointed at a Vercel URL with the env read commented out. Both `BASE_URI` and `API_URI` come from the environment.
+
+### Added
+
+- `cms/lib/helpers/auth.ts` — token signing/verification, cookie handling and the route guards.
+- `cms/lib/utils/env.ts`, `logger.ts`, `http.ts`, `validation.ts`, `slug.ts` — the shared plumbing the handlers were missing.
+- `cms/components/registry.ts` — the renderable-component allow-list.
+- `cms/lib/helpers/page-content.ts` — one place that turns a stored page into a component list, shared by the home and catch-all routes.
+- **Unit tests** (part of NC-31): jest + ts-jest in `cms/`, 37 tests in `cms/__tests__/` covering the token invariants (a tampered token is rejected, a refresh token is not an access token, a missing secret throws), id parsing, slug building and payload validation. Wired into `ci.yml`.
+
+### Changed
+
+- All documentation (`CLAUDE.md`, `AGENTS.md`, `BACKLOG.md`, `CHANGELOG.md`, `TODO.md`) and every code comment translated to English, matching the project's own language rule. The Italian fallback string in `NoComponent` is now English too.
+- `.github/workflows/ci.yml`: added the `npm test` step to the cms job.
+
+### Removed
+
+- `cms/pages/pagebuilder.tsx` (NC-35): a near-identical older copy of `page-builder.tsx`, which is the path the middleware guards.
+
+### New backlog items
+
+- **NC-53** 🟠 — no rate limiting on login and registration; credential stuffing is only slowed by bcrypt. Carved out of NC-8 and scheduled for M3.
+
+### Verification
+
+Run locally against a clean install (`npm ci`), the same sequence CI runs:
+
+| | `npm ci` | `prisma validate` | `prisma generate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ | ✅ | ✅ (1 warning) | ✅ 37 passed | ✅ |
+| `admin` | ✅ | — | — | ✅ | ✅ (1 warning) | — | ✅ |
+
+Not verified: no runtime test against a real PostgreSQL instance, so the Prisma queries are checked by the type system and by `prisma validate`, not by execution.
 
 ## [0.5.0] - 2026-07-26
 
-Milestone **M0 · Build verde** chiusa: `cms` e `admin` installano, typecheckano, lintano e buildano. Prima di questa release il progetto non era nemmeno installabile.
+Milestone **M0 · Green build** closed: `cms` and `admin` install, typecheck, lint and build. Before this release the project was not even installable.
 
-### Corretto
+### Fixed
 
-- **`cms/prisma/schema.prisma`** (NC-24): la relazione `Visit → Page` riusava la primary key di `Visit` come foreign key e non dichiarava il campo opposto su `Page`, quindi `prisma generate` falliva con P1012. Ora `Visit.pageId` + `Page.visits Visit[]`, con indice dedicato e `createdAt`. `@@index([title], map: "title")` sostituisce l'argomento `name` deprecato.
-- **Campi obbligatori mancanti nelle create** (NC-25): `type` in `pagesRepo.create` (default `"page"`) e in `prisma/seed.ts`; `template` e `data` in `componentRepo.create`.
-- **Conflitti di peer dependency** (NC-50): `npm install` falliva con ERESOLVE in entrambe le app. `@popperjs/core` da `~2.10.1` a `^2.11.8` (lo pretende bootstrap 5.3.x), coppia apexcharts allineata (`apexcharts@^3.41.0`, `react-apexcharts@~1.5.0`: la 1.9 pretende apexcharts 4).
-- **Build sass rotta** (NC-52): `bootstrap: "^5.1.3"` floatava a 5.3.x, che ha spostato `$theme-colors-rgb` in `_maps.scss`; la sequenza di import di Metronic in `styles/sass/_init.scss` è quella di 5.1 e il build moriva con `SassError: Undefined variable`. Pin a `~5.1.3`.
-- **`cms/Dockerfile`** (NC-49): riscritto. Partiva da `node:17.4-stretch` (tag inesistente, distro archiviata), faceva `apt -y install curl` senza `apt-get update`, non eseguiva mai `prisma generate` — il postinstall di `@prisma/client` girava prima che lo schema fosse nell'immagine — e lo stage di produzione copiava le dipendenze senza il client generato. Ora `node:18-bullseye-slim` (OpenSSL 1.1, richiesto dagli engine di Prisma 3), `npm ci`, `prisma generate` esplicito e copia di `node_modules/.prisma` nel runtime.
-- **`componentRepo.create`** (NC-21): salvava `property: bodyComponent.toString()`, cioè `"[object Object]"`. Ora `JSON.stringify`, come già faceva l'`update`.
+- **`cms/prisma/schema.prisma`** (NC-24): the `Visit → Page` relation reused `Visit`'s primary key as a foreign key and declared no opposite field on `Page`, so `prisma generate` failed with P1012. Now `Visit.pageId` + `Page.visits Visit[]`, with its own index and a `createdAt`. `@@index([title], map: "title")` replaces the deprecated `name` argument.
+- **Mandatory fields missing from creates** (NC-25): `type` in `pagesRepo.create` (default `"page"`) and in `prisma/seed.ts`; `template` and `data` in `componentRepo.create`.
+- **Peer dependency conflicts** (NC-50): `npm install` failed with ERESOLVE in both apps. `@popperjs/core` from `~2.10.1` to `^2.11.8` (required by bootstrap 5.3.x), apexcharts pair aligned (`apexcharts@^3.41.0`, `react-apexcharts@~1.5.0`: 1.9 requires apexcharts 4).
+- **Broken sass build** (NC-52): `bootstrap: "^5.1.3"` floated to 5.3.x, which moved `$theme-colors-rgb` into `_maps.scss`; the Metronic import sequence in `styles/sass/_init.scss` is the 5.1 one and the build died with `SassError: Undefined variable`. Pinned to `~5.1.3`.
+- **`cms/Dockerfile`** (NC-49): rewritten. It started from `node:17.4-stretch` (non-existent tag, archived distro), ran `apt -y install curl` without `apt-get update`, never ran `prisma generate` — the `@prisma/client` postinstall ran before the schema was in the image — and its production stage copied dependencies without the generated client. Now `node:18-bullseye-slim` (OpenSSL 1.1, required by the Prisma 3 engines), `npm ci`, an explicit `prisma generate` and `node_modules/.prisma` copied into the runtime stage.
+- **`componentRepo.create`** (NC-21): stored `property: bodyComponent.toString()`, i.e. `"[object Object]"`. Now `JSON.stringify`, as `update` already did.
 
-### Aggiunto
+### Added
 
-- `cms/package-lock.json` (NC-26): `cms/` non aveva alcun lockfile.
-- `jest` e la sua configurazione in `packages/core/nextcms` (NC-48), che dichiarava `test:unit: jest` senza averlo tra le dipendenze.
+- `cms/package-lock.json` (NC-26): `cms/` had no lockfile at all.
+- `jest` and its configuration in `packages/core/nextcms` (NC-48), which declared `test:unit: jest` without depending on it.
 
-### Modificato
+### Changed
 
-- `admin/package-lock.json` rigenerato: quello committato era lockfileVersion 2 e ometteva i binari SWC opzionali, quindi `npm ci` produceva un albero senza `@next/swc-darwin-arm64` e il build falliva con *Failed to load SWC binary*.
-- `.github/workflows/ci.yml`: `npm ci` con cache npm per entrambe le app, ora che i lockfile esistono. Rimosso il job `packages`, che non può girare finché NC-51 è aperto.
+- `admin/package-lock.json` regenerated: the committed one was lockfileVersion 2 and omitted the optional SWC binaries, so `npm ci` produced a tree without `@next/swc-darwin-arm64` and the build failed with *Failed to load SWC binary*.
+- `.github/workflows/ci.yml`: `npm ci` with npm cache for both apps now that the lockfiles exist. Removed the `packages` job, which cannot run while NC-51 is open.
 
-### Nuovi item di backlog
+### New backlog items
 
-- **NC-51** 🔴 — `@nextcms/nextcms` dipende da versioni dei propri fratelli mai pubblicate su npm (`@nextcms/generators@0.1.4`, `@nextcms/utils@0.1.10`): `npm install` fallisce con `notarget`, quindi il pacchetto pubblicato `@nextcms/nextcms@0.1.19` non è installabile da nessuno. Apre la milestone M0b.
-- **NC-52** — pin di bootstrap (vedi sopra).
-
-### Verifica
-
-Sequenza eseguita in locale su installazione pulita (`npm ci`), identica a quella della CI:
-
-| | `npm ci` | `prisma validate` | `prisma generate` | `tsc --noEmit` | lint | build |
-|---|---|---|---|---|---|---|
-| `cms` | ✅ | ✅ | ✅ | ✅ | ✅ (1 warning) | ✅ |
-| `admin` | ✅ | — | — | ✅ | ✅ (1 warning) | ✅ |
+- **NC-51** 🔴 — `@nextcms/nextcms` depends on sibling versions never published to npm (`@nextcms/generators@0.1.4`, `@nextcms/utils@0.1.10`): `npm install` fails with `notarget`, so the published `@nextcms/nextcms@0.1.19` cannot be installed by anyone. Opens milestone M0b.
+- **NC-52** — the bootstrap pin described above.
 
 ## [0.4.0] - 2026-07-25
 
-### Aggiunto
+### Added
 
-- `.github/workflows/ci.yml`: primo gate di qualità del repo (NC-29). Tre job — `cms` (install, `prisma validate`, `prisma generate`, `tsc --noEmit`, lint, build), `admin` (install da lockfile, typecheck, lint, build), `packages` (unit test di `@nextcms/nextcms`). Sono gate bloccanti: restano rossi finché la milestone M0 non è chiusa.
-- `cms/.eslintrc.json` e `admin/.eslintrc.json` (NC-47): senza una config per app, `next lint` in CI sarebbe partito in modalità setup interattiva. La config di root non è risolvibile dalle app perché i plugin sono installati dentro `cms/` e `admin/`.
-- `BACKLOG.md`: roadmap a sei milestone sequenziali (M0 build verde → M6 strada per 1.0) con la release di destinazione di ciascuna e la definition of done.
+- `.github/workflows/ci.yml`: the repository's first quality gate (NC-29). Three jobs — `cms` (install, `prisma validate`, `prisma generate`, `tsc --noEmit`, lint, build), `admin` (install from lockfile, typecheck, lint, build), `packages` (unit tests for `@nextcms/nextcms`).
+- `cms/.eslintrc.json` and `admin/.eslintrc.json` (NC-47): without a per-app config, `next lint` in CI would have started its interactive setup. The root config is not resolvable from the apps because the plugins are installed inside `cms/` and `admin/`.
+- `BACKLOG.md`: a six-milestone sequential roadmap (M0 green build → M6 road to 1.0) with the target release of each and a definition of done.
 
-### Modificato
+### Changed
 
-- `.github/workflows/codeql.yml` (NC-45): `codeql-action` da v2 (ritirata da GitHub a gennaio 2025, la workflow falliva sempre) a v3, linguaggio `javascript-typescript`, query `security-and-quality`, `checkout@v4`.
-- `.github/workflows/docker-publish.yml` (NC-46): riscritta. Usava `::set-output` — comando disabilitato da GitHub — e un blocco bash fatto a mano per i tag; ora il tagging lo fa `docker/metadata-action@v5`, con action aggiornate e cache buildx.
+- `.github/workflows/codeql.yml` (NC-45): `codeql-action` from v2 (retired by GitHub in January 2025, so the workflow always failed) to v3, language `javascript-typescript`, `security-and-quality` queries, `checkout@v4`.
+- `.github/workflows/docker-publish.yml` (NC-46): rewritten. It used `::set-output` — a command GitHub has disabled — plus a hand-rolled bash block for tagging; tagging is now done by `docker/metadata-action@v5`, with current actions and buildx cache.
 
-### Rimosso
+### Removed
 
-- `.github/workflows/cypress.yml` (NC-30): girava a ogni push ma nel repo non esistono test Cypress né la configurazione — buildava e avviava `cms/` a vuoto. L'E2E rientra con NC-31.
+- `.github/workflows/cypress.yml` (NC-30): it ran on every push but the repo has no Cypress tests and no configuration — it built and started `cms/` for nothing. E2E returns with NC-31.
 
-### Nuovi item di backlog
+### New backlog items
 
-- NC-45 (CodeQL v2 ritirata), NC-46 (`::set-output` in docker-publish), NC-47 (ESLint per app), NC-48 (`jest` non installato in `@nextcms/nextcms` ma richiamato da `test:unit`), NC-49 (`cms/Dockerfile` non esegue `prisma generate` prima della build).
+- NC-45 (CodeQL v2 retired), NC-46 (`::set-output` in docker-publish), NC-47 (per-app ESLint), NC-48 (`jest` not installed in `@nextcms/nextcms` but called by `test:unit`), NC-49 (`cms/Dockerfile` does not run `prisma generate` before the build).
 
 ## [0.3.0] - 2026-07-25
 
-### Aggiunto
+### Added
 
-- `CLAUDE.md` e `AGENTS.md`: regole operative, architettura, comandi e trappole note del repository.
-- `BACKLOG.md`: sorgente unica dei todo con id stabili `NC-n`, popolato dall'audit del codice sul commit `7ac0299` (44 item su sicurezza, bug API, schema Prisma, CI, debito tecnico e feature).
-- `CHANGELOG.md` (questo file) e la regola **una feature = un tag**.
+- `CLAUDE.md` and `AGENTS.md`: working rules, architecture, commands and known traps for the repository.
+- `BACKLOG.md`: single source of todos with stable `NC-n` ids, populated from the code audit on commit `7ac0299` (44 items across security, API bugs, the Prisma schema, CI, technical debt and features).
+- `CHANGELOG.md` (this file) and the **one feature, one tag** rule.
 
-### Modificato
+### Changed
 
-- `TODO.md` è ora un puntatore a `BACKLOG.md`, che diventa la sorgente unica dei todo.
+- `TODO.md` is now a pointer to `BACKLOG.md`, which becomes the single source of todos.
 
-## [0.2.11] e precedenti
+## [0.2.11] and earlier
 
-Rilasci precedenti all'adozione del changelog: vedi i tag git (`git tag --sort=-v:refname`) e la history.
+Releases predating the changelog: see the git tags (`git tag --sort=-v:refname`) and the history.

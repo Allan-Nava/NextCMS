@@ -1,12 +1,11 @@
 name: CI
 
-# Gate di qualità del repository (NC-29). Prima di questa workflow nulla
-# verificava che il progetto compilasse: giravano solo CodeQL, un job Cypress
-# senza test e la publish Docker.
+# Quality gate for the repository (NC-29). Before this workflow existed nothing
+# checked that the project even compiled: only CodeQL, a Cypress job with no
+# tests, and the Docker publish ran.
 #
-# I job sono gate REALI (bloccanti). Finché la milestone M0 non è chiusa la CI
-# è rossa: è voluto — è il termometro dello stato del repo, non un fastidio da
-# silenziare. Vedi BACKLOG.md (NC-24, NC-25, NC-26, NC-48).
+# Every job is a hard gate. Keep them green — do not silence a job, close the
+# backlog item behind it.
 
 on:
   push:
@@ -23,20 +22,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # App pubblica + API. È l'unica che ha Prisma, quindi il client va generato
-  # prima del typecheck: senza `prisma generate` i tipi `Prisma.*Input` usati
-  # nei repo layer non esistono.
+  # Public app plus the API. It is the only one with Prisma, so the client must
+  # be generated before the typecheck: without `prisma generate` the
+  # `Prisma.*Input` types used by the repo layer do not exist.
   cms:
-    name: cms (typecheck, lint, build)
+    name: cms (typecheck, lint, test, build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: cms
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      # Prisma pretende una URL valida anche solo per generare il client: non
-      # viene aperta nessuna connessione durante generate/build.
+      # Prisma wants a syntactically valid URL even just to generate the client;
+      # no connection is opened during generate, test or build.
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/nextcms?schema=public"
+      # Any value works here: the unit tests set their own secret per case.
+      JWT_SECRET: "ci-only-secret"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,10 +55,12 @@ jobs:
         run: npx tsc --noEmit
       - name: Lint
         run: npm run lint
+      - name: Unit tests
+        run: npm test
       - name: Build
         run: npm run build
 
-  # Pannello admin: nessun Prisma, parla con l'API di cms/ via HTTP.
+  # Admin panel: no Prisma, talks to the cms/ API over HTTP.
   admin:
     name: admin (typecheck, lint, build)
     runs-on: ubuntu-latest
@@ -82,8 +85,7 @@ jobs:
       - name: Build
         run: npm run build
 
-# NOTA — nessun job per `packages/`: `@nextcms/nextcms` dipende da versioni dei
-# propri pacchetti fratelli che non sono mai state pubblicate su npm
-# (`@nextcms/generators@0.1.4`, `@nextcms/utils@0.1.10`), quindi `npm install`
-# fallisce con notarget e i test non possono girare. Il job rientra quando
-# NC-51 è chiuso.
+# NOTE — there is no job for `packages/`: `@nextcms/nextcms` depends on versions
+# of its own sibling packages that were never published to npm
+# (`@nextcms/generators@0.1.4`, `@nextcms/utils@0.1.10`), so `npm install` fails
+# with notarget and the tests cannot run. The job comes back once NC-51 is fixed.
