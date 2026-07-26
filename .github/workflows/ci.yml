@@ -78,13 +78,15 @@ jobs:
 
   # Admin panel: no Prisma, talks to the cms/ API over HTTP.
   admin:
-    name: admin (typecheck, lint, build)
+    name: admin (typecheck, lint, test, build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: admin
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      # The rewrite that proxies the cms API is resolved at build time (NC-54).
+      CMS_ORIGIN: "http://localhost:3000"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -98,6 +100,8 @@ jobs:
         run: npx tsc --noEmit
       - name: Lint
         run: npm run lint
+      - name: Unit tests
+        run: npm test
       - name: Build
         run: npm run build
 

@@ -4,6 +4,45 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.10.0] - 2026-07-26
+
+Most of **M5 · Admin**. The panel had one page whose entire body was the string `TODO ADMIN STUFF`; it is now a working surface with a session.
+
+### Added
+
+- **The panel shell and four screens** (NC-43): navigation, the signed-in user, and a dashboard of counts. Screens for **users**, **roles**, **categories** and **tags** — none of which had a UI anywhere before. The users screen is the only place in the product that can create a privileged account, since self-registration can never set the role flags.
+- **`lib/crud/AdminAPI.ts`** (NC-44): the panel's only route to the cms API. It unwraps the response envelope and turns a failure into an `ApiError` carrying its status, so a screen can tell *your session expired* (401) from *you are not an administrator* (403) — the dashboard shows a dash rather than a zero for counts the API refuses.
+- Jest in the admin app with 18 tests, wired into CI along with an `npm test` step for `admin` that was missing.
+
+### Changed
+
+- **Session sharing between the two apps** (NC-54). Neither option in the original note was needed, because its premise was wrong: **cookies are scoped by host, not by port** (RFC 6265), so the HttpOnly `access_token` set on `localhost:3000` is already sent to `localhost:4000`.
+
+  What was actually missing was the API path. The panel now calls same-origin `/admin/api/*`, which a Next rewrite proxies to the cms — so the browser attaches the cookie and the rewrite forwards it upstream. No CORS to configure, and no token in `localStorage` to steal. The panel's middleware sends a visitor with no cookie to the cms login, and the cms login honours `?next=`.
+
+  Both ends of that round trip are open-redirect surfaces, and both were built test-first. `safeReturnTo` in the panel refuses anything that is not a same-origin path; `safeRedirectTarget` in the cms additionally allows exactly one absolute origin — the configured `ADMIN_URL`, so the trip works across ports in development. It compares parsed origins rather than string prefixes, which is what makes `http://localhost:4000.evil.example` and `http://localhost:4000@evil.example` fail.
+
+- **`admin` dependencies trimmed** (NC-36): 54 devDependencies and 3 runtime dependencies removed, **900 packages down to 521**. The Metronic sass tree was already dead code — its imports are commented out in `_app.tsx` — and `pg`, `reflect-metadata` and `sass-loader` were never used at all. `bootstrap` and `bootstrap-icons` moved to `dependencies`, where a stylesheet the build imports belongs.
+
+### Removed
+
+- The copies of `cms` code that the panel carried and never used: `DynamicComponents`, `Elements/*`, the page-builder components, the redux store, the duplicated types and `fetchWrapper`. Also the committed `tsconfig.tsbuildinfo`, now ignored.
+
+### Not done
+
+- **NC-58** — the second half of the page builder (per-block settings, media, nested blocks) is untouched, so M5 is **not** closed. It needs a media story first, which is NC-61 in M7.
+- **NC-76**, new — there are now two editing surfaces: the content forms and page builder in `cms/`, the panel in `admin/`, which links across to them. Duplicating those forms would have meant two implementations of the same validation, so the panel links instead. Deciding which app owns authoring, and moving the screens once, is follow-up work.
+- The vendored `src/_metronic` theme (82 files) is kept but excluded from the typecheck: adopting it means restoring the ten packages it imports.
+
+### Verification
+
+| | typecheck | lint | tests | build |
+|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ 122 passed | ✅ |
+| `admin` | ✅ | ✅ | ✅ 18 passed | ✅ |
+
+Not verified: no browser has exercised the login round trip or the API proxy — no database is available here, so the flow is covered by the unit tests on both redirect guards and by the type system, not by a request.
+
 ## [0.9.1] - 2026-07-26
 
 Work on a Vercel build failure. **The reported failure was not reproduced**, and this release says so rather than claiming a fix — but the investigation found three real defects, two of them mine, and they are fixed.

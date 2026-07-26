@@ -20,7 +20,7 @@ Milestones **M0–M6 are sequential**: each only makes sense once the previous o
 | **M2** | Correct APIs | Every endpoint answers, with the right status and the right data | `v0.6.0` ✅ | NC-11…23 |
 | **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
 | **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` ✅ | NC-41, NC-42 |
-| **M5** | Admin | The panel stops being a placeholder | `v0.10.0` | NC-36, 43, 44, 54, 58 |
+| **M5** | Admin | The panel stops being a placeholder | `v0.10.0` | NC-36, 43, 44, 54, 58, 76 |
 | **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 55…57, 59, 70…75 |
 | **M7** | Product | Features a CMS is expected to have and this one lacks | incremental | NC-60…69 |
 
@@ -105,12 +105,13 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 
 ## M5 · Admin → `v0.9.0`
 
+- [ ] 🟡 **NC-76** — Two editing surfaces. The content forms and the page builder live in `cms/`, while the panel is in `admin/`; the panel links across to them. Decide which app owns authoring and move the screens there once, rather than maintaining two copies of the same validation.
 - [ ] 🟡 **NC-58** — Page builder, second half: per-block settings in the UI (props are already stored and rendered, just not editable), image and media handling, and nested blocks. Carved out of NC-42, which shipped layout persistence in v0.8.0.
 
-- [ ] ⚪ **NC-36** — `admin/package.json` duplicates ~70 devDependencies of `cms/` (Metronic and CRA leftovers) for three pages. Trim it. `react-scripts` is already gone (NC-10).
-- [ ] **NC-43** — Admin UI/UX: every entity wired up, including the admin-only user creation screen.
-- [ ] **NC-44** — Admin API: full CRUD per entity, consuming the `cms/` API with a bearer token.
-- [ ] 🟠 **NC-54** — Session shared between `cms` (port 3000) and `admin` (port 4000). The access-token cookie is HttpOnly and scoped to its origin, so it does not travel between the two dev servers; in production the intended topology is a single origin with admin under `/admin`. Needs a decision: same-origin multi-zone, or admin holding a bearer token obtained through its own login screen. Carved out of NC-39, which shipped the rest of the auth work in v0.7.0.
+- [x] ⚪ **NC-36** — `admin/package.json` duplicated ~70 devDependencies of `cms/` for three pages. *(v0.10.0: 54 devDependencies and 3 runtime dependencies removed — 900 packages down to 521. The Metronic sass tree was already dead code, its imports commented out in `_app.tsx`; `pg`, `reflect-metadata` and `sass-loader` were never used. `bootstrap` and `bootstrap-icons` moved to `dependencies`, where a stylesheet the build imports belongs. The vendored `src/_metronic` theme is kept but excluded from the typecheck: adopting it means restoring the packages it imports.)*
+- [x] **NC-43** — Admin UI/UX. *(v0.10.0: the panel had one page whose entire body was the string "TODO ADMIN STUFF". It now has a shell with navigation and the signed-in user, a dashboard of counts, and screens for users, roles, categories and tags — none of which had a UI anywhere before. The users screen is the only place that can create a privileged account. Content is a read-only overview that links into the cms editing screens: duplicating those forms would mean two implementations of the same validation. Consolidating the two surfaces is NC-76.)*
+- [x] **NC-44** — Admin API client. *(v0.10.0: `lib/crud/AdminAPI.ts` is the panel's only route to the cms API. It carries no token — see NC-54 — unwraps the response envelope, and turns a failure into an `ApiError` with its status, so a screen can tell "your session expired" (401) from "you are not an admin" (403). No bearer token after all: the cookie is a better answer.)*
+- [x] 🟠 **NC-54** — Session shared between `cms` and `admin`. *(v0.10.0: neither of the two options in the original note was needed. **Cookies are scoped by host, not by port** (RFC 6265), so the HttpOnly `access_token` set on localhost:3000 is already sent to localhost:4000 — the premise that it "does not travel between the two dev servers" was wrong. What was missing was the API path: the panel now calls same-origin `/admin/api/*`, which a Next rewrite proxies to the cms, so the cookie is attached by the browser and forwarded upstream. No CORS, and no token in localStorage to steal. The panel's middleware redirects a visitor with no cookie to the cms login, and the cms login honours `?next=` through a validated target. Both sides of that round trip are open-redirect surfaces and both are covered by tests.)*
 
 ## M6 · Road to 1.0 → `v1.0.0`
 

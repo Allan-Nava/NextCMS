@@ -37,6 +37,12 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - Data model: `cms/prisma/schema.prisma` (`Page`, `Component` with `parent`+`position`, `Category`, `Tag`, `Entity`, `User`, `Role`, `Visit`, `PasswordResetToken`), postgresql provider. No `migrations/` directory — the project uses `prisma db push`, so push a schema change before the code that needs it can run.
 - Tests: `cms/__tests__/*.test.ts` (jest + ts-jest, node environment).
 
+## Admin panel
+
+- It holds no token: `lib/crud/AdminAPI.ts` calls same-origin `/admin/api/*`, proxied to the cms by a rewrite, so the HttpOnly cookie does the work (`NC-54`). Cookies are host-scoped, not port-scoped — that is why it works across 3000/4000.
+- Editing lives in `cms/`; the panel links across to it (`NC-76`).
+- `src/_metronic` is unused and excluded from the typecheck.
+
 ## Security invariants — do not regress these
 
 - **Never return a raw Prisma `User`**: use `publicUserSelect` / `PublicUser`, otherwise the bcrypt hash leaks (`NC-1`).
@@ -48,6 +54,7 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - **Drafts must not leak**: a public listing filters on `publishedAt`; only an authenticated caller sees unpublished content (`NC-41`).
 - **Stored JSON-LD must keep its closing tags escaped** before it is injected into a script tag (`NC-60`): an editor storing `</script>` would otherwise turn the rest into live markup.
 - **Drafts must stay out of the sitemap and get `noindex`** — all three paths use the same `isPubliclyVisible` predicate; do not reimplement it.
+- **A post-login `?next=` must be validated** before redirecting — `safeRedirectTarget` / `safeReturnTo`, comparing parsed origins rather than prefixes (`NC-54`).
 - **Reset tokens are stored hashed and are single-use**, and the production mail transport must never print one to the log (`NC-39`).
 - **`forgot-password` answers the same way for a known and an unknown address**: a different answer is an account-enumeration oracle.
 

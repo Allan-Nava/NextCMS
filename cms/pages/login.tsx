@@ -10,12 +10,14 @@
  * Copyright 2022 - 2022 © 
  */
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 import { useDispatch } from 'react-redux'
 import * as Yup from 'yup'
 import clsx from 'clsx'
 import { actions } from '../lib/reducers/auth/reducer'
 import { useFormik } from 'formik'
 import { login } from '../lib/crud/AuthCRUD'
+import { safeRedirectTarget } from '../lib/utils/redirect'
 //
 //
 const loginSchema = Yup.object().shape({
@@ -39,6 +41,7 @@ const initialValues = {
 const Login = () => {
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
+  const router = useRouter()
   const formik = useFormik({
     initialValues,
     validationSchema: loginSchema,
@@ -53,6 +56,18 @@ const Login = () => {
           setLoading(false)
           setSubmitting(false)
           dispatch(actions.login(access_token, refresh_token))
+          // The admin panel sends people here as /login?next=/admin/... and
+          // expects the round trip to complete. `next` comes from the URL, so it
+          // is validated rather than trusted (NC-54).
+          const target = safeRedirectTarget(
+            typeof router.query.next === 'string' ? router.query.next : undefined,
+            { adminOrigin: process.env.ADMIN_URL }
+          )
+          if (target.startsWith('/')) {
+            router.push(target)
+          } else {
+            window.location.assign(target)
+          }
         })
         .catch(() => {
           setLoading(false)

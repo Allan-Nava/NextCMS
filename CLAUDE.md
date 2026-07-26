@@ -57,7 +57,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
   - `lib/utils/seo.ts` + `components/Seo.tsx` — the page head: title/description fallbacks, canonical, Open Graph, validated JSON-LD. `lib/utils/sitemap.ts` backs `/sitemap.xml` and `/robots.txt`.
   - `lib/reducers/` — Redux Toolkit (`auth`, `layout`, `dragAndDrop`) mounted in `store.ts`; the page builder (`components/pagebuilder/`, react-dnd) builds on it.
   - `lib/prisma.ts` — the `PrismaClient` singleton.
-- **`admin/`** (`next-admin`) — panel on the Metronic theme (`src/_metronic`), `basePath: '/admin'`, port 4000. **No Prisma**: it talks to the `cms/` API through `lib/helpers/fetchWrapper.ts`. It is the least developed part (only `_app`, `index`, `_middleware`).
+- **`admin/`** (`next-admin`) — the panel, `basePath: '/admin'`, port 4000. **No Prisma and no token**: every call goes through `lib/crud/AdminAPI.ts` to a same-origin `/admin/api/*` path that `next.config.js` proxies to the cms, so the HttpOnly cookie travels and there is no CORS (`NC-54`). Screens: dashboard, content overview (read-only, links into the cms editors), users, roles, taxonomies. `src/_metronic` is a vendored theme that is **not** in use — excluded from the typecheck, and adopting it means restoring the packages it imports.
 - **`packages/`** — published npm packages, CommonJS, independent of the two Next apps:
   - `core/nextcms` → `@nextcms/nextcms`: the `nextcms` CLI (commander) plus a Strapi-style bootstrap/loader on Koa.
   - `core/utils` → `@nextcms/utils`: env helper, errors, sanitize/visitors (including `remove-password`).
@@ -74,6 +74,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 - **The `packages/@nextcms/*` packages are not installable** (`NC-51`): they depend on versions of their own siblings that were never published to npm. That is why `ci.yml` has no `packages` job.
 - **Auth lives in the API handlers, not in middleware**: `_middleware.ts` runs on the edge runtime, where `jsonwebtoken` cannot verify a signature. Guard routes with `requireAuth`/`requireAdmin` from `lib/helpers/auth.ts`; the middleware only does a cheap cookie presence check for page redirects.
 - **Passwords are hashed with `bcryptjs` and tokens signed with `jsonwebtoken` in the repo/auth layer**, never in a handler. `JWT_SECRET` is mandatory: the app fails fast at startup without it.
+- **A post-login `?next=` is attacker-controlled** (`NC-54`): validate it with `safeRedirectTarget` (cms) or `safeReturnTo` (admin). Compare parsed origins, never string prefixes.
 - **Never return a raw Prisma `User`**: use `publicUserSelect` / the `PublicUser` type so the password hash cannot leak (`NC-1`).
 - **`BASE_URI` is now load-bearing**: it builds canonical URLs, the sitemap and password reset links. A wrong value is visible to search engines, not just internally.
 - **Never log a request or response object**: they carry headers and cookies, i.e. tokens. Use `lib/utils/logger.ts`.
