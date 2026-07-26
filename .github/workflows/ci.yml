@@ -22,6 +22,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Deploy-time settings that live in files rather than in a dashboard. Cheap and
+  # first, because getting these wrong fails a deploy before any of the build
+  # jobs below would have caught it.
+  manifests:
+    name: manifests (node version)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      # Vercel reads engines.node from the manifest at the project's Root
+      # Directory, so every manifest a deploy might read has to agree (NC-72).
+      - name: Node version is declared consistently
+        run: node .github/scripts/check-engines.mjs
+
   # Public app plus the API. It is the only one with Prisma, so the client must
   # be generated before the typecheck: without `prisma generate` the
   # `Prisma.*Input` types used by the repo layer do not exist.

@@ -4,6 +4,41 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.8.4] - 2026-07-26
+
+### Fixed
+
+- **The deploy died on the Node version** (NC-72), with a version nothing in the repository asked for:
+
+  ```
+  Found invalid or discontinued Node.js Version: "14.x".
+  Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.
+  ```
+
+  Vercel resolves `engines.node` from the `package.json` **at the project's Root Directory**, and falls back to the dashboard setting when it finds none there. The root manifest had no `engines` block, so the stale `14.x` in the dashboard kept winning and the deploy stopped right after cloning, before installing anything.
+
+  This also explains why **the v0.7.3 fix could not have worked**: it added `engines` to `cms/package.json` and `admin/package.json`, and those manifests were never the ones being read. The root manifest now declares `24.x` as well.
+
+### Added
+
+- `.github/scripts/check-engines.mjs` and a `manifests` job in CI: the three manifests must declare the same Node version, and the build fails if they drift. This bug has already recurred once — a guard is cheaper than diagnosing it a third time. Verified in both directions: it passes as things stand, and fails with a clear message when `engines` is removed from the root manifest.
+- A **Node version** subsection on the documentation site explaining where Vercel actually reads it from, plus the three dashboard settings a new project needs, in order.
+
+### Changed
+
+- The root `package.json` is now `private: true`. It exists only so tooling can read `engines`; it is not a publishable package, and `private: false` with no name left an accidental `npm publish` from the root possible.
+
+### Still needed in the dashboard
+
+The two settings git cannot express — and the deploy needs both:
+
+1. **Root Directory** → `cms` (NC-71). The repository root has no `next` dependency and no build script.
+2. **Node.js Version** → `24.x`. The manifests override it now, but leaving a discontinued version there is what produced the failure above.
+
+### Verification
+
+`check-engines.mjs` passes across all three manifests and exits 1 with an explicit message when the root `engines` is removed. HTML and anchors on the docs site still validate. Not verified: no deploy has been run, so whether Vercel now gets past this point is unconfirmed — but the cause of *this* error is identified precisely rather than guessed at, which was not true of the previous release.
+
 ## [0.8.3] - 2026-07-26
 
 ### Fixed

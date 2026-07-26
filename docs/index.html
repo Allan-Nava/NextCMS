@@ -684,10 +684,33 @@ npm run dev              # http://localhost:4000/admin</code></pre>
             repository root the build fails before it starts: there is nothing there to build.
           </p>
         </div>
+
+        <h3>The Node version, and where Vercel actually reads it</h3>
         <p>
-          <code>engines.node</code> in each app's <code>package.json</code> takes precedence over the dashboard's Node
-          version, so the deployed runtime is declared in git rather than living as invisible project state.
+          <code>engines.node</code> overrides the dashboard's Node version — but Vercel reads it from the
+          <code>package.json</code> <strong>at the project's Root Directory</strong>, not from every manifest in the
+          repository. A project pointed at the repository root never sees <code>cms/package.json</code>.
         </p>
+        <p>
+          This is how a deploy failed with a version nothing in the repository asked for:
+        </p>
+        <pre><code>Found invalid or discontinued Node.js Version: "14.x".
+Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.</code></pre>
+        <p>
+          The root manifest had no <code>engines</code>, so the stale <code>14.x</code> in the dashboard won, and the
+          deploy stopped right after cloning — before installing anything. Every manifest now declares
+          <code>24.x</code>, and CI fails if they drift apart.
+        </p>
+        <div class="note">
+          <p>Setting a project up from scratch, in order:</p>
+          <ol>
+            <li><strong>Root Directory</strong> → <code>cms</code> (Settings → Build and Deployment).</li>
+            <li><strong>Node.js Version</strong> → <code>24.x</code>. The manifests override it, but leaving a
+              discontinued version there is what caused the failure above.</li>
+            <li><strong>Environment variables</strong> → <code>DATABASE_URL</code> and <code>JWT_SECRET</code>. The app
+              refuses to sign a token without the second one.</li>
+          </ol>
+        </div>
 
         <h3>Why the build command runs <code>prisma generate</code></h3>
         <p>
