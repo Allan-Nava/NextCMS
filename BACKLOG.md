@@ -21,7 +21,7 @@ Milestones are **sequential**: each only makes sense once the previous one is cl
 | **M3** | Working auth | Full login/logout/register/reset flows, profile screen | `v0.7.0` ✅ | NC-39, 40, 53 |
 | **M4** | Content and page builder | Pages and components creatable, persisted and rendered from the DB | `v0.8.0` | NC-41, NC-42 |
 | **M5** | Admin | The panel stops being a placeholder | `v0.9.0` | NC-36, 43, 44, 54 |
-| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38 |
+| **M6** | Road to 1.0 | Debt, tests, Next migration | `v1.0.0` | NC-27, 31…33, 37, 38, 56 |
 
 Release numbering note: M1 and M2 shipped together in `v0.6.0`, so everything after moved up one minor from the original plan.
 
@@ -115,4 +115,5 @@ Independent of the apps: the `@nextcms/*` packages are blocked by a single cause
 - [ ] 🟡 **NC-33** — Migration to Next 13+/App Router (currently Next 12.1.1, React 17, `pages/`, legacy `_middleware.ts`). A migration, not a bump — and the prerequisite for dropping the Next 12.x advisories.
 - [ ] ⚪ **NC-37** — Duplicate lockfiles and orphan files. Root: `package-lock.json` + `yarn.lock` for a single dependency, an `.eslintrc.json` no app can resolve, and `haikus.json` (an Octocat fixture) out of context. `admin/`: `package-lock.json` and `yarn.lock` coexist, and something in the environment rewrites the latter after an `npm ci` — with two disagreeing lockfiles the install is not deterministic. npm is the declared package manager: remove the `yarn.lock` files.
 - [ ] ⚪ **NC-38** — Consider npm workspaces to avoid installing folder by folder (and to unblock NC-51).
+- [x] 🟡 **NC-56** — This backlog existed only as a file: nothing carried it into GitHub, so the work was invisible to anyone not reading the repo. *(v0.7.2: `.github/scripts/backlog-sync.mjs` + `.github/workflows/backlog-sync.yml` reconcile every `NC-n` item with an issue and every `## Mn` section with a milestone, idempotently, on every push that touches `BACKLOG.md`. 12 parser tests run before each sync.)*
 - [x] 🟡 **NC-28** — `BASE_URI` was hardcoded to a Vercel URL in `cms/lib/utils/constants.ts` with the env read commented out. *(v0.6.0: both `BASE_URI` and `API_URI` come from the environment.)*

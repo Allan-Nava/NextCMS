@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.7.2] - 2026-07-26
+
+### Added
+
+- **Backlog automation** (NC-56): `.github/scripts/backlog-sync.mjs` and `.github/workflows/backlog-sync.yml`. Until now `BACKLOG.md` was only a file — nothing carried it into GitHub, so none of the tracked work was visible to anyone not reading the repo.
+
+  Each `NC-n` item becomes an issue labelled `backlog` plus a `severity:*` label, filed under the milestone taken from its `## Mn` section; ticking an item closes its issue, unticking reopens it, and a milestone closes once all of its items are done. The `NC-n` id is the key, so the sync is idempotent: unchanged items are not touched, an edited description updates the existing issue instead of opening a second one, and only the labels the script owns are compared, so a label added by hand survives. An issue whose item disappeared from the file is reported and left alone rather than closed.
+
+  Zero dependencies — Node's global `fetch` and the token Actions already provides. It runs on every push that touches `BACKLOG.md`, and the manual trigger defaults to a dry run so the plan can be inspected first. `BACKLOG.md` is never written to.
+
+- 12 parser tests (`node --test`), run in the workflow before each sync since the parser decides what gets written to the tracker. One of them runs against the real `BACKLOG.md`, so the fixture cannot drift away from the file. They caught a first version that split titles on `:` and produced entries like *"NC-52: bootstrap"*.
+
+### Verification
+
+Dry run against the real backlog parses **54 items across 8 milestones** with the expected done/open split (M0 11/11, M0b 0/2, M1 10/10, M2 13/13, M3 3/3, M4 2/4, M5 0/4, M6 1/7). Not verified: no call has been made against the GitHub API — nothing is pushed, so the first real sync will be the first time the write path runs. That is what the dry-run default on the manual trigger is for.
+
 ## [0.7.0] - 2026-07-26
 
 Milestone **M3 · Working auth** closed. The session lifecycle is complete on the `cms` side: sign in, stay signed in, recover a lost password, edit your own account.

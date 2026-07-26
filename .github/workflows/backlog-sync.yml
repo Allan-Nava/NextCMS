@@ -1,0 +1,60 @@
+name: Backlog sync
+
+# Keeps GitHub issues and milestones in sync with BACKLOG.md (NC-56).
+#
+# BACKLOG.md stays the single source of truth — this never writes back to it.
+# Each `NC-n` item becomes an issue (label `backlog`, plus a `severity:*` label),
+# filed under the milestone of its `## Mn` section. Ticking an item closes its
+# issue, unticking reopens it, and a milestone closes when all of its items are
+# done. The run is idempotent: the `NC-n` id is the key, so nothing is
+# duplicated and unchanged items are not touched.
+#
+# FIRST RUN: this creates one milestone per section and one issue per item —
+# on the current backlog that is 8 milestones and 54 issues. Use the manual
+# trigger with dry_run left on to see the plan before letting it write.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "BACKLOG.md"
+      - ".github/scripts/backlog-sync.mjs"
+      - ".github/workflows/backlog-sync.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the plan without writing anything to GitHub"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+# Never two syncs at once: they would race on creating the same issue.
+concurrency:
+  group: backlog-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # The parser decides what gets written to the tracker, so it is tested
+      # before it is trusted.
+      - name: Test the parser
+        run: node --test .github/scripts/backlog-sync.test.mjs
+
+      - name: Sync backlog to issues
+        run: node .github/scripts/backlog-sync.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          # A push always writes; a manual run honours the checkbox, which
+          # defaults to a dry run.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}

@@ -13,7 +13,7 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - **Gate before closing**: `npm run lint`, `npm test` and `npm run build` green in the app you touched.
 - **NEVER `git push`**: the user always does it, tags included. NEVER add `Co-Authored-By`.
 - **No secrets** in code, `.env.example`, docs or logs.
-- **Todos go to `BACKLOG.md`** (stable `NC-n` ids); no scattered `TODO:` comments.
+- **Todos go to `BACKLOG.md`** (stable `NC-n` ids); no scattered `TODO:` comments. A push that touches it syncs the items to GitHub issues and milestones (`backlog-sync.yml`) — close an item by ticking it in the file, never by closing the issue by hand.
 - **Language is English** for code, comments, docs and user-facing output.
 - **Next 12 + React 17, `pages/` router**: no major bumps (Next 13+/App Router) without asking.
 

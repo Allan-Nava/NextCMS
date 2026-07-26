@@ -96,6 +96,7 @@ Things that need a human decision, not a patch:
 ## Pointers
 
 - Todos: `BACKLOG.md` (`NC-n` ids) · Releases: `CHANGELOG.md` · Docs: `docs/` (`Prisma.md`, `NPM.md`) · Schema: `cms/prisma/schema.prisma`
-- CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io)
+- CI: `.github/workflows/` — `ci.yml` (gate: typecheck/lint/test/build), `codeql.yml`, `docker-publish.yml` (tag `v*` → image on ghcr.io), `backlog-sync.yml`
+- **Backlog automation**: every push touching `BACKLOG.md` syncs the `NC-n` items to GitHub issues and the `## Mn` sections to milestones (`.github/scripts/backlog-sync.mjs`). The file is the source of truth and is never written back to — close an item by ticking it in the file, not by closing the issue.
 - Env: `.env.example` (root, Prisma) and `cms/.env.example` — variables in use: `DATABASE_URL`, `JWT_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, `ALLOW_PUBLIC_REGISTRATION`, `PASSWORD_RESET_TTL_MINUTES`, `LOG_LEVEL`, `ADMIN_URL`, `API_URI`, `BASE_URI`
 - Dev container: `.devcontainer/` · Debug: `.vscode/launch.json`
