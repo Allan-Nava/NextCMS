@@ -30,6 +30,7 @@
             <li><a href="#api">API reference</a></li>
             <li><a href="#auth">Authentication</a></li>
             <li><a href="#content">Content &amp; page builder</a></li>
+            <li><a href="#deploy">Deploying</a></li>
           </ul>
           <p class="group">Project</p>
           <ul>
@@ -634,6 +635,90 @@ npm run dev              # http://localhost:4000/admin</code></pre>
             and nested blocks (the data model supports them, the editor does not).
           </p>
         </div>
+
+        <h2 id="deploy">Deploying</h2>
+
+        <h3>Vercel</h3>
+        <p>
+          The repository root is not a deployable application: it has no <code>next</code> dependency and no build
+          script. Each app deploys as its own Vercel project, and the setting that makes this work lives in the
+          dashboard rather than in git.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Setting</th>
+                <th>Value for the public site</th>
+                <th>Value for the admin panel</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Root Directory</td>
+                <td><code>cms</code></td>
+                <td><code>admin</code></td>
+              </tr>
+              <tr>
+                <td>Framework preset</td>
+                <td>Next.js (also pinned in <code>cms/vercel.json</code>)</td>
+                <td>Next.js</td>
+              </tr>
+              <tr>
+                <td>Node version</td>
+                <td>from <code>engines.node</code> (<code>24.x</code>)</td>
+                <td>from <code>engines.node</code> (<code>24.x</code>)</td>
+              </tr>
+              <tr>
+                <td>Required environment variables</td>
+                <td><code>DATABASE_URL</code>, <code>JWT_SECRET</code></td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note danger">
+          <p>
+            <strong>Root Directory must be set to <code>cms</code></strong> (or <code>admin</code>). Vercel cannot infer
+            it, and <code>vercel.json</code> cannot express it for a Next.js app in a subdirectory. With it left at the
+            repository root the build fails before it starts: there is nothing there to build.
+          </p>
+        </div>
+        <p>
+          <code>engines.node</code> in each app's <code>package.json</code> takes precedence over the dashboard's Node
+          version, so the deployed runtime is declared in git rather than living as invisible project state.
+        </p>
+
+        <h3>Why the build command runs <code>prisma generate</code></h3>
+        <p>
+          The generated Prisma client lives in <code>node_modules/.prisma</code>. Vercel restores
+          <code>node_modules</code> from its build cache, which means the <code>@prisma/client</code> postinstall — the
+          thing that normally generates the client — does not run on a cached build. The client is then missing and the
+          build fails while type-checking, with <code>Module '"@prisma/client"' has no exported member 'Prisma'</code>.
+        </p>
+        <p>
+          So the build script generates it explicitly, and must keep doing so:
+        </p>
+        <pre><code>"build": "next telemetry disable &amp;&amp; prisma generate &amp;&amp; next build"</code></pre>
+        <p>
+          <code>prisma generate</code> does not need a reachable database, or even
+          <code>DATABASE_URL</code>, so this is safe at build time.
+        </p>
+
+        <h3>Docker</h3>
+        <p>
+          <code>cms/Dockerfile</code> is the maintained image and is published to
+          <code>ghcr.io</code> by the <code>docker-publish</code> workflow on every tag. The root
+          <code>Dockerfile</code> and <code>Dockerfile-slim</code> do not build anything — same reason as above — and
+          are tracked for removal.
+        </p>
+
+        <h3>Database migrations</h3>
+        <p>
+          There is no <code>prisma/migrations</code> directory: schema changes are applied with
+          <code>prisma db push</code>. Nothing in the deploy pipeline does this for you, so a release that changes the
+          schema needs the push run against the target database before the new code serves traffic.
+        </p>
 
         <h2 id="roadmap">Roadmap</h2>
         <p>

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "npx next telemetry disable && next build",
+    "build": "next telemetry disable && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest"

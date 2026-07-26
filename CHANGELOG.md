@@ -4,6 +4,45 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.8.3] - 2026-07-26
+
+### Fixed
+
+- **The Vercel build failed** (NC-70). `cms/package.json` never ran `prisma generate`. The generated client lives in `node_modules/.prisma`; Vercel restores `node_modules` from its build cache, so the `@prisma/client` postinstall that normally generates it does not run on a cached build. The client is then absent and the build dies while type-checking:
+
+  ```
+  Type error: Module '"@prisma/client"' has no exported member 'Prisma'.
+  ```
+
+  The build script now generates it explicitly:
+
+  ```
+  "build": "next telemetry disable && prisma generate && next build"
+  ```
+
+  `prisma generate` needs neither a reachable database nor `DATABASE_URL`, so this is safe at build time — verified by running it with the variable unset.
+
+### Added
+
+- `cms/vercel.json`: pins the framework to Next.js and the install to `npm ci`, so a deploy installs from the lockfile rather than resolving fresh.
+- A **Deploying** section on the documentation site: the Vercel settings for both apps, why the build command generates the Prisma client, the Docker situation, and the fact that nothing in the pipeline runs `prisma db push` for you.
+
+### Note on what could not be fixed in git
+
+`engines.node: "24.x"` is **not** the problem — Vercel's current versions are 24.x (default), 22.x and 20.x, so 24.x is valid. That was checked against Vercel's documentation rather than assumed.
+
+**NC-71** is opened rather than closed: Vercel's **Root Directory must be set to `cms`** in the dashboard (and `admin` for the panel). The repository root has no `next` dependency and no build script, so a project pointed at it cannot build, and `vercel.json` cannot express Root Directory for a Next app in a subdirectory. Restructuring into npm workspaces (NC-38) would make the root buildable and remove the invisible setting.
+
+### Verification
+
+The failure was **reproduced** locally — `rm -rf .next node_modules/.prisma` then `npm run build` exits 1 with the type error above — and the fix verified from that same state: the build regenerates the client and exits 0. A first attempt appeared to pass because the `.next` cache masked the missing client, which is worth knowing when testing this again.
+
+| | `prisma validate` | `tsc --noEmit` | lint | tests | build |
+|---|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ (1 pre-existing warning) | ✅ 72 passed | ✅ |
+
+Not verified: no deploy has been run. Whether this was *the* failure the deploy hit is unconfirmed — the Vercel build log was not available, so two likely causes were addressed: one fixed and proven, one documented as a required setting.
+
 ## [0.8.2] - 2026-07-26
 
 ### Fixed
