@@ -23,6 +23,21 @@ export interface ApiEnvelope<T> {
     error?: unknown;
 }
 //
+// The list endpoints paginate now (NC-78): `data` is still the array and the
+// totals sit beside it, so a caller that ignores `meta` keeps working.
+export interface PaginationMeta {
+    page: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+}
+//
+export interface Paged<T> {
+    rows: T[];
+    meta: PaginationMeta | null;
+}
+//
 export class ApiError extends Error {
     readonly status: number;
 
@@ -59,6 +74,24 @@ async function request<T>(method: string, resource: string, body?: unknown, quer
     return payload.data;
 }
 //
+// Same request, but keeps the pagination metadata the list endpoints return.
+async function requestPaged<T>(resource: string, query?: Record<string, QueryValue>): Promise<Paged<T>> {
+    const response = await fetch(apiPath(resource, query ?? {}), { credentials: 'same-origin' });
+    if (!response.ok) {
+        let message = response.statusText;
+        try {
+            const payload = (await response.json()) as ApiEnvelope<unknown>;
+            const detail = (payload.error as { error?: string } | undefined)?.error;
+            if (detail) message = detail;
+        } catch {
+            // Not JSON — keep the status text.
+        }
+        throw new ApiError(response.status, message);
+    }
+    const payload = (await response.json()) as ApiEnvelope<T[]> & { meta?: PaginationMeta };
+    return { rows: payload.data, meta: payload.meta ?? null };
+}
+//
 export const api = {
     get: <T>(resource: string, query?: Record<string, QueryValue>) => request<T>('GET', resource, undefined, query),
     post: <T>(resource: string, body: unknown) => request<T>('POST', resource, body),
@@ -91,6 +124,13 @@ export interface Role {
     name: string;
 }
 //
+export interface Author {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+}
+//
 export interface ContentSummary {
     id: number;
     title: string;
@@ -99,36 +139,37 @@ export interface ContentSummary {
     publishedAt: string | null;
     category: Taxonomy | null;
     tags: Taxonomy[];
+    author: Author | null;
 }
 //
 export const users = {
-    list: () => api.get<AdminUser[]>('user'),
+    list: (page = 1) => requestPaged<AdminUser>('user', { page }),
     create: (input: Record<string, unknown>) => api.post<AdminUser>('user', input),
     update: (id: number, input: Record<string, unknown>) => api.patch<AdminUser>(`user/${id}`, input),
     remove: (id: number) => api.delete<{ id: number }>(`user/${id}`),
 };
 //
 export const roles = {
-    list: () => api.get<Role[]>('role'),
+    list: (page = 1) => requestPaged<Role>('role', { page }),
     create: (name: string) => api.post<Role>('role', { name }),
     update: (id: number, name: string) => api.patch<Role>(`role/${id}`, { name }),
     remove: (id: number) => api.delete<{ id: number }>(`role/${id}`),
 };
 //
 export const categories = {
-    list: () => api.get<Taxonomy[]>('category'),
+    list: (page = 1) => requestPaged<Taxonomy>('category', { page }),
     create: (name: string) => api.post<Taxonomy>('category', { name }),
     remove: (id: number) => api.delete<{ id: number }>(`category/${id}`),
 };
 //
 export const tags = {
-    list: () => api.get<Taxonomy[]>('tag'),
+    list: (page = 1) => requestPaged<Taxonomy>('tag', { page }),
     create: (name: string) => api.post<Taxonomy>('tag', { name }),
     remove: (id: number) => api.delete<{ id: number }>(`tag/${id}`),
 };
 //
 export const content = {
-    list: (type?: string) => api.get<ContentSummary[]>('page', { type }),
+    list: (type?: string, page = 1) => requestPaged<ContentSummary>('page', { type, page }),
 };
 //
 export const session = {

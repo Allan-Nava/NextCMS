@@ -50,9 +50,16 @@ const Dashboard: NextPage = () => {
     useEffect(() => {
         // Each count settles on its own: a 403 on the admin-only endpoints must not
         // blank out the counts a non-admin is allowed to see.
-        const load = <K extends keyof Counts>(key: K, promise: Promise<{ length: number }>) =>
+        // `meta.total` and not `rows.length`: the lists are paged now (NC-78), so the
+        // length of one page is not the count.
+        const load = <K extends keyof Counts>(
+            key: K,
+            promise: Promise<{ rows: unknown[]; meta: { total: number } | null }>
+        ) =>
             promise
-                .then((rows) => setCounts((current) => ({ ...current, [key]: rows.length })))
+                .then((paged) =>
+                    setCounts((current) => ({ ...current, [key]: paged.meta?.total ?? paged.rows.length }))
+                )
                 .catch(() => setCounts((current) => ({ ...current, [key]: -1 })));
         Promise.all([
             load('content', content.list()),

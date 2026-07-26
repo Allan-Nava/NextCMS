@@ -8,7 +8,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import EntityTable from './EntityTable';
-import { ApiError } from '../../../lib/crud/AdminAPI';
+import { ApiError, Paged } from '../../../lib/crud/AdminAPI';
 //
 // Roles, categories and tags are the same screen three times over: a list of
 // things with a name, a create box and a delete button (NC-43). The differences
@@ -21,7 +21,7 @@ export interface NamedEntity {
 //
 const NamedList: React.FC<{
     heading: string;
-    list: () => Promise<NamedEntity[]>;
+    list: () => Promise<Paged<NamedEntity>>;
     create: (name: string) => Promise<unknown>;
     remove: (id: number) => Promise<unknown>;
     showSlug?: boolean;
@@ -35,7 +35,7 @@ const NamedList: React.FC<{
     const load = useCallback(() => {
         setError(null);
         list()
-            .then(setRows)
+            .then(({ rows: fetched }) => setRows(fetched))
             .catch((err: ApiError) =>
                 setError(err.status === 403 ? 'Only an administrator can manage these.' : err.message)
             );

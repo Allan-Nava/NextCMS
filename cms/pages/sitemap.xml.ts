@@ -7,6 +7,7 @@
  * Copyright 2022 - 2026 ©
  */
 import type { GetServerSideProps } from 'next';
+import prisma from '../lib/prisma';
 import { pagesRepo } from '../lib/helpers/page-repo';
 import { buildSitemap } from '../lib/utils/sitemap';
 import { envOrDefault } from '../lib/utils/env';
@@ -20,8 +21,20 @@ import { logger } from '../lib/utils/logger';
 // job and is unit-tested there.
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     try {
-        const entries = await pagesRepo.listSitemapEntries();
-        const xml = buildSitemap(entries, { baseUrl: envOrDefault('BASE_URI', '') });
+        const [entries, categories, tags] = await Promise.all([
+            pagesRepo.listSitemapEntries(),
+            prisma.category.findMany({ where: { deletedAt: null }, select: { slug: true, updatedAt: true } }),
+            prisma.tag.findMany({ where: { deletedAt: null }, select: { slug: true, updatedAt: true } }),
+        ]);
+        // The archive routes are real URLs now (NC-80), so they belong here. They
+        // are always visible: an archive has no draft state of its own.
+        const visible = { publishedAt: new Date(0), deletedAt: null };
+        const archives = [
+            { slug: '/posts', updatedAt: new Date(), ...visible },
+            ...categories.map((c) => ({ slug: `/category/${c.slug}`, updatedAt: c.updatedAt, ...visible })),
+            ...tags.map((t) => ({ slug: `/tag/${t.slug}`, updatedAt: t.updatedAt, ...visible })),
+        ];
+        const xml = buildSitemap([...entries, ...archives], { baseUrl: envOrDefault('BASE_URI', '') });
         res.setHeader('Content-Type', 'application/xml; charset=utf-8');
         // Short public cache: crawlers poll this, and a stale entry for a few
         // minutes is harmless.

@@ -45,6 +45,10 @@ model Page {
 
   categoryId        Int?
   category          Category? @relation(fields: [categoryId], references: [id])
+  // Nullable: rows created before NC-79 have no author, and deleting a user must
+  // not delete their content.
+  authorId          Int?
+  author            User? @relation(fields: [authorId], references: [id])
   // Replaces the old freeform `tags String?` column: tags are entities now, so
   // they can be listed and filtered on (NC-41). Breaking change for an existing
   // database — see the release notes.
@@ -54,6 +58,7 @@ model Page {
   @@index([title], map: "title")
   @@index([type], map: "page_type")
   @@index([categoryId], map: "page_category")
+  @@index([authorId], map: "page_author")
 
 }
 //
@@ -117,6 +122,7 @@ model User {
   deletedAt         DateTime?
 
   passwordResets    PasswordResetToken[]
+  pages             Page[]
 }
 //
 // Password reset tokens (NC-39).

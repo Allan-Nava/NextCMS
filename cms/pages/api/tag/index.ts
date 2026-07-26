@@ -10,16 +10,17 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Prisma } from '@prisma/client';
 import { tagRepo } from '../../../lib/helpers/taxonomy-repo';
 import { requireAuth } from '../../../lib/helpers/auth';
-import { errorResponse, successResponse } from '../../../lib/types/response/response';
+import { errorResponse, pagedResponse, successResponse } from '../../../lib/types/response/response';
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { validateTaxonomyPayload } from '../../../lib/utils/validation';
+import { paginationMeta, parsePagination } from '../../../lib/utils/pagination';
 //
 // GET  /api/tag   list    (public: taxonomies are part of the content)
 // POST /api/tag   create  (authenticated)
 export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     switch (req.method) {
         case 'GET':
-            return list(res);
+            return list(req, res);
         case 'POST':
             return create(req, res);
         default:
@@ -27,9 +28,11 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse):
     }
 }
 //
-async function list(res: NextApiResponse): Promise<void> {
+async function list(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     try {
-        res.status(200).json(successResponse(await tagRepo.getAll(), 'tags retrieved'));
+        const pagination = parsePagination(req.query);
+        const { rows, total } = await tagRepo.getAll(pagination);
+        res.status(200).json(pagedResponse(rows, paginationMeta(total, pagination), 'tags retrieved'));
     } catch (error) {
         serverError(res, 'list tags', error);
     }

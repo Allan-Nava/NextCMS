@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import Layout from '../components/admin/common/layout';
 import EntityTable from '../components/admin/common/EntityTable';
-import { ApiError, ContentSummary, content } from '../lib/crud/AdminAPI';
+import { ApiError, ContentSummary, PaginationMeta, content } from '../lib/crud/AdminAPI';
 //
 // Content overview (NC-43).
 //
@@ -27,6 +27,8 @@ const TYPES = [
 const ContentPage: NextPage = () => {
     const [type, setType] = useState('');
     const [rows, setRows] = useState<ContentSummary[] | null>(null);
+    const [meta, setMeta] = useState<PaginationMeta | null>(null);
+    const [page, setPage] = useState(1);
     const [error, setError] = useState<string | null>(null);
     const cmsOrigin = process.env.CMS_ORIGIN ?? '';
 
@@ -34,10 +36,13 @@ const ContentPage: NextPage = () => {
         setError(null);
         setRows(null);
         content
-            .list(type || undefined)
-            .then(setRows)
+            .list(type || undefined, page)
+            .then((paged) => {
+                setRows(paged.rows);
+                setMeta(paged.meta);
+            })
             .catch((err: ApiError) => setError(err.message));
-    }, [type]);
+    }, [type, page]);
 
     useEffect(load, [load]);
 
@@ -49,7 +54,10 @@ const ContentPage: NextPage = () => {
                         key={option.value}
                         type='button'
                         className={`btn btn-outline-secondary${type === option.value ? ' active' : ''}`}
-                        onClick={() => setType(option.value)}
+                        onClick={() => {
+                            setType(option.value);
+                            setPage(1);
+                        }}
                     >
                         {option.label}
                     </button>
@@ -72,6 +80,7 @@ const ContentPage: NextPage = () => {
                                 <span className='badge bg-secondary'>draft</span>
                             ),
                     },
+                    { header: 'Author', render: (row) => row.author?.username ?? '—' },
                     { header: 'Category', render: (row) => row.category?.name ?? '—' },
                     {
                         header: 'Tags',
@@ -99,6 +108,29 @@ const ContentPage: NextPage = () => {
                     },
                 ]}
             />
+            {meta && meta.totalPages > 1 && (
+                <nav className='d-flex align-items-center gap-2 mb-3' aria-label='Pagination'>
+                    <button
+                        type='button'
+                        className='btn btn-sm btn-outline-secondary'
+                        disabled={meta.page <= 1}
+                        onClick={() => setPage(meta.page - 1)}
+                    >
+                        Previous
+                    </button>
+                    <span className='small text-muted'>
+                        Page {meta.page} of {meta.totalPages} — {meta.total} items
+                    </span>
+                    <button
+                        type='button'
+                        className='btn btn-sm btn-outline-secondary'
+                        disabled={!meta.hasMore}
+                        onClick={() => setPage(meta.page + 1)}
+                    >
+                        Next
+                    </button>
+                </nav>
+            )}
             <p className='text-muted small'>
                 Editing happens in the cms app so the forms and their validation exist once. Consolidating the two
                 surfaces is tracked as NC-76.

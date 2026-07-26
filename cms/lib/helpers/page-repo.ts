@@ -13,6 +13,7 @@ import prisma from '../prisma';
 import { Prisma } from '@prisma/client';
 import { tagRepo } from './taxonomy-repo';
 import { logger } from '../utils/logger';
+import { Pagination } from '../utils/pagination';
 //
 // Content lives in one table keyed by `type` ("page", "post", …), so pages and
 // posts share a slug space and a renderer (NC-41).
@@ -20,13 +21,19 @@ import { logger } from '../utils/logger';
 export const CONTENT_TYPES = ['page', 'post'] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
 //
+// The author is exposed with a NARROWER projection than `publicUserSelect`
+// (NC-79): content listings are public, and an author's email address has no
+// business being in one. Only what a byline needs.
+const authorSelect = { id: true, username: true, firstName: true, lastName: true } as const;
+//
 // Category and tags are included on every read: the editor and the public
 // templates both need them, and a second round trip per page is not worth
 // saving three columns.
-const withTaxonomy = { category: true, tags: true } as const;
+const withTaxonomy = { category: true, tags: true, author: { select: authorSelect } } as const;
 export type PageWithTaxonomy = Prisma.PageGetPayload<{ include: typeof withTaxonomy }>;
 //
 export interface CreatePageInput {
+    authorId?: number | null;
     title: string;
     slug: string;
     description: string;
@@ -44,8 +51,15 @@ export type UpdatePageInput = Partial<CreatePageInput>;
 export interface ListPagesOptions {
     type?: string;
     categoryId?: number;
+    categorySlug?: string;
     tagSlug?: string;
+    authorId?: number;
     publishedOnly?: boolean;
+}
+//
+export interface PagedPages {
+    rows: PageWithTaxonomy[];
+    total: number;
 }
 //
 export const pagesRepo = {
@@ -58,14 +72,36 @@ export const pagesRepo = {
     delete: _delete,
 };
 //
-async function getAll(options: ListPagesOptions = {}): Promise<PageWithTaxonomy[]> {
+function listWhere(options: ListPagesOptions): Prisma.PageWhereInput {
     const where: Prisma.PageWhereInput = { deletedAt: null };
     if (options.type) where.type = options.type;
     if (options.categoryId !== undefined) where.categoryId = options.categoryId;
+    if (options.categorySlug) where.category = { slug: options.categorySlug };
     if (options.tagSlug) where.tags = { some: { slug: options.tagSlug } };
+    if (options.authorId !== undefined) where.authorId = options.authorId;
     // Public listings must not leak drafts; the editor asks without this flag.
-    if (options.publishedOnly) where.publishedAt = { not: null };
-    return prisma.page.findMany({ where, include: withTaxonomy, orderBy: { id: 'asc' } });
+    // `lte: now` and not just `not: null`, so a scheduled post stays out until its
+    // time — the same rule as `isPubliclyVisible` (NC-59).
+    if (options.publishedOnly) where.publishedAt = { not: null, lte: new Date() };
+    return where;
+}
+//
+// Paged, and the count comes from the same `where` in the same round trip
+// (NC-78). The previous version returned the whole table.
+async function getAll(options: ListPagesOptions = {}, pagination?: Pagination): Promise<PagedPages> {
+    const where = listWhere(options);
+    const [rows, total] = await Promise.all([
+        prisma.page.findMany({
+            where,
+            include: withTaxonomy,
+            // Newest first: a content list is read from the top.
+            orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
+            skip: pagination?.skip,
+            take: pagination?.take,
+        }),
+        prisma.page.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 // Lean projection for the sitemap (NC-69): it needs four columns for every page,
@@ -100,6 +136,7 @@ async function create(input: CreatePageInput): Promise<PageWithTaxonomy> {
         seoDescription: input.seoDescription,
         jsonld: input.jsonld,
         publishedAt: input.published ? new Date() : null,
+        author: input.authorId ? { connect: { id: input.authorId } } : undefined,
         category: input.categoryId ? { connect: { id: input.categoryId } } : undefined,
         tags: tags.length > 0 ? { connect: tags.map((tag) => ({ id: tag.id })) } : undefined,
     };

@@ -13,6 +13,7 @@ import prisma from '../prisma';
 import { Prisma, Component } from '@prisma/client';
 import { PageComponent } from '../types/page';
 import { logger } from '../utils/logger';
+import { Pagination } from '../utils/pagination';
 //
 export interface CreateComponentInput {
     name: string;
@@ -35,8 +36,20 @@ export const componentRepo = {
     toPageComponent,
 };
 //
-async function getAll(): Promise<Component[]> {
-    return prisma.component.findMany({ where: { deletedAt: null }, orderBy: [{ parent: 'asc' }, { position: 'asc' }] });
+// Paged (NC-78). `getForPage` is deliberately not paged: a page's layout is read
+// whole or not at all.
+async function getAll(pagination?: Pagination): Promise<{ rows: Component[]; total: number }> {
+    const where = { deletedAt: null };
+    const [rows, total] = await Promise.all([
+        prisma.component.findMany({
+            where,
+            orderBy: [{ parent: 'asc' }, { position: 'asc' }],
+            skip: pagination?.skip,
+            take: pagination?.take,
+        }),
+        prisma.component.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 // The blocks of one page, in layout order (NC-42).

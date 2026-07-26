@@ -27,7 +27,7 @@ const UsersPage: NextPage = () => {
         setError(null);
         users
             .list()
-            .then(setRows)
+            .then(({ rows: fetched }) => setRows(fetched))
             .catch((err: ApiError) =>
                 setError(
                     err.status === 403

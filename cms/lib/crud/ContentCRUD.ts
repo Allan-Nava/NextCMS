@@ -15,6 +15,17 @@ import axios from 'axios';
 import type { ApiEnvelope } from './AuthCRUD';
 import type { PageComponent } from '../types/page';
 //
+export interface PagedEnvelope<T> extends ApiEnvelope<T[]> {
+    meta: { page: number; perPage: number; total: number; totalPages: number; hasMore: boolean };
+}
+//
+export interface Author {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+}
+//
 export interface ContentSummary {
     id: number;
     title: string;
@@ -24,6 +35,7 @@ export interface ContentSummary {
     publishedAt: string | null;
     category: { id: number; name: string; slug: string } | null;
     tags: { id: number; name: string; slug: string }[];
+    author: Author | null;
 }
 //
 export interface Taxonomy {
@@ -44,9 +56,14 @@ export interface ContentPayload {
     published?: boolean;
 }
 //
-export function listContent(type?: string) {
-    const query = type ? `?type=${encodeURIComponent(type)}` : '';
-    return axios.get<ApiEnvelope<ContentSummary[]>>(`/api/page${query}`);
+export function listContent(type?: string, options: { page?: number; perPage?: number; mine?: boolean } = {}) {
+    const params = new URLSearchParams();
+    if (type) params.set('type', type);
+    if (options.page) params.set('page', String(options.page));
+    if (options.perPage) params.set('perPage', String(options.perPage));
+    if (options.mine) params.set('author', 'me');
+    const query = params.toString();
+    return axios.get<PagedEnvelope<ContentSummary>>(`/api/page${query ? `?${query}` : ''}`);
 }
 //
 export function getContent(id: number) {
@@ -66,11 +83,11 @@ export function deleteContent(id: number) {
 }
 //
 export function listCategories() {
-    return axios.get<ApiEnvelope<Taxonomy[]>>('/api/category');
+    return axios.get<PagedEnvelope<Taxonomy>>('/api/category?perPage=100');
 }
 //
 export function listTags() {
-    return axios.get<ApiEnvelope<Taxonomy[]>>('/api/tag');
+    return axios.get<PagedEnvelope<Taxonomy>>('/api/tag?perPage=100');
 }
 //
 export function getLayout(pageId: number) {

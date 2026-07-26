@@ -53,6 +53,8 @@ This file defines the working rules for agents (Copilot, Claude, other AI tools)
 - **The component registry is an allow-list**: never go back to `import(dbProvidedPath)` (`NC-34`). A layout is validated against it before it is saved.
 - **Drafts must not leak**: a public listing filters on `publishedAt`; only an authenticated caller sees unpublished content (`NC-41`).
 - **Stored JSON-LD must keep its closing tags escaped** before it is injected into a script tag (`NC-60`): an editor storing `</script>` would otherwise turn the rest into live markup.
+- **New list endpoints must page** (`NC-78`): take a `Pagination`, return `{rows, total}`, answer with `pagedResponse`. `data` stays the array.
+- **A content author is set from the session, never the payload**, and never exposed with its email (`NC-79`).
 - **Drafts must stay out of the sitemap and get `noindex`** — all three paths use the same `isPubliclyVisible` predicate; do not reimplement it.
 - **A post-login `?next=` must be validated** before redirecting — `safeRedirectTarget` / `safeReturnTo`, comparing parsed origins rather than prefixes (`NC-54`).
 - **Reset tokens are stored hashed and are single-use**, and the production mail transport must never print one to the log (`NC-39`).

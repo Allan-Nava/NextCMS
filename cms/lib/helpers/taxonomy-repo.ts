@@ -14,6 +14,7 @@ import prisma from '../prisma';
 import { Category, Prisma, Tag } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { slugify } from '../utils/slug';
+import { Pagination } from '../utils/pagination';
 //
 export interface TaxonomyInput {
     name: string;
@@ -28,8 +29,14 @@ export const categoryRepo = {
     delete: _delete,
 };
 //
-async function getAll(): Promise<Category[]> {
-    return prisma.category.findMany({ where: { deletedAt: null }, orderBy: { name: 'asc' } });
+// Paged (NC-78).
+async function getAll(pagination?: Pagination): Promise<{ rows: Category[]; total: number }> {
+    const where = { deletedAt: null };
+    const [rows, total] = await Promise.all([
+        prisma.category.findMany({ where, orderBy: { name: 'asc' }, skip: pagination?.skip, take: pagination?.take }),
+        prisma.category.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 async function getById(id: number): Promise<Category | null> {
@@ -69,8 +76,13 @@ export const tagRepo = {
     ensureMany,
 };
 //
-async function getAllTags(): Promise<Tag[]> {
-    return prisma.tag.findMany({ where: { deletedAt: null }, orderBy: { name: 'asc' } });
+async function getAllTags(pagination?: Pagination): Promise<{ rows: Tag[]; total: number }> {
+    const where = { deletedAt: null };
+    const [rows, total] = await Promise.all([
+        prisma.tag.findMany({ where, orderBy: { name: 'asc' }, skip: pagination?.skip, take: pagination?.take }),
+        prisma.tag.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 async function getTagById(id: number): Promise<Tag | null> {

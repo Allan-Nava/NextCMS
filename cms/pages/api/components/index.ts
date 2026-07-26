@@ -12,9 +12,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { componentRepo } from '../../../lib/helpers/component-repo';
 import { requireAuth } from '../../../lib/helpers/auth';
-import { successResponse } from '../../../lib/types/response/response';
+import { pagedResponse, successResponse } from '../../../lib/types/response/response';
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { validateComponentPayload } from '../../../lib/utils/validation';
+import { paginationMeta, parsePagination } from '../../../lib/utils/pagination';
 import { isRegisteredComponent, registeredComponentPaths } from '../../../components/registry';
 //
 // GET  /api/components   list components   (public: needed to render pages)
@@ -24,7 +25,7 @@ import { isRegisteredComponent, registeredComponentPaths } from '../../../compon
 export default async function handle(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     switch (req.method) {
         case 'GET':
-            return listComponents(res);
+            return listComponents(req, res);
         case 'POST':
             return createComponent(req, res);
         default:
@@ -32,9 +33,11 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse):
     }
 }
 //
-async function listComponents(res: NextApiResponse): Promise<void> {
+async function listComponents(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     try {
-        res.status(200).json(successResponse(await componentRepo.getAll(), 'components retrieved'));
+        const pagination = parsePagination(req.query);
+        const { rows, total } = await componentRepo.getAll(pagination);
+        res.status(200).json(pagedResponse(rows, paginationMeta(total, pagination), 'components retrieved'));
     } catch (error) {
         serverError(res, 'list components', error);
     }

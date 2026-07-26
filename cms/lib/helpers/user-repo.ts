@@ -14,6 +14,7 @@ import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { PublicUser, publicUserSelect } from '../types/user';
 import { logger } from '../utils/logger';
+import { Pagination } from '../utils/pagination';
 //
 // Every read goes through `publicUserSelect`, so no caller can accidentally
 // hand the bcrypt hash to a response (NC-1). Password hashing lives here and
@@ -54,8 +55,20 @@ export const userRepo = {
     delete: _delete,
 };
 //
-async function getAll(): Promise<PublicUser[]> {
-    return prisma.user.findMany({ select: publicUserSelect, orderBy: { id: 'asc' } });
+// Paged (NC-78): this used to return every account in the database.
+async function getAll(pagination?: Pagination): Promise<{ rows: PublicUser[]; total: number }> {
+    const where = { deletedAt: null };
+    const [rows, total] = await Promise.all([
+        prisma.user.findMany({
+            where,
+            select: publicUserSelect,
+            orderBy: { id: 'asc' },
+            skip: pagination?.skip,
+            take: pagination?.take,
+        }),
+        prisma.user.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 async function getById(id: number): Promise<PublicUser | null> {

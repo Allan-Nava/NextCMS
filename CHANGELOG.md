@@ -4,6 +4,46 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.11.0] - 2026-07-26
+
+Three M7 items, in the order they were recommended: author, pagination, archives. The first two changed contracts, so they came before there is much content or many clients.
+
+### Added
+
+- **Content has an author** (NC-79). `Page.authorId` with a nullable relation to `User` — nullable because rows created before this have none, and deleting a user must not delete their content.
+
+  Two decisions worth naming. The author is taken **from the session, never from the payload**, so a client cannot publish under someone else's name. And it is exposed through a projection *narrower* than `publicUserSelect`: content listings are public, and an author's email address has no business being in one, so only what a byline needs is included.
+
+  `?author=me` answers the "my drafts" case, and the admin content list gained an Author column.
+
+- **Every list endpoint paginates** (NC-78). Built test-first: 20 tests for `lib/utils/pagination.ts` before a line of implementation, then applied to pages, users, roles, components, categories and tags.
+
+  `?page` and `?perPage`, capped at 100 — the cap is the point, since `?perPage=100000` would otherwise be the same unbounded request this replaced. The count comes from the same `where` in the same round trip. The envelope gains `meta` and `data` stays the array, so a client that ignores pagination keeps working.
+
+  The type system earned its keep here: changing the repo return shape surfaced all eight call sites that assumed an array, including the admin dashboard, whose counts now read `meta.total` rather than the length of one page.
+
+- **Archive pages** (NC-80): `/category/<slug>`, `/tag/<slug>` and `/posts`, paged and sharing one presentation so the three cannot drift apart. Categories and tags could be created, assigned and filtered through the API, and no public page listed content by either — a visitor could only reach content by its exact slug.
+
+  An unknown slug is a **404, not an empty list**: otherwise every typo'd URL would render a real-looking archive that happens to be empty. Drafts and scheduled content are excluded through the same `publishedOnly` path as the API, and the archive URLs are now in `sitemap.xml`.
+
+### Changed
+
+- The content list is ordered newest-first (`publishedAt desc`) rather than by id ascending: a content list is read from the top.
+- `publishedOnly` filters `publishedAt <= now` rather than merely "not null", so a scheduled post stays out of listings until its time — the rule `isPubliclyVisible` already applied to single pages.
+
+### Verification
+
+| | typecheck | lint | tests | build |
+|---|---|---|---|---|
+| `cms` | ✅ | ✅ | ✅ 141 passed | ✅ |
+| `admin` | ✅ | ✅ | ✅ 18 passed | ✅ |
+
+The three archive routes appear in the build output. Not verified against a live database: the queries are checked by the type system and `prisma validate`, and **the new column and indexes need `prisma db push` before this release runs**.
+
+### Still open in M7
+
+Five of the eight items added in 0.10.2 remain: the authorable 404 (NC-81), the trash (NC-82), caching on public routes (NC-83), a feed (NC-84) and a health endpoint (NC-85). NC-84 is cheap now that the archive query exists.
+
 ## [0.10.2] - 2026-07-26
 
 ### Added

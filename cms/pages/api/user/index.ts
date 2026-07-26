@@ -13,9 +13,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Prisma } from '@prisma/client';
 import { userRepo } from '../../../lib/helpers/user-repo';
 import { requireAdmin } from '../../../lib/helpers/auth';
-import { errorResponse, successResponse } from '../../../lib/types/response/response';
+import { errorResponse, pagedResponse, successResponse } from '../../../lib/types/response/response';
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { validateUserPayload } from '../../../lib/utils/validation';
+import { paginationMeta, parsePagination } from '../../../lib/utils/pagination';
 //
 // GET  /api/user   list users     (admin only)
 // POST /api/user   create a user  (admin only)
@@ -36,7 +37,9 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse):
 async function listUsers(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     if (!requireAdmin(req, res)) return;
     try {
-        res.status(200).json(successResponse(await userRepo.getAll(), 'users retrieved'));
+        const pagination = parsePagination(req.query);
+        const { rows, total } = await userRepo.getAll(pagination);
+        res.status(200).json(pagedResponse(rows, paginationMeta(total, pagination), 'users retrieved'));
     } catch (error) {
         serverError(res, 'list users', error);
     }

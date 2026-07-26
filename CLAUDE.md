@@ -76,6 +76,8 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 - **Passwords are hashed with `bcryptjs` and tokens signed with `jsonwebtoken` in the repo/auth layer**, never in a handler. `JWT_SECRET` is mandatory: the app fails fast at startup without it.
 - **A post-login `?next=` is attacker-controlled** (`NC-54`): validate it with `safeRedirectTarget` (cms) or `safeReturnTo` (admin). Compare parsed origins, never string prefixes.
 - **Never return a raw Prisma `User`**: use `publicUserSelect` / the `PublicUser` type so the password hash cannot leak (`NC-1`).
+- **List endpoints are paged** (`NC-78`): repos take a `Pagination` and return `{rows, total}`; routes answer with `pagedResponse`. `data` is still the array — do not move it. `perPage` is capped at 100.
+- **A content author comes from the session, never the payload** (`NC-79`), and is exposed through a projection narrower than `publicUserSelect`: no email in a public listing.
 - **`BASE_URI` is now load-bearing**: it builds canonical URLs, the sitemap and password reset links. A wrong value is visible to search engines, not just internally.
 - **Never log a request or response object**: they carry headers and cookies, i.e. tokens. Use `lib/utils/logger.ts`.
 - After every `schema.prisma` change run `npx prisma generate`, otherwise the `Prisma.*Input` types used by the repos will not match.
@@ -91,7 +93,7 @@ npm publish --access public    # publishing @nextcms/* (see docs/NPM.md)
 
 The repo is WIP. The audit on commit `7ac0299` opened 54 items in `BACKLOG.md`; M0 through M3 have closed 38 of them. The apps build, the API answers correctly and the whole session lifecycle works: sign in, refresh, recover a password, edit your own account.
 
-Known product gaps worth reading before adding a feature, because they change how you would build it: **no list endpoint paginates** (`NC-78`), **content has no author** (`NC-79`), **taxonomies have no public archive pages** (`NC-80`), and **no public route sets a cache header** (`NC-83`).
+Known product gaps worth reading before adding a feature: **no public route sets a cache header** (`NC-83`), **soft-deleted rows have no trash** (`NC-82`), and **the 404 is not authorable** (`NC-81`).
 
 What remains is mostly **product**, not repair: content management (`NC-41`), page builder persistence (`NC-42`) and the admin panel (`NC-43`, `NC-44`, `NC-54`), plus the Next 13 migration (`NC-33`) and deeper test coverage (`NC-31`).
 

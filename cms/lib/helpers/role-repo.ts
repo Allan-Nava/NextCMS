@@ -12,6 +12,7 @@
 import prisma from '../prisma';
 import { Prisma, Role } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { Pagination } from '../utils/pagination';
 //
 // `update` and `delete` were missing entirely, so the API had no way to maintain
 // a role once created (NC-22).
@@ -23,8 +24,14 @@ export const roleRepo = {
     delete: _delete,
 };
 //
-async function getAll(): Promise<Role[]> {
-    return prisma.role.findMany({ where: { deletedAt: null }, orderBy: { id: 'asc' } });
+// Paged (NC-78).
+async function getAll(pagination?: Pagination): Promise<{ rows: Role[]; total: number }> {
+    const where = { deletedAt: null };
+    const [rows, total] = await Promise.all([
+        prisma.role.findMany({ where, orderBy: { id: 'asc' }, skip: pagination?.skip, take: pagination?.take }),
+        prisma.role.count({ where }),
+    ]);
+    return { rows, total };
 }
 //
 async function getById(id: number): Promise<Role | null> {

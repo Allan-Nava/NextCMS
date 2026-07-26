@@ -12,9 +12,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { roleRepo } from '../../../lib/helpers/role-repo';
 import { requireAdmin } from '../../../lib/helpers/auth';
-import { successResponse } from '../../../lib/types/response/response';
+import { pagedResponse, successResponse } from '../../../lib/types/response/response';
 import { badRequest, methodNotAllowed, serverError } from '../../../lib/utils/http';
 import { isNonEmptyString } from '../../../lib/utils/validation';
+import { paginationMeta, parsePagination } from '../../../lib/utils/pagination';
 //
 // GET  /api/role   list roles   (admin only)
 // POST /api/role   create role  (admin only)
@@ -35,7 +36,9 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse):
 async function listRoles(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     if (!requireAdmin(req, res)) return;
     try {
-        res.status(200).json(successResponse(await roleRepo.getAll(), 'roles retrieved'));
+        const pagination = parsePagination(req.query);
+        const { rows, total } = await roleRepo.getAll(pagination);
+        res.status(200).json(pagedResponse(rows, paginationMeta(total, pagination), 'roles retrieved'));
     } catch (error) {
         serverError(res, 'list roles', error);
     }

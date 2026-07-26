@@ -41,3 +41,25 @@ export function errorResponse( error: object): ErrorResponse {
     }
 }
 
+
+//
+// Paged responses (NC-78). `data` stays the array — a client that ignored
+// pagination keeps working — and the totals sit beside it.
+export interface PagedResponse<T> extends SuccessResponse {
+    data: T[];
+    meta: {
+        page: number;
+        perPage: number;
+        total: number;
+        totalPages: number;
+        hasMore: boolean;
+    };
+}
+//
+export function pagedResponse<T>(
+    data: T[],
+    meta: PagedResponse<T>['meta'],
+    message: string
+): PagedResponse<T> {
+    return { data, meta, message, response: DEFAULTResponse.OK };
+}
