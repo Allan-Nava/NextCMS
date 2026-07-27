@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning is [Semantic Versioning](https://semver.org/). **Every feature = one `vX.Y.Z` tag** with its own section below.
 
+## [0.11.3] - 2026-07-26
+
+### Fixed
+
+- **The Pages workflow failed on its own lint step** (NC-86). It ran stylelint through `npx --package`, which installs into the npx cache directory. stylelint resolves a shared config named in `extends` **relative to the config file**, not to wherever the binary happens to live, so from the cache it could not find `stylelint-config-recommended`:
+
+  ```
+  ConfigurationError: Could not find "stylelint-config-recommended".
+  Do you need to install the package or use the "configBasedir" option?
+  ```
+
+  The linter is now installed into the working directory and run with `npx stylelint`.
+
+  This one is worth naming plainly: **I hit this exact error while building the page, worked around it in my shell, and left the broken form in the workflow.** The command in `pages.yml` was never the command I had verified.
+
+### Changed
+
+- `pages.yml` pins Node 24 with `actions/setup-node`, like every other workflow. It was the only one taking whatever the runner happened to ship, while the repo declares Node 24 in three manifests and gates on it in CI.
+- Its `paths` filter now includes `.github/scripts/check-anchors.mjs`, so a change to the checker triggers the workflow that runs it.
+
+### Verification
+
+Both directions, because a linter that never fails is worse than no linter: the current stylesheet passes (exit 0), and a deliberately duplicated selector fails with exit 2 and names the rule. A first negative test used `color: ;`, which passed — not because the linter was inert but because an empty value is not a rule in the recommended set. The duplicate-selector rule is the one that caught a real bug in v0.8.5, so it is the right one to test with.
+
+The other three steps were re-run as well: `html-validate` clean, 17 anchors resolving, both SVGs well-formed.
+
 ## [0.11.2] - 2026-07-26
 
 Documentation audit rather than a rewrite: every claim was checked against the code, and this section lists what was **wrong**, not just what was added.

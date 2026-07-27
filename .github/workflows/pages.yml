@@ -14,6 +14,7 @@ on:
     branches: ["main"]
     paths:
       - "docs/**"
+      - ".github/scripts/check-anchors.mjs"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -33,6 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Pinned like every other workflow rather than taking whatever the runner
+      # ships: the repo declares Node 24 in three manifests and CI gates on it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
       # Catches a broken tag or a duplicate id before it reaches the published
       # site — the reason this job exists at all rather than deploying straight
@@ -45,8 +51,17 @@ jobs:
 
       # A dead duplicate selector and a malformed logo are both invisible in a
       # screenshot; stylelint caught one of each while this page was built.
+      #
+      # Installed into the working directory rather than run through
+      # `npx --package`: stylelint resolves a shared config named in `extends`
+      # relative to the config file, so from the npx cache it cannot find
+      # `stylelint-config-recommended` and the step dies with
+      # `ConfigurationError: Could not find "stylelint-config-recommended"`.
+      - name: Install the stylesheet linter
+        run: npm install --no-save --no-audit --no-fund stylelint@16 stylelint-config-recommended@14
+
       - name: Lint the stylesheet
-        run: npx --yes --package stylelint@16 --package stylelint-config-recommended@14 stylelint --config docs/.stylelintrc.json "docs/assets/*.css"
+        run: npx stylelint --config docs/.stylelintrc.json "docs/assets/*.css"
 
       - name: SVG assets are well-formed
         run: |
